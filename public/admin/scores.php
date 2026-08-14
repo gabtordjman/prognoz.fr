@@ -73,6 +73,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $scored = scorePendingFinishedMatches($pdo);
             adminFlash('success', 'Points locaux : ' . $scored . ' match(s) traités.');
             $anchor = '#points-locaux';
+        } elseif ($action === 'recover_postponed_scores') {
+            $rec = recoverPostponedScoresFromApi($pdo, 3);
+            $msg = 'Récupération API reportés : '
+                . (int) $rec['recovered'] . ' score(s) appliqué(s)'
+                . ' · ' . (int) $rec['checked'] . ' dans la fenêtre 3 j'
+                . ' · ' . (int) $rec['skipped_old'] . ' trop vieux pour l’API'
+                . ( !empty($rec['quota_blocked']) ? ' · quota bloqué' : '' );
+            adminFlash((int) $rec['recovered'] > 0 ? 'success' : 'info', $msg);
+            $anchor = '#reportes';
+        } elseif ($action === 'dismiss_empty_postponed') {
+            $n = dismissPostponedMatchesWithoutPredictions($pdo);
+            adminFlash(
+                $n > 0 ? 'success' : 'info',
+                $n > 0
+                    ? $n . ' reporté(s) sans aucun prono retiré(s) de la liste (annulés).'
+                    : 'Aucun reporté sans prono à nettoyer.'
+            );
+            $anchor = '#reportes';
+        } elseif ($action === 'reactivate_future_postponed') {
+            $n = reactivateFuturePostponedMatches($pdo);
+            adminFlash(
+                $n > 0 ? 'success' : 'info',
+                $n > 0
+                    ? $n . ' reporté(s) à date future réactivé(s).'
+                    : 'Aucun reporté futur à réactiver.'
+            );
+            $anchor = '#reportes';
         } elseif ($action === 'search_teams') {
             $searchHome = trim((string) ($_POST['team_home'] ?? ''));
             $searchAway = trim((string) ($_POST['team_away'] ?? ''));
@@ -420,7 +447,29 @@ adminLayoutStart('Résultats & scores manuels', 'scores');
         <p class="ops-muted">
             Ils restent ici tant que tu n’as pas saisi le score ou réactivé le match.
             Tu peux changer la date, puis entrer le score quand le match a enfin été joué.
+            <strong>The Odds API</strong> ne remonte les scores que sur ~3 jours :
+            au-delà, saisie manuelle (Flashscore, etc.).
         </p>
+        <div class="ops-form-row" style="margin-bottom:0.85rem; flex-wrap:wrap; gap:0.5rem;">
+            <form method="post"
+                  onsubmit="return confirm('Interroger l’API pour les reportés des 3 derniers jours ? (crédits /scores)');">
+                <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+                <input type="hidden" name="action" value="recover_postponed_scores">
+                <button type="submit" class="ops-btn ops-btn-primary">Récupérer scores API (reportés ≤ 3 j)</button>
+            </form>
+            <form method="post"
+                  onsubmit="return confirm('Retirer de la liste tous les reportés sans aucun prono ?');">
+                <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+                <input type="hidden" name="action" value="dismiss_empty_postponed">
+                <button type="submit" class="ops-btn">Nettoyer reportés sans prono</button>
+            </form>
+            <form method="post"
+                  onsubmit="return confirm('Réactiver les reportés dont la date est encore dans le futur ?');">
+                <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+                <input type="hidden" name="action" value="reactivate_future_postponed">
+                <button type="submit" class="ops-btn">Réactiver reportés futurs</button>
+            </form>
+        </div>
         <?php if ($postponedMatches === []): ?>
             <p class="ops-muted" style="margin-bottom:0">Aucun match reporté pour le moment.</p>
         <?php else: ?>

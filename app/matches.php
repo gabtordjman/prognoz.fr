@@ -1311,7 +1311,7 @@ function sportsAwaitingResults(PDO $pdo, int $maxSports): array
          INNER JOIN prediction_markets pm ON pm.match_id = m.id
          INNER JOIN predictions p ON p.market_id = pm.id AND p.statut = 'en_attente'
          WHERE m.date_match < DATE_SUB({$now}, INTERVAL {$readyMin} MINUTE)
-           AND m.date_match > DATE_SUB({$now}, INTERVAL {$maxWait} DAY)
+           AND m.date_match >= DATE_SUB({$now}, INTERVAL {$maxWait} DAY)
            AND m.statut NOT IN ('annule', 'reporte')
            AND (m.resultat_1x2 IS NULL OR m.resultat_1x2 = '')
          GROUP BY m.sport
@@ -1464,9 +1464,142 @@ function syncMatchScores(PDO $pdo, ?int $daysFrom = null, ?int $maxSports = null
 }
 
 /**
- * Filet de sécurité : match sans résultat API après RESULT_MAX_WAIT_DAYS
- * → statut « reporte » + pronos en attente à 0 pt (visible « Match reporté »).
- * Évite la file admin manuelle. E-mail admin si des joueurs sont concernés.
+ * Récupère via The Odds API les scores des matchs « reporte » encore dans la fenêtre
+ * daysFrom (max API = 3 jours). Réouvre les pronos annulés et attribue les points.
+ *
+ * @return array{checked:int,recovered:int,sports:list<string>,skipped_old:int,quota_blocked:bool}
+ */
+function recoverPostponedScoresFromApi(PDO $pdo, int $daysFrom = 3): array
+{
+    $out = [
+        'checked'       => 0,
+        'recovered'     => 0,
+        'sports'        => [],
+        'skipped_old'   => 0,
+        'quota_blocked' => false,
+    ];
+
+    if (!oddsApiConfigured()) {
+        return $out;
+    }
+
+    ensureMatchStatutSchema($pdo);
+    $daysFrom = max(1, min(3, $daysFrom));
+
+    $allPostponed = $pdo->query(
+        "SELECT id, sport, date_match, external_id, equipe_home, equipe_away
+         FROM matches
+         WHERE statut = 'reporte'
+           AND (resultat_1x2 IS NULL OR resultat_1x2 = '')"
+    )->fetchAll() ?: [];
+
+    if ($allPostponed === []) {
+        return $out;
+    }
+
+    $inWindow = [];
+    foreach ($allPostponed as $row) {
+        $ts = utcDatetimeTimestamp((string) ($row['date_match'] ?? ''));
+        if ($ts === null) {
+            $out['skipped_old']++;
+            continue;
+        }
+        // Fenêtre API : kick-off déjà passé et pas plus vieux que $daysFrom jours.
+        if ($ts > time() || $ts < time() - ($daysFrom * 86400)) {
+            $out['skipped_old']++;
+            continue;
+        }
+        $inWindow[] = $row;
+    }
+
+    $out['checked'] = count($inWindow);
+    if ($inWindow === []) {
+        return $out;
+    }
+
+    $bySport = [];
+    foreach ($inWindow as $row) {
+        $sport = (string) ($row['sport'] ?? '');
+        if ($sport === '') {
+            continue;
+        }
+        $bySport[$sport][] = $row;
+    }
+
+    foreach ($bySport as $sportKey => $rows) {
+        if (!oddsQuotaAllows('scores')) {
+            $out['quota_blocked'] = true;
+            break;
+        }
+
+        $games = oddsFetchScores($sportKey, $daysFrom, true);
+        $out['sports'][] = $sportKey . ':' . count($games);
+
+        $indexByExt = [];
+        $indexByTeams = [];
+        foreach ($games as $game) {
+            if (!is_array($game) || empty($game['completed'])) {
+                continue;
+            }
+            $gid = (string) ($game['id'] ?? '');
+            if ($gid !== '') {
+                $indexByExt[$gid] = $game;
+            }
+            $h = trim((string) ($game['home_team'] ?? ''));
+            $a = trim((string) ($game['away_team'] ?? ''));
+            if ($h !== '' && $a !== '') {
+                $indexByTeams[mb_strtolower($h . '|' . $a)] = $game;
+            }
+        }
+
+        foreach ($rows as $match) {
+            $game = null;
+            $ext = (string) ($match['external_id'] ?? '');
+            if ($ext !== '' && isset($indexByExt[$ext])) {
+                $game = $indexByExt[$ext];
+            }
+            if ($game === null) {
+                $key = mb_strtolower(
+                    trim((string) $match['equipe_home']) . '|' . trim((string) $match['equipe_away'])
+                );
+                $game = $indexByTeams[$key] ?? null;
+            }
+            if ($game === null) {
+                continue;
+            }
+
+            $scores = extractMatchScores(
+                $game['scores'] ?? null,
+                (string) $match['equipe_home'],
+                (string) $match['equipe_away']
+            );
+            if ($scores === null) {
+                continue;
+            }
+
+            try {
+                applyManualMatchScore(
+                    $pdo,
+                    (int) $match['id'],
+                    (int) $scores['home'],
+                    (int) $scores['away'],
+                    null
+                );
+                $out['recovered']++;
+            } catch (Throwable $e) {
+                // Score impossible (sport sans nul, etc.) : on laisse en reporté.
+            }
+        }
+    }
+
+    return $out;
+}
+
+/**
+ * Filet de sécurité après RESULT_MAX_WAIT_DAYS sans score API :
+ * - match AVEC pronos en attente → « reporte » (visible joueur + admin)
+ * - match SANS aucun prono → « annule » silencieux (pas de pollution admin)
+ * Dernière chance /scores avant bascule (uniquement matchs avec pronos).
  */
 function voidStalePredictions(PDO $pdo): int
 {
@@ -1475,6 +1608,7 @@ function voidStalePredictions(PDO $pdo): int
 
     $now     = matchSqlNow();
     $maxWait = (int) RESULT_MAX_WAIT_DAYS;
+    $catchup = (int) SCORES_CATCHUP_DAYS;
 
     $detailStmt = $pdo->query(
         "SELECT p.id, p.user_id, u.pseudo, u.email,
@@ -1490,36 +1624,125 @@ function voidStalePredictions(PDO $pdo): int
            AND m.statut NOT IN ('annule', 'reporte')
          ORDER BY u.pseudo ASC, m.date_match ASC"
     );
-    $rows = $detailStmt->fetchAll();
+    $rows = $detailStmt->fetchAll() ?: [];
 
-    $matchStmt = $pdo->query(
-        "SELECT m.id
+    $withPendingStmt = $pdo->query(
+        "SELECT DISTINCT m.id
          FROM matches m
+         INNER JOIN prediction_markets pm ON pm.match_id = m.id
+         INNER JOIN predictions p ON p.market_id = pm.id AND p.statut = 'en_attente'
          WHERE m.date_match < DATE_SUB({$now}, INTERVAL {$maxWait} DAY)
            AND (m.resultat_1x2 IS NULL OR m.resultat_1x2 = '')
            AND m.statut NOT IN ('annule', 'reporte')
          ORDER BY m.date_match ASC
          LIMIT 80"
     );
-    $matchIds = array_map('intval', $matchStmt->fetchAll(PDO::FETCH_COLUMN) ?: []);
+    $withPendingIds = array_map('intval', $withPendingStmt->fetchAll(PDO::FETCH_COLUMN) ?: []);
 
-    if ($matchIds === [] && $rows === []) {
+    $orphanStmt = $pdo->query(
+        "SELECT m.id
+         FROM matches m
+         WHERE m.date_match < DATE_SUB({$now}, INTERVAL {$maxWait} DAY)
+           AND (m.resultat_1x2 IS NULL OR m.resultat_1x2 = '')
+           AND m.statut NOT IN ('annule', 'reporte', 'termine')
+           AND NOT EXISTS (
+                SELECT 1 FROM prediction_markets pm
+                INNER JOIN predictions p ON p.market_id = pm.id
+                WHERE pm.match_id = m.id
+           )
+         ORDER BY m.date_match ASC
+         LIMIT 120"
+    );
+    $orphanIds = array_map('intval', $orphanStmt->fetchAll(PDO::FETCH_COLUMN) ?: []);
+
+    if ($withPendingIds === [] && $orphanIds === [] && $rows === []) {
         return 0;
     }
 
+    $candidateIds = $withPendingIds;
+    if ($candidateIds !== [] && oddsApiConfigured() && oddsQuotaAllows('scores')) {
+        $ph = implode(',', array_fill(0, count($candidateIds), '?'));
+        $sportQ = $pdo->prepare(
+            "SELECT DISTINCT sport FROM matches WHERE id IN ($ph) AND sport <> ''"
+        );
+        $sportQ->execute($candidateIds);
+        $sports = $sportQ->fetchAll(PDO::FETCH_COLUMN) ?: [];
+        $passes = 0;
+        foreach ($sports as $sportKey) {
+            if ($passes >= 3 || !oddsQuotaAllows('scores')) {
+                break;
+            }
+            $sportKey = (string) $sportKey;
+            $games = oddsFetchScores($sportKey, $catchup, true);
+            $passes++;
+            foreach ($games as $game) {
+                if (!is_array($game) || empty($game['completed']) || empty($game['id'])) {
+                    continue;
+                }
+                $byExt = $pdo->prepare(
+                    'SELECT * FROM matches WHERE external_id = ? AND (resultat_1x2 IS NULL OR resultat_1x2 = "")'
+                );
+                $byExt->execute([$game['id']]);
+                $match = $byExt->fetch() ?: null;
+                if (!$match || !in_array((int) $match['id'], $candidateIds, true)) {
+                    continue;
+                }
+                $scores = extractMatchScores(
+                    $game['scores'] ?? null,
+                    (string) $match['equipe_home'],
+                    (string) $match['equipe_away']
+                );
+                $result1x2 = $scores === null
+                    ? null
+                    : result1x2FromScores($scores['home'], $scores['away'], matchHasDraw($match['sport']));
+                if ($scores === null || $result1x2 === null) {
+                    continue;
+                }
+                $pdo->prepare(
+                    'UPDATE matches SET statut = "termine", resultat_1x2 = ?, score_home = ?, score_away = ?
+                     WHERE id = ?'
+                )->execute([$result1x2, $scores['home'], $scores['away'], $match['id']]);
+                scoreMatch($pdo, (int) $match['id']);
+            }
+        }
+
+        $withPendingStmt = $pdo->query(
+            "SELECT DISTINCT m.id
+             FROM matches m
+             INNER JOIN prediction_markets pm ON pm.match_id = m.id
+             INNER JOIN predictions p ON p.market_id = pm.id AND p.statut = 'en_attente'
+             WHERE m.date_match < DATE_SUB({$now}, INTERVAL {$maxWait} DAY)
+               AND (m.resultat_1x2 IS NULL OR m.resultat_1x2 = '')
+               AND m.statut NOT IN ('annule', 'reporte')
+             ORDER BY m.date_match ASC
+             LIMIT 80"
+        );
+        $withPendingIds = array_map('intval', $withPendingStmt->fetchAll(PDO::FETCH_COLUMN) ?: []);
+    }
+
     $voided = 0;
-    foreach ($matchIds as $matchId) {
+    foreach ($withPendingIds as $matchId) {
         if ($matchId <= 0) {
             continue;
         }
         try {
             $voided += postponeMatch($pdo, $matchId, null);
         } catch (Throwable $e) {
-            // Match déjà clôturé / score arrivé entre-temps : on continue.
+            // Match déjà clôturé / score arrivé entre-temps.
         }
     }
 
-    // Pronos orphelins encore en_attente sur un match déjà reporté/annulé.
+    foreach ($orphanIds as $matchId) {
+        if ($matchId <= 0) {
+            continue;
+        }
+        try {
+            cancelMatch($pdo, $matchId);
+        } catch (Throwable $e) {
+            // ignore
+        }
+    }
+
     if ($rows !== []) {
         $ids = [];
         foreach ($rows as $r) {
@@ -1536,17 +1759,74 @@ function voidStalePredictions(PDO $pdo): int
             $stmt->execute($ids);
             $voided += $stmt->rowCount();
         }
-    }
-
-    if ($rows !== [] && function_exists('notifyAdminUnavailableResults')) {
-        try {
-            notifyAdminUnavailableResults($rows);
-        } catch (Throwable $e) {
-            // Ne pas faire échouer la résolution si le mail tombe.
+        if (function_exists('notifyAdminUnavailableResults')) {
+            try {
+                notifyAdminUnavailableResults($rows);
+            } catch (Throwable $e) {
+                // ignore
+            }
         }
     }
 
     return $voided;
+}
+
+/**
+ * Reportés sans aucune ligne predictions → hors file (statut annule).
+ */
+function dismissPostponedMatchesWithoutPredictions(PDO $pdo): int
+{
+    ensureMatchStatutSchema($pdo);
+    $stmt = $pdo->query(
+        "SELECT m.id
+         FROM matches m
+         WHERE m.statut = 'reporte'
+           AND (m.resultat_1x2 IS NULL OR m.resultat_1x2 = '')
+           AND NOT EXISTS (
+                SELECT 1 FROM prediction_markets pm
+                INNER JOIN predictions p ON p.market_id = pm.id
+                WHERE pm.match_id = m.id
+           )
+         LIMIT 300"
+    );
+    $ids = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN) ?: []);
+    if ($ids === []) {
+        return 0;
+    }
+    $ph = implode(',', array_fill(0, count($ids), '?'));
+    $upd = $pdo->prepare(
+        "UPDATE matches
+         SET statut = 'annule', score_home = NULL, score_away = NULL
+         WHERE id IN ($ph) AND statut = 'reporte'"
+    );
+    $upd->execute($ids);
+    return $upd->rowCount();
+}
+
+/**
+ * Réactive les matchs « reporté » dont la date est encore dans le futur.
+ */
+function reactivateFuturePostponedMatches(PDO $pdo): int
+{
+    ensureMatchStatutSchema($pdo);
+    $now = matchSqlNow();
+    $stmt = $pdo->query(
+        "SELECT id FROM matches
+         WHERE statut = 'reporte'
+           AND date_match > {$now}
+         LIMIT 100"
+    );
+    $ids = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN) ?: []);
+    $n = 0;
+    foreach ($ids as $id) {
+        try {
+            reactivatePostponedMatch($pdo, $id, null);
+            $n++;
+        } catch (Throwable $e) {
+            // ignore
+        }
+    }
+    return $n;
 }
 
 /**

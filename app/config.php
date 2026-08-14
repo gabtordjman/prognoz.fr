@@ -8,7 +8,7 @@ if (!defined('APP_BOOT')) {
 }
 
 define('APP_NAME', 'Prognoz');
-define('APP_VERSION', '1.0.1');
+define('APP_VERSION', '1.0.2');
 define('APP_BETA', envBool('APP_BETA', false));
 define('APP_MAINTENANCE', envBool('APP_MAINTENANCE', false));
 define('APP_CONTACT_EMAIL', env('APP_CONTACT_EMAIL', 'contact@example.com'));
@@ -189,7 +189,7 @@ define('SCORES_CATCHUP_DAYS', 3); // daysFrom (toujours 2 crédits ; 1 ou 3 = m�
 define('MATCH_RESULT_READY_MINUTES', 150); // délai avant d'interroger /scores (match réellement fini)
 define('SCORES_MAX_SPORTS_PER_RUN', 1); // 1 ligue / passe (= 2 crédits) — la plus urgente seulement
 define('SCORES_MAX_SPORTS_LOW_QUOTA', 1);
-define('RESULT_MAX_WAIT_DAYS', 4); // au-delà, prono sans résultat API = annulé (0 pt, pas de blocage)
+define('RESULT_MAX_WAIT_DAYS', 3); // aligné sur SCORES_CATCHUP_DAYS (fenêtre API /scores)
 define('PENDING_SCORE_INTERVAL_SECONDS', 120); // rattrapage points sur page web : max 1× / 2 min
 define('MATCH_CLOSE_AFTER_MINUTES', 30); // match retiré de l'affichage après coup d'envoi + délai
 define('ODDS_SYNC_INTERVAL_SECONDS', 21600); // cotes : max 1 sync auto / 6 h (jamais en cron)
