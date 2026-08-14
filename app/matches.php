@@ -1464,16 +1464,18 @@ function syncMatchScores(PDO $pdo, ?int $daysFrom = null, ?int $maxSports = null
 }
 
 /**
- * Filet de sécurité : un match sans résultat API après RESULT_MAX_WAIT_DAYS
- * ne doit pas laisser des pronos bloqués en « en_attente » indéfiniment.
- * Envoie aussi un e-mail admin (utilisateurs + matchs concernés).
+ * Filet de sécurité : match sans résultat API après RESULT_MAX_WAIT_DAYS
+ * → statut « reporte » + pronos en attente à 0 pt (visible « Match reporté »).
+ * Évite la file admin manuelle. E-mail admin si des joueurs sont concernés.
  */
 function voidStalePredictions(PDO $pdo): int
 {
     ensurePredictionHistorySchema($pdo);
+    ensureMatchStatutSchema($pdo);
 
     $now     = matchSqlNow();
     $maxWait = (int) RESULT_MAX_WAIT_DAYS;
+
     $detailStmt = $pdo->query(
         "SELECT p.id, p.user_id, u.pseudo, u.email,
                 m.id AS match_id, m.equipe_home, m.equipe_away, m.competition,
@@ -1485,22 +1487,58 @@ function voidStalePredictions(PDO $pdo): int
          WHERE p.statut = 'en_attente'
            AND m.date_match < DATE_SUB({$now}, INTERVAL {$maxWait} DAY)
            AND (m.resultat_1x2 IS NULL OR m.resultat_1x2 = '')
+           AND m.statut NOT IN ('annule', 'reporte')
          ORDER BY u.pseudo ASC, m.date_match ASC"
     );
     $rows = $detailStmt->fetchAll();
-    if (empty($rows)) {
+
+    $matchStmt = $pdo->query(
+        "SELECT m.id
+         FROM matches m
+         WHERE m.date_match < DATE_SUB({$now}, INTERVAL {$maxWait} DAY)
+           AND (m.resultat_1x2 IS NULL OR m.resultat_1x2 = '')
+           AND m.statut NOT IN ('annule', 'reporte')
+         ORDER BY m.date_match ASC
+         LIMIT 80"
+    );
+    $matchIds = array_map('intval', $matchStmt->fetchAll(PDO::FETCH_COLUMN) ?: []);
+
+    if ($matchIds === [] && $rows === []) {
         return 0;
     }
 
-    $ids = array_values(array_unique(array_map(static fn ($r) => (int) $r['id'], $rows)));
-    $placeholders = implode(',', array_fill(0, count($ids), '?'));
-    $pdo->prepare(
-        "UPDATE predictions
-         SET statut = 'annule', points_gagnes = 0, resolved_at = UTC_TIMESTAMP()
-         WHERE id IN ($placeholders)"
-    )->execute($ids);
+    $voided = 0;
+    foreach ($matchIds as $matchId) {
+        if ($matchId <= 0) {
+            continue;
+        }
+        try {
+            $voided += postponeMatch($pdo, $matchId, null);
+        } catch (Throwable $e) {
+            // Match déjà clôturé / score arrivé entre-temps : on continue.
+        }
+    }
 
-    if (function_exists('notifyAdminUnavailableResults')) {
+    // Pronos orphelins encore en_attente sur un match déjà reporté/annulé.
+    if ($rows !== []) {
+        $ids = [];
+        foreach ($rows as $r) {
+            $ids[(int) ($r['id'] ?? 0)] = true;
+        }
+        $ids = array_values(array_filter(array_keys($ids)));
+        if ($ids !== []) {
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $stmt = $pdo->prepare(
+                "UPDATE predictions
+                 SET statut = 'annule', points_gagnes = 0, resolved_at = UTC_TIMESTAMP()
+                 WHERE id IN ($placeholders) AND statut = 'en_attente'"
+            );
+            $stmt->execute($ids);
+            $voided += $stmt->rowCount();
+        }
+    }
+
+    if ($rows !== [] && function_exists('notifyAdminUnavailableResults')) {
         try {
             notifyAdminUnavailableResults($rows);
         } catch (Throwable $e) {
@@ -1508,7 +1546,7 @@ function voidStalePredictions(PDO $pdo): int
         }
     }
 
-    return count($ids);
+    return $voided;
 }
 
 /**

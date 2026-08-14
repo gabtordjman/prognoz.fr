@@ -24,7 +24,7 @@ function assert_eq($label, $got, $expected) {
     }
 }
 
-assert_eq('version', APP_VERSION, '1.0.0');
+assert_eq('version', APP_VERSION, '1.0.1');
 assert_eq('pretty login', prettyPublicPath('auth/login.php'), 'auth/login');
 assert_eq('pretty login qs', prettyPublicPath('auth/login.php?redirect=index.php'), 'auth/login?redirect=index.php');
 assert_eq('pretty index', prettyPublicPath('index.php'), '');

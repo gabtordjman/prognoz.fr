@@ -3,7 +3,7 @@
 Jeu de pronostics social **100 % gratuit** (foot, basket, tennis) : pas de bookmaker,
 pas d'argent réel. Cumulez des points, créez des communautés privées et défiez vos potes.
 
-**Version : 1.0.0** — base autonome pour la prod (et future app mobile).
+**Version : 1.0.1** — base autonome pour la prod (et future app mobile).
 
 Site : [prognoz.fr](https://www.prognoz.fr)
 
@@ -117,8 +117,10 @@ Sans cron, les pages du site déclenchent la résolution en tâche de fond (appe
 `/api/sync?mode=light`, throttlé côté serveur). Le cron reste préférable :
 les résultats tombent même quand personne n'est connecté.
 
-Un match sans résultat côté API après `RESULT_MAX_WAIT_DAYS` (4 jours) voit ses pronos
-passer en `annule` (0 pt) — cela évite des pronos bloqués en `en_attente` indéfiniment.
+Un match sans résultat côté API après `RESULT_MAX_WAIT_DAYS` (4 jours) est passé
+automatiquement en **reporté** : les joueurs voient « Match reporté » (0 pt),
+la file admin se vide. Un e-mail admin résume les cas. Tu peux encore saisir un
+score plus tard dans **Admin → Reportés**.
 
 ### Diagnostic des pronos bloqués
 

@@ -79,17 +79,17 @@ function notifyAdminUnavailableResults(array $rows): bool
     $matchCount = count(array_filter(array_keys($matchIds)));
 
     $textLines = [
-        'Alerte Prognoz — résultats indisponibles',
+        'Alerte Prognoz — matchs reportés automatiquement',
         '',
         sprintf(
-            '%d prono(s) passés en « Annulé (données indisponibles) » concernant %d joueur(s) et %d match(s).',
+            '%d prono(s) concernés (%d joueur(s), %d match(s)) : délai dépassé sans résultat API.',
             $predCount,
             $userCount,
             $matchCount
         ),
-        'Délai dépassé sans résultat API (RESULT_MAX_WAIT_DAYS).',
+        'Les matchs sont passés en « reporté » (0 pt, visible joueur). RESULT_MAX_WAIT_DAYS.',
         '',
-        'Corriger : panel admin → Résultats & scores manuels.',
+        'Info : panel admin → Résultats (section Reportés) si tu veux resaisir un score plus tard.',
         '',
     ];
 
@@ -97,8 +97,8 @@ function notifyAdminUnavailableResults(array $rows): bool
         '<p style="margin:0 0 12px;">'
         . htmlspecialchars(
             sprintf(
-                '%d prono(s) viennent d’être passés en « Annulé (données indisponibles) » '
-                . '(%d joueur(s), %d match(s)).',
+                '%d prono(s) viennent d’être liés à un match reporté automatiquement '
+                . '(%d joueur(s), %d match(s) — délai sans résultat API).',
                 $predCount,
                 $userCount,
                 $matchCount
@@ -108,7 +108,8 @@ function notifyAdminUnavailableResults(array $rows): bool
         )
         . '</p>',
         '<p style="margin:0 0 16px;color:#5c5345;font-size:14px;">'
-        . 'Aucun résultat API après le délai max. Saisissez le score à la main pour attribuer les points.</p>',
+        . 'Les joueurs voient « Match reporté » (0 pt). Tu peux encore saisir un score '
+        . 'dans la section Reportés si le résultat arrive plus tard.</p>',
     ];
 
     foreach ($byUser as $u) {
@@ -141,18 +142,18 @@ function notifyAdminUnavailableResults(array $rows): bool
     }
 
     $subject = sprintf(
-        '[Prognoz] %d résultat(s) indisponible(s) — %d joueur(s)',
+        '[Prognoz] %d match(s) reporté(s) auto — %d joueur(s)',
         $matchCount,
         $userCount
     );
     $bodyText = implode("\n", $textLines);
     $html = renderAppMailHtml([
-        'title'       => 'Résultats indisponibles',
-        'preheader'   => sprintf('%d match(s) sans données API à corriger.', $matchCount),
+        'title'       => 'Matchs reportés automatiquement',
+        'preheader'   => sprintf('%d match(s) sans résultat API après délai.', $matchCount),
         'greeting'    => 'Alerte administration',
         'body_html'   => implode('', $htmlParts),
-        'cta_url'     => absoluteUrl('admin/scores.php') . '#donnees-indisponibles',
-        'cta_label'   => 'Corriger dans l’admin',
+        'cta_url'     => absoluteUrl('admin/scores.php') . '#reportes',
+        'cta_label'   => 'Voir les reportés',
         'footer_note' => 'E-mail automatique Prognoz · ' . adminNotifyEmail(),
     ]);
 

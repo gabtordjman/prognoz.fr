@@ -1064,7 +1064,9 @@ button.pill-points-btn:active {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 0.15rem;
+    min-height: 3.15rem;
     box-shadow: none;
     transition:
         background var(--dur-fast) ease,
@@ -1079,9 +1081,21 @@ button.pill-points-btn:active {
     font-weight: 700;
     color: var(--green);
     line-height: 1;
+    min-height: 0.75rem;
+}
+
+.pick-prob--empty {
+    color: var(--muted);
+    opacity: 0.45;
+    font-weight: 600;
+}
+
+.pick-btn--no-prob .pick-val {
+    letter-spacing: 0.02em;
 }
 
 .pick-btn.selected .pick-prob { color: rgba(255, 255, 255, 0.88); }
+.pick-btn.selected .pick-prob--empty { color: rgba(255, 255, 255, 0.55); }
 
 .pick-btn:hover, .score-btn:hover {
     border-color: var(--green-light);

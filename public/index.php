@@ -254,10 +254,12 @@ releaseSession();
                                 foreach ($pickChoices as $val => $lbl):
                                     $probVal = $m[$probCols[$val]] ?? null;
                                 ?>
-                                <button type="button" class="pick-btn<?= $choix1x2 === $val ? ' selected' : '' ?>" data-pick="<?= e($val) ?>">
+                                <button type="button" class="pick-btn<?= $choix1x2 === $val ? ' selected' : '' ?><?= $probVal === null ? ' pick-btn--no-prob' : '' ?>" data-pick="<?= e($val) ?>">
                                     <span class="pick-val"><?= e($lbl) ?></span>
                                     <?php if ($probVal !== null): ?>
                                     <span class="pick-prob"><?= (float) $probVal ?>%</span>
+                                    <?php else: ?>
+                                    <span class="pick-prob pick-prob--empty" aria-hidden="true">—</span>
                                     <?php endif; ?>
                                 </button>
                                 <?php endforeach; ?>
