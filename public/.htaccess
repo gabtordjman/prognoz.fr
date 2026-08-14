@@ -1,0 +1,56 @@
+# Prognoz v1.0 — sécurité Apache + URLs sans .php
+Options -Indexes
+DirectoryIndex index.php index.html
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # robots.txt / sitemap.xml (avant toute autre règle)
+    RewriteRule ^robots\.txt$ robots.php [L]
+    RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
+    # GET/HEAD : *.php → 301 URL propre via THE_REQUEST (portable sous-dossier / prod)
+    # POST sur *.php : fichier réel servi (évite de casser la méthode HTTP)
+    RewriteCond %{ENV:REDIRECT_STATUS} ^$
+    RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$ [NC]
+    RewriteCond %{THE_REQUEST} \s/+((?:[^?\s]*?/)?)index\.php[\s?] [NC]
+    RewriteRule ^index\.php$ /%1 [R=301,L,QSA,NE]
+
+    RewriteCond %{ENV:REDIRECT_STATUS} ^$
+    RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$ [NC]
+    RewriteCond %{THE_REQUEST} \s/+(.+?)\.php[\s?] [NC]
+    RewriteRule ^.+\.php$ /%1 [R=301,L,QSA,NE]
+
+    # URL propre → fichier .php (si le fichier existe)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}.php -f
+    RewriteRule ^(.*)$ $1.php [L]
+
+    # 404 portable (sous-dossier XAMPP ou DocumentRoot = public/)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} !404\.php$
+    RewriteRule . 404.php [L]
+</IfModule>
+
+# Headers de base (si mod_headers dispo)
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Upload photo de profil (compressée ensuite côté PHP)
+<IfModule mod_php.c>
+    php_value upload_max_filesize 5M
+    php_value post_max_size 8M
+</IfModule>
+<IfModule mod_php7.c>
+    php_value upload_max_filesize 5M
+    php_value post_max_size 8M
+</IfModule>
+<IfModule mod_php8.c>
+    php_value upload_max_filesize 5M
+    php_value post_max_size 8M
+</IfModule>

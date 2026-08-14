@@ -1,0 +1,12 @@
+.env
+vendor/
+composer.phar
+composer-setup.php
+var/cache/*
+!var/cache/.gitkeep
+var/cache/rate_limit/*
+app/cache/*
+!app/cache/README.md
+tools/admin_console/__pycache__/
+tools/admin_console/.venv/
+tools/admin_console/.env.local

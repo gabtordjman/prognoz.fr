@@ -1,0 +1,10 @@
+# Pas de listage du dossier API
+Options -Indexes
+DirectoryIndex disabled
+
+# Si quelqu'un ouvre /api/ sans fichier → 403
+<IfModule mod_authz_core.c>
+    <FilesMatch "^\.">
+        Require all denied
+    </FilesMatch>
+</IfModule>

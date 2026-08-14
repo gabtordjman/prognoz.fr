@@ -1,0 +1,116 @@
+"filename", "language", "MS SQL", "JSON with Comments", "Markdown", "Python", "Dotenv", "PHP", "JSON", "XML", "JavaScript", "PostCSS", "comment", "blank", "total"
+"/home/tordjman/Documents/prognoz.fr/.cursor/settings.json", "JSON with Comments", 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 8
+"/home/tordjman/Documents/prognoz.fr/README.md", "Markdown", 0, 0, 118, 0, 0, 0, 0, 0, 0, 0, 0, 43, 161
+"/home/tordjman/Documents/prognoz.fr/app/admin_auth.php", "PHP", 0, 0, 0, 0, 0, 147, 0, 0, 0, 0, 13, 27, 187
+"/home/tordjman/Documents/prognoz.fr/app/admin_layout.php", "PHP", 0, 0, 0, 0, 0, 101, 0, 0, 0, 0, 3, 4, 108
+"/home/tordjman/Documents/prognoz.fr/app/auth.php", "PHP", 0, 0, 0, 0, 0, 292, 0, 0, 0, 0, 17, 48, 357
+"/home/tordjman/Documents/prognoz.fr/app/badges.php", "PHP", 0, 0, 0, 0, 0, 154, 0, 0, 0, 0, 7, 14, 175
+"/home/tordjman/Documents/prognoz.fr/app/bootstrap.php", "PHP", 0, 0, 0, 0, 0, 45, 0, 0, 0, 0, 7, 6, 58
+"/home/tordjman/Documents/prognoz.fr/app/communities.php", "PHP", 0, 0, 0, 0, 0, 35, 0, 0, 0, 0, 2, 7, 44
+"/home/tordjman/Documents/prognoz.fr/app/config.php", "PHP", 0, 0, 0, 0, 0, 176, 0, 0, 0, 0, 23, 18, 217
+"/home/tordjman/Documents/prognoz.fr/app/db.php", "PHP", 0, 0, 0, 0, 0, 25, 0, 0, 0, 0, 0, 2, 27
+"/home/tordjman/Documents/prognoz.fr/app/encryption.php", "PHP", 0, 0, 0, 0, 0, 176, 0, 0, 0, 0, 3, 30, 209
+"/home/tordjman/Documents/prognoz.fr/app/env.php", "PHP", 0, 0, 0, 0, 0, 52, 0, 0, 0, 0, 1, 6, 59
+"/home/tordjman/Documents/prognoz.fr/app/friends.php", "PHP", 0, 0, 0, 0, 0, 167, 0, 0, 0, 0, 8, 26, 201
+"/home/tordjman/Documents/prognoz.fr/app/helpers.php", "PHP", 0, 0, 0, 0, 0, 262, 0, 0, 0, 0, 26, 50, 338
+"/home/tordjman/Documents/prognoz.fr/app/layout.php", "PHP", 0, 0, 0, 0, 0, 489, 0, 0, 0, 0, 2, 19, 510
+"/home/tordjman/Documents/prognoz.fr/app/mail.php", "PHP", 0, 0, 0, 0, 0, 245, 0, 0, 0, 0, 7, 44, 296
+"/home/tordjman/Documents/prognoz.fr/app/maintenance.php", "PHP", 0, 0, 0, 0, 0, 69, 0, 0, 0, 0, 2, 10, 81
+"/home/tordjman/Documents/prognoz.fr/app/matches.php", "PHP", 0, 0, 0, 0, 0, 1756, 0, 0, 0, 0, 133, 261, 2150
+"/home/tordjman/Documents/prognoz.fr/app/notifications.php", "PHP", 0, 0, 0, 0, 0, 77, 0, 0, 0, 0, 7, 14, 98
+"/home/tordjman/Documents/prognoz.fr/app/odds_api.php", "PHP", 0, 0, 0, 0, 0, 649, 0, 0, 0, 0, 86, 111, 846
+"/home/tordjman/Documents/prognoz.fr/app/profile.php", "PHP", 0, 0, 0, 0, 0, 60, 0, 0, 0, 0, 10, 7, 77
+"/home/tordjman/Documents/prognoz.fr/app/push.php", "PHP", 0, 0, 0, 0, 0, 226, 0, 0, 0, 0, 4, 39, 269
+"/home/tordjman/Documents/prognoz.fr/app/routes.php", "PHP", 0, 0, 0, 0, 0, 21, 0, 0, 0, 0, 3, 5, 29
+"/home/tordjman/Documents/prognoz.fr/app/scoring.php", "PHP", 0, 0, 0, 0, 0, 159, 0, 0, 0, 0, 15, 24, 198
+"/home/tordjman/Documents/prognoz.fr/app/seasons.php", "PHP", 0, 0, 0, 0, 0, 383, 0, 0, 0, 0, 25, 63, 471
+"/home/tordjman/Documents/prognoz.fr/app/seo.php", "PHP", 0, 0, 0, 0, 0, 185, 0, 0, 0, 0, 3, 18, 206
+"/home/tordjman/Documents/prognoz.fr/app/user_predictions.php", "PHP", 0, 0, 0, 0, 0, 197, 0, 0, 0, 0, 5, 21, 223
+"/home/tordjman/Documents/prognoz.fr/composer.json", "JSON", 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 1, 10
+"/home/tordjman/Documents/prognoz.fr/composer.lock", "JSON", 0, 0, 0, 0, 0, 0, 1228, 0, 0, 0, 0, 1, 1229
+"/home/tordjman/Documents/prognoz.fr/db/migrations/001_match_probabilities.sql", "MS SQL", 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 6
+"/home/tordjman/Documents/prognoz.fr/db/migrations/002_encryption.sql", "MS SQL", 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 14
+"/home/tordjman/Documents/prognoz.fr/db/migrations/003_features.sql", "MS SQL", 57, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 67
+"/home/tordjman/Documents/prognoz.fr/db/migrations/003_sport_column.sql", "MS SQL", 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 3
+"/home/tordjman/Documents/prognoz.fr/db/migrations/004_profile_changes.sql", "MS SQL", 31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 35
+"/home/tordjman/Documents/prognoz.fr/db/migrations/005_seasons.sql", "MS SQL", 49, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 10, 67
+"/home/tordjman/Documents/prognoz.fr/db/migrations/006_push_subscriptions.sql", "MS SQL", 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 14
+"/home/tordjman/Documents/prognoz.fr/migrations/001_match_probabilities.sql", "MS SQL", 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 6
+"/home/tordjman/Documents/prognoz.fr/public/404.php", "PHP", 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 2, 12
+"/home/tordjman/Documents/prognoz.fr/public/account/dashboard.php", "PHP", 0, 0, 0, 0, 0, 200, 0, 0, 0, 0, 0, 17, 217
+"/home/tordjman/Documents/prognoz.fr/public/account/friends.php", "PHP", 0, 0, 0, 0, 0, 150, 0, 0, 0, 0, 0, 13, 163
+"/home/tordjman/Documents/prognoz.fr/public/account/profile.php", "PHP", 0, 0, 0, 0, 0, 183, 0, 0, 0, 0, 0, 15, 198
+"/home/tordjman/Documents/prognoz.fr/public/account/settings.php", "PHP", 0, 0, 0, 0, 0, 582, 0, 0, 0, 0, 1, 22, 605
+"/home/tordjman/Documents/prognoz.fr/public/admin/README.md", "Markdown", 0, 0, 26, 0, 0, 0, 0, 0, 0, 0, 0, 12, 38
+"/home/tordjman/Documents/prognoz.fr/public/admin/dashboard.php", "PHP", 0, 0, 0, 0, 0, 76, 0, 0, 0, 0, 0, 6, 82
+"/home/tordjman/Documents/prognoz.fr/public/admin/index.php", "PHP", 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 4, 17
+"/home/tordjman/Documents/prognoz.fr/public/admin/login.php", "PHP", 0, 0, 0, 0, 0, 43, 0, 0, 0, 0, 0, 6, 49
+"/home/tordjman/Documents/prognoz.fr/public/admin/logout.php", "PHP", 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 2, 8
+"/home/tordjman/Documents/prognoz.fr/public/admin/ops.php", "PHP", 0, 0, 0, 0, 0, 122, 0, 0, 0, 0, 0, 6, 128
+"/home/tordjman/Documents/prognoz.fr/public/admin/scores.php", "PHP", 0, 0, 0, 0, 0, 99, 0, 0, 0, 0, 0, 6, 105
+"/home/tordjman/Documents/prognoz.fr/public/admin/users.php", "PHP", 0, 0, 0, 0, 0, 114, 0, 0, 0, 0, 1, 6, 121
+"/home/tordjman/Documents/prognoz.fr/public/api/chat_notifications.php", "PHP", 0, 0, 0, 0, 0, 36, 0, 0, 0, 0, 0, 10, 46
+"/home/tordjman/Documents/prognoz.fr/public/api/fetch_messages.php", "PHP", 0, 0, 0, 0, 0, 45, 0, 0, 0, 0, 0, 9, 54
+"/home/tordjman/Documents/prognoz.fr/public/api/flush_ticket.php", "PHP", 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 1, 4
+"/home/tordjman/Documents/prognoz.fr/public/api/point_notifications.php", "PHP", 0, 0, 0, 0, 0, 39, 0, 0, 0, 0, 0, 11, 50
+"/home/tordjman/Documents/prognoz.fr/public/api/push_subscribe.php", "PHP", 0, 0, 0, 0, 0, 49, 0, 0, 0, 0, 0, 13, 62
+"/home/tordjman/Documents/prognoz.fr/public/api/push_test.php", "PHP", 0, 0, 0, 0, 0, 36, 0, 0, 0, 0, 0, 8, 44
+"/home/tordjman/Documents/prognoz.fr/public/api/push_vapid.php", "PHP", 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 4, 15
+"/home/tordjman/Documents/prognoz.fr/public/api/send_message.php", "PHP", 0, 0, 0, 0, 0, 68, 0, 0, 0, 0, 0, 15, 83
+"/home/tordjman/Documents/prognoz.fr/public/api/submit_prediction.php", "PHP", 0, 0, 0, 0, 0, 57, 0, 0, 0, 0, 0, 11, 68
+"/home/tordjman/Documents/prognoz.fr/public/api/sync.php", "PHP", 0, 0, 0, 0, 0, 190, 0, 0, 0, 0, 16, 24, 230
+"/home/tordjman/Documents/prognoz.fr/public/api/test_mail.php", "PHP", 0, 0, 0, 0, 0, 22, 0, 0, 0, 0, 6, 6, 34
+"/home/tordjman/Documents/prognoz.fr/public/api/validate_ticket.php", "PHP", 0, 0, 0, 0, 0, 47, 0, 0, 0, 0, 0, 11, 58
+"/home/tordjman/Documents/prognoz.fr/public/assets/css/admin.css", "PostCSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 323, 4, 65, 392
+"/home/tordjman/Documents/prognoz.fr/public/assets/css/style.css", "PostCSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 3754, 27, 622, 4403
+"/home/tordjman/Documents/prognoz.fr/public/assets/img/apple-touch-icon.svg", "XML", 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 1, 17
+"/home/tordjman/Documents/prognoz.fr/public/assets/img/favicon.svg", "XML", 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 1, 17
+"/home/tordjman/Documents/prognoz.fr/public/assets/js/chat.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 0, 177, 0, 1, 24, 202
+"/home/tordjman/Documents/prognoz.fr/public/assets/js/match-effects.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 0, 40, 0, 0, 7, 47
+"/home/tordjman/Documents/prognoz.fr/public/assets/js/notifications.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 0, 386, 0, 0, 38, 424
+"/home/tordjman/Documents/prognoz.fr/public/assets/js/point-toast.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 0, 133, 0, 0, 15, 148
+"/home/tordjman/Documents/prognoz.fr/public/assets/js/predictions.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 0, 588, 0, 3, 61, 652
+"/home/tordjman/Documents/prognoz.fr/public/assets/js/site-notifications.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 0, 216, 0, 5, 37, 258
+"/home/tordjman/Documents/prognoz.fr/public/assets/js/theme-time.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 0, 11, 0, 0, 2, 13
+"/home/tordjman/Documents/prognoz.fr/public/auth/forgot-password.php", "PHP", 0, 0, 0, 0, 0, 63, 0, 0, 0, 0, 0, 5, 68
+"/home/tordjman/Documents/prognoz.fr/public/auth/login.php", "PHP", 0, 0, 0, 0, 0, 70, 0, 0, 0, 0, 0, 8, 78
+"/home/tordjman/Documents/prognoz.fr/public/auth/logout.php", "PHP", 0, 0, 0, 0, 0, 38, 0, 0, 0, 0, 0, 5, 43
+"/home/tordjman/Documents/prognoz.fr/public/auth/register.php", "PHP", 0, 0, 0, 0, 0, 95, 0, 0, 0, 0, 0, 9, 104
+"/home/tordjman/Documents/prognoz.fr/public/auth/reset-password.php", "PHP", 0, 0, 0, 0, 0, 70, 0, 0, 0, 0, 0, 5, 75
+"/home/tordjman/Documents/prognoz.fr/public/communities.php", "PHP", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 1, 4
+"/home/tordjman/Documents/prognoz.fr/public/communities/index.php", "PHP", 0, 0, 0, 0, 0, 114, 0, 0, 0, 0, 0, 15, 129
+"/home/tordjman/Documents/prognoz.fr/public/communities/invite.php", "PHP", 0, 0, 0, 0, 0, 114, 0, 0, 0, 0, 0, 16, 130
+"/home/tordjman/Documents/prognoz.fr/public/communities/view.php", "PHP", 0, 0, 0, 0, 0, 304, 0, 0, 0, 0, 1, 29, 334
+"/home/tordjman/Documents/prognoz.fr/public/community.php", "PHP", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 1, 4
+"/home/tordjman/Documents/prognoz.fr/public/confidentialite.php", "PHP", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 1, 4
+"/home/tordjman/Documents/prognoz.fr/public/dashboard.php", "PHP", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 1, 4
+"/home/tordjman/Documents/prognoz.fr/public/index.php", "PHP", 0, 0, 0, 0, 0, 372, 0, 0, 0, 0, 0, 32, 404
+"/home/tordjman/Documents/prognoz.fr/public/invite.php", "PHP", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 1, 4
+"/home/tordjman/Documents/prognoz.fr/public/legal/cgu.php", "PHP", 0, 0, 0, 0, 0, 76, 0, 0, 0, 0, 0, 13, 89
+"/home/tordjman/Documents/prognoz.fr/public/legal/comment-ca-marche.php", "PHP", 0, 0, 0, 0, 0, 48, 0, 0, 0, 0, 0, 6, 54
+"/home/tordjman/Documents/prognoz.fr/public/legal/confidentialite.php", "PHP", 0, 0, 0, 0, 0, 136, 0, 0, 0, 0, 0, 16, 152
+"/home/tordjman/Documents/prognoz.fr/public/login.php", "PHP", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 1, 4
+"/home/tordjman/Documents/prognoz.fr/public/logout.php", "PHP", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 1, 4
+"/home/tordjman/Documents/prognoz.fr/public/maintenance.php", "PHP", 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 4, 20
+"/home/tordjman/Documents/prognoz.fr/public/register.php", "PHP", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 1, 4
+"/home/tordjman/Documents/prognoz.fr/public/robots.php", "PHP", 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 3, 8
+"/home/tordjman/Documents/prognoz.fr/public/sitemap.php", "PHP", 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 3, 8
+"/home/tordjman/Documents/prognoz.fr/public/sw-notifications.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 0, 71, 0, 1, 9, 81
+"/home/tordjman/Documents/prognoz.fr/schema.sql", "MS SQL", 163, 0, 0, 0, 0, 0, 0, 0, 0, 0, 48, 18, 229
+"/home/tordjman/Documents/prognoz.fr/scripts/encrypt_sensitive_data.php", "PHP", 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 7, 9, 58
+"/home/tordjman/Documents/prognoz.fr/sql/migrate_encryption.sql", "MS SQL", 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 5, 18
+"/home/tordjman/Documents/prognoz.fr/tools/admin_console/README.md", "Markdown", 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0, 14, 44
+"/home/tordjman/Documents/prognoz.fr/tools/admin_console/config.example.env", "Dotenv", 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 5, 4, 19
+"/home/tordjman/Documents/prognoz.fr/tools/admin_console/prognoz_admin.py", "Python", 0, 0, 0, 1107, 0, 0, 0, 0, 0, 0, 5, 135, 1247
+"/home/tordjman/Documents/prognoz.fr/tools/admin_console/prognoz_crypto.py", "Python", 0, 0, 0, 26, 0, 0, 0, 0, 0, 0, 0, 11, 37
+"/home/tordjman/Documents/prognoz.fr/tools/admin_console/prognoz_db.py", "Python", 0, 0, 0, 262, 0, 0, 0, 0, 0, 0, 434, 25, 721
+"/home/tordjman/Documents/prognoz.fr/tools/admin_console/prognoz_ops.py", "Python", 0, 0, 0, 125, 0, 0, 0, 0, 0, 0, 19, 16, 160
+"/home/tordjman/Documents/prognoz.fr/tools/diagnose_results.php", "PHP", 0, 0, 0, 0, 0, 106, 0, 0, 0, 0, 6, 10, 122
+"/home/tordjman/Documents/prognoz.fr/tools/generate_admin_credentials.php", "PHP", 0, 0, 0, 0, 0, 37, 0, 0, 0, 0, 5, 9, 51
+"/home/tordjman/Documents/prognoz.fr/tools/generate_vapid.php", "PHP", 0, 0, 0, 0, 0, 76, 0, 0, 0, 0, 5, 13, 94
+"/home/tordjman/Documents/prognoz.fr/tools/ops_terminal.php", "PHP", 0, 0, 0, 0, 0, 309, 0, 0, 0, 0, 11, 23, 343
+"/home/tordjman/Documents/prognoz.fr/tools/prepare_season_reset.php", "PHP", 0, 0, 0, 0, 0, 90, 0, 0, 0, 0, 8, 15, 113
+"/home/tordjman/Documents/prognoz.fr/tools/prune_db.php", "PHP", 0, 0, 0, 0, 0, 20, 0, 0, 0, 0, 4, 3, 27
+"/home/tordjman/Documents/prognoz.fr/tools/resolve_results.php", "PHP", 0, 0, 0, 0, 0, 29, 0, 0, 0, 0, 6, 6, 41
+"/home/tordjman/Documents/prognoz.fr/tools/sync_matches.php", "PHP", 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 4, 7, 43
+"Total", "-", 335, 7, 174, 1520, 10, 10635, 1237, 32, 1622, 4077, 1076, 2569, 23294

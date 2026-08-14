@@ -1,0 +1,544 @@
+<?php
+require __DIR__ . '/../../app/bootstrap.php';
+requireAdminLogin();
+
+$pdo = getPDO();
+$searchResults = [];
+$searchHome = '';
+$searchAway = '';
+$searchSport = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!csrfCheck()) {
+        adminFlash('error', 'Session expirée.');
+        header('Location: ' . url('admin/scores.php'));
+        exit;
+    }
+    $action = (string) ($_POST['action'] ?? '');
+    $anchor = '#saisie';
+    try {
+        if ($action === 'manual_score') {
+            $pens = !empty($_POST['pens']);
+            $pensWinner = null;
+            if ($pens) {
+                $pensWinner = (string) ($_POST['pens_winner'] ?? '');
+                if ($pensWinner !== '1' && $pensWinner !== '2') {
+                    throw new InvalidArgumentException('Tirs au but : choisis le vainqueur.');
+                }
+            }
+            $res = applyManualMatchScore(
+                $pdo,
+                (int) ($_POST['match_id'] ?? 0),
+                (int) ($_POST['score_home'] ?? -1),
+                (int) ($_POST['score_away'] ?? -1),
+                $pensWinner
+            );
+            $msg = 'Score enregistré — points attribués.';
+            if ((int) ($res['rescored'] ?? 0) > 0) {
+                $msg = 'Score enregistré — '
+                    . (int) $res['rescored']
+                    . ' prono(s) recalculé(s).';
+            }
+            adminFlash('success', $msg);
+            $anchor = !empty($_POST['from_postponed']) ? '#reportes' : '#file';
+        } elseif ($action === 'cancel_match') {
+            $n = cancelMatch($pdo, (int) ($_POST['match_id'] ?? 0));
+            adminFlash('success', 'Match annulé — ' . $n . ' prono(s) à 0 pt.');
+            $anchor = '#file';
+        } elseif ($action === 'postpone_match') {
+            $dateRaw = trim((string) ($_POST['new_date'] ?? ''));
+            $newDateUtc = $dateRaw !== '' ? parseAdminMatchDatetime($dateRaw) : null;
+            $n = postponeMatch($pdo, (int) ($_POST['match_id'] ?? 0), $newDateUtc);
+            $msg = 'Match reporté — ' . $n . ' prono(s) à 0 pt (indiqué au joueur).';
+            if ($newDateUtc) {
+                $msg .= ' Nouvelle date enregistrée.';
+            }
+            adminFlash('success', $msg);
+            $anchor = '#reportes';
+        } elseif ($action === 'postpone_set_date') {
+            $dateUtc = parseAdminMatchDatetime((string) ($_POST['new_date'] ?? ''));
+            updatePostponedMatchDate($pdo, (int) ($_POST['match_id'] ?? 0), $dateUtc);
+            adminFlash('success', 'Date du match reporté mise à jour.');
+            $anchor = '#reportes';
+        } elseif ($action === 'postpone_reactivate') {
+            $dateRaw = trim((string) ($_POST['new_date'] ?? ''));
+            $newDateUtc = $dateRaw !== '' ? parseAdminMatchDatetime($dateRaw) : null;
+            $n = reactivatePostponedMatch($pdo, (int) ($_POST['match_id'] ?? 0), $newDateUtc);
+            adminFlash(
+                'success',
+                'Match réactivé (à venir) — ' . $n . ' prono(s) rouvert(s).'
+            );
+            $anchor = '#reportes';
+        } elseif ($action === 'score_local') {
+            $scored = scorePendingFinishedMatches($pdo);
+            adminFlash('success', 'Points locaux : ' . $scored . ' match(s) traités.');
+            $anchor = '#points-locaux';
+        } elseif ($action === 'search_teams') {
+            $searchHome = trim((string) ($_POST['team_home'] ?? ''));
+            $searchAway = trim((string) ($_POST['team_away'] ?? ''));
+            $searchSport = (string) ($_POST['sport'] ?? '');
+            if (!in_array($searchSport, ['', 'soccer', 'basketball', 'tennis'], true)) {
+                $searchSport = '';
+            }
+            if ($searchHome === '' && $searchAway === '' && $searchSport === '') {
+                adminFlash('error', 'Indique un sport et/ou au moins un nom d’équipe.');
+                header('Location: ' . url('admin/scores.php') . '#saisie');
+                exit;
+            }
+            $searchResults = searchMatchesForManualScore($pdo, $searchHome, $searchAway, 25, $searchSport);
+            if ($searchResults === []) {
+                adminFlash('error', 'Aucun match trouvé.');
+            }
+            $anchor = '#saisie';
+        } else {
+            header('Location: ' . url('admin/scores.php'));
+            exit;
+        }
+        if ($action !== 'search_teams') {
+            header('Location: ' . url('admin/scores.php') . $anchor);
+            exit;
+        }
+    } catch (InvalidArgumentException $e) {
+        adminFlash('error', $e->getMessage());
+        header('Location: ' . url('admin/scores.php') . '#saisie');
+        exit;
+    } catch (Throwable $e) {
+        adminFlash('error', 'Erreur technique.');
+        header('Location: ' . url('admin/scores.php'));
+        exit;
+    }
+}
+
+$needScore = listStuckMatchesForManualScore($pdo, 40);
+$needPoints = listMatchesAwaitingLocalScore($pdo, 40);
+$voidedMatches = listVoidedMatchesForManualScore($pdo, 40);
+$postponedMatches = listPostponedMatchesForAdmin($pdo, 80);
+
+$predMatchIds = array_values(array_unique(array_merge(
+    array_map(static fn ($m) => (int) $m['id'], $needScore),
+    array_map(static fn ($m) => (int) $m['id'], $voidedMatches),
+    array_map(static fn ($m) => (int) $m['id'], $postponedMatches),
+    array_map(static fn ($m) => (int) $m['id'], $needPoints),
+    array_map(static fn ($m) => (int) $m['id'], $searchResults)
+)));
+$predsByMatch = fetchAdminMatchPredictions($pdo, $predMatchIds);
+
+/**
+ * @param array<string,mixed> $m
+ */
+function adminRenderScoreForm(array $m, bool $fromPostponed = false): void
+{
+    $id = (int) $m['id'];
+    $home = (string) ($m['equipe_home'] ?? 'Domicile');
+    $away = (string) ($m['equipe_away'] ?? 'Extérieur');
+    $isSoccer = sportCategory((string) ($m['sport'] ?? '')) === 'soccer';
+    ?>
+    <form method="post" class="ops-score-form">
+        <?= csrfField() ?>
+        <input type="hidden" name="action" value="manual_score">
+        <input type="hidden" name="match_id" value="<?= $id ?>">
+        <?php if ($fromPostponed): ?>
+        <input type="hidden" name="from_postponed" value="1">
+        <?php endif; ?>
+        <div class="ops-score-line">
+            <div class="ops-score-inputs">
+                <label class="ops-score-team">
+                    <span class="ops-score-team-name" title="<?= e($home) ?>"><?= e($home) ?></span>
+                    <input class="ops-input ops-input-score" type="number" name="score_home" min="0" max="300" required placeholder="0">
+                </label>
+                <span class="ops-score-sep" aria-hidden="true">–</span>
+                <label class="ops-score-team">
+                    <span class="ops-score-team-name" title="<?= e($away) ?>"><?= e($away) ?></span>
+                    <input class="ops-input ops-input-score" type="number" name="score_away" min="0" max="300" required placeholder="0">
+                </label>
+            </div>
+            <button type="submit" class="ops-btn ops-btn-primary ops-btn-sm ops-score-submit">OK</button>
+        </div>
+        <?php if ($isSoccer): ?>
+        <div class="ops-pens-row">
+            <label class="ops-check ops-pens-check">
+                <input type="checkbox" name="pens" value="1" class="ops-pens-toggle" data-pens-for="<?= $id ?>">
+                <span>TAB</span>
+            </label>
+            <select class="ops-select ops-pens-winner" name="pens_winner" data-pens-select="<?= $id ?>" disabled>
+                <option value="">Vainqueur…</option>
+                <option value="1"><?= e($home) ?></option>
+                <option value="2"><?= e($away) ?></option>
+            </select>
+        </div>
+        <?php endif; ?>
+    </form>
+    <?php
+}
+
+/**
+ * @param array<string,mixed> $m
+ */
+function adminRenderPostponeControls(array $m): void
+{
+    $id = (int) $m['id'];
+    $dateVal = matchDatetimeLocalValue((string) ($m['date_match'] ?? ''));
+    ?>
+    <div class="ops-postpone-box">
+        <form method="post" class="ops-postpone-form" onsubmit="return confirm('Marquer ce match comme reporté ? Les joueurs verront « Match reporté » (0 pt).');">
+            <?= csrfField() ?>
+            <input type="hidden" name="action" value="postpone_match">
+            <input type="hidden" name="match_id" value="<?= $id ?>">
+            <label class="ops-postpone-date">
+                <span>Nouvelle date (opt.)</span>
+                <input class="ops-input ops-input-datetime" type="datetime-local" name="new_date" value="<?= e($dateVal) ?>">
+            </label>
+            <div class="ops-postpone-actions">
+                <button type="submit" class="ops-btn ops-btn-sm">Reporté</button>
+            </div>
+        </form>
+        <form method="post" class="ops-postpone-cancel" onsubmit="return confirm('Match vraiment annulé ? Pronos → 0 pt.');">
+            <?= csrfField() ?>
+            <input type="hidden" name="action" value="cancel_match">
+            <input type="hidden" name="match_id" value="<?= $id ?>">
+            <button type="submit" class="ops-btn ops-btn-danger ops-btn-sm">Annulé</button>
+        </form>
+    </div>
+    <?php
+}
+
+/**
+ * @param list<array<string,mixed>> $preds
+ */
+function adminRenderMatchPredictors(array $preds): void
+{
+    if ($preds === []) {
+        echo '<span class="ops-muted">—</span>';
+        return;
+    }
+    $byUser = [];
+    foreach ($preds as $p) {
+        $uid = (int) ($p['user_id'] ?? 0);
+        $pseudo = (string) ($p['pseudo'] ?? '?');
+        if (!isset($byUser[$uid])) {
+            $byUser[$uid] = [
+                'pseudo' => $pseudo,
+                'picks'  => [],
+            ];
+        }
+        $byUser[$uid]['picks'][] = marketTypeLabel((string) ($p['market_type'] ?? ''))
+            . ' : '
+            . formatPickLabel($p, (string) ($p['reponse'] ?? ''));
+    }
+    ?>
+    <ul class="ops-pred-list">
+        <?php foreach ($byUser as $u): ?>
+        <li>
+            <strong class="ops-pred-pseudo"><?= e($u['pseudo']) ?></strong>
+            <span class="ops-pred-picks"><?= e(implode(' · ', $u['picks'])) ?></span>
+        </li>
+        <?php endforeach; ?>
+    </ul>
+    <?php
+}
+
+/**
+ * @param array<string,mixed> $m
+ */
+function adminMatchStatusLabel(array $m): string
+{
+    $statut = (string) ($m['statut'] ?? '');
+    if ($statut === 'reporte') {
+        return 'Reporté';
+    }
+    if ($statut === 'annule') {
+        return 'Annulé';
+    }
+    if (!empty($m['resultat_1x2'])) {
+        return (int) $m['score_home'] . '–' . (int) $m['score_away'];
+    }
+    if ((int) ($m['voided_count'] ?? 0) > 0) {
+        return 'Données indispo.';
+    }
+    if ((int) ($m['pending_count'] ?? 0) > 0) {
+        return 'Sans score';
+    }
+    return $statut !== '' ? $statut : '—';
+}
+
+adminLayoutStart('Résultats & scores manuels', 'scores');
+?>
+<div class="ops-panel" id="saisie">
+    <div class="ops-panel-head">Saisir un score</div>
+    <div class="ops-panel-body">
+        <p class="ops-muted">
+            Choisis le sport, tape les équipes (ou un joueur en tennis), puis entre le score exact.
+        </p>
+        <form method="post" class="ops-score-search">
+            <?= csrfField() ?>
+            <input type="hidden" name="action" value="search_teams">
+            <label class="ops-field">
+                <span>Sport</span>
+                <select class="ops-select" name="sport">
+                    <option value="" <?= $searchSport === '' ? 'selected' : '' ?>>Tous</option>
+                    <option value="soccer" <?= $searchSport === 'soccer' ? 'selected' : '' ?>>Football</option>
+                    <option value="basketball" <?= $searchSport === 'basketball' ? 'selected' : '' ?>>Basket</option>
+                    <option value="tennis" <?= $searchSport === 'tennis' ? 'selected' : '' ?>>Tennis</option>
+                </select>
+            </label>
+            <label class="ops-field">
+                <span>Équipe / joueur 1</span>
+                <input class="ops-input" name="team_home" value="<?= e($searchHome) ?>" placeholder="ex. Dinamo, Fritz…">
+            </label>
+            <label class="ops-field">
+                <span>Équipe / joueur 2</span>
+                <input class="ops-input" name="team_away" value="<?= e($searchAway) ?>" placeholder="ex. Thun, Bergs…">
+            </label>
+            <div class="ops-field ops-field--action">
+                <span>&nbsp;</span>
+                <button type="submit" class="ops-btn ops-btn-primary">Chercher</button>
+            </div>
+        </form>
+
+        <?php if ($searchResults !== []): ?>
+        <div class="ops-table-wrap ops-table-wrap--scores">
+            <table class="ops-table ops-table--scores">
+                <thead>
+                    <tr>
+                        <th>Sport</th>
+                        <th>Match</th>
+                        <th>Quand</th>
+                        <th>État</th>
+                        <th>Pronos</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($searchResults as $m): ?>
+                    <?php
+                    $mid = (int) $m['id'];
+                    $canScore = empty($m['resultat_1x2'])
+                        || (int) ($m['voided_count'] ?? 0) > 0
+                        || (int) ($m['pending_count'] ?? 0) > 0;
+                    ?>
+                    <tr>
+                        <td>
+                            <div><?= e(sportCategoryLabel((string) ($m['sport'] ?? ''))) ?></div>
+                            <div class="ops-sub"><?= e((string) ($m['competition'] ?: $m['sport'])) ?></div>
+                        </td>
+                        <td>
+                            <strong><?= e($m['equipe_home'] . ' – ' . $m['equipe_away']) ?></strong>
+                            <div class="ops-mono ops-sub">#<?= $mid ?></div>
+                        </td>
+                        <td class="ops-mono ops-nowrap"><?= e(formatMatchWhen($m['date_match'])) ?></td>
+                        <td class="ops-mono"><?= e(adminMatchStatusLabel($m)) ?></td>
+                        <td class="ops-td-preds"><?php adminRenderMatchPredictors($predsByMatch[$mid] ?? []); ?></td>
+                        <td class="ops-td-score">
+                            <?php if ($canScore): ?>
+                                <?php adminRenderScoreForm($m); ?>
+                            <?php else: ?>
+                                <span class="ops-muted">Déjà scoré</span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<div class="ops-panel" id="file">
+    <div class="ops-panel-head">File d’attente</div>
+    <div class="ops-panel-body">
+        <p class="ops-muted">
+            Matchs qui attendent encore un score ou un recalcul.
+            Sans score API : <span class="ops-mono"><?= count($needScore) ?></span>
+            · Données indispo. : <span class="ops-mono"><?= count($voidedMatches) ?></span>
+            · Reportés : <span class="ops-mono"><?= count($postponedMatches) ?></span>
+            <?php if ($postponedMatches !== []): ?>
+                · <a href="#reportes">Voir les reportés ↓</a>
+            <?php endif; ?>
+        </p>
+
+        <?php if ($needScore === [] && $voidedMatches === []): ?>
+            <p class="ops-muted" style="margin-bottom:0">Rien en attente (hors reportés).</p>
+        <?php else: ?>
+        <div class="ops-table-wrap ops-table-wrap--scores">
+            <table class="ops-table ops-table--scores">
+                <thead>
+                    <tr>
+                        <th>Sport</th>
+                        <th>Match</th>
+                        <th>Quand</th>
+                        <th>Qui a prono</th>
+                        <th>Score</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($voidedMatches as $m): ?>
+                    <?php $mid = (int) $m['id']; ?>
+                    <tr>
+                        <td>
+                            <?= e(sportCategoryLabel((string) ($m['sport'] ?? ''))) ?>
+                            <div class="ops-sub"><?= e((string) ($m['competition'] ?: 'Données indisponibles')) ?></div>
+                        </td>
+                        <td>
+                            <strong><?= e($m['equipe_home'] . ' – ' . $m['equipe_away']) ?></strong>
+                            <div class="ops-mono ops-sub">#<?= $mid ?></div>
+                        </td>
+                        <td class="ops-mono ops-nowrap"><?= e(formatMatchWhen($m['date_match'])) ?></td>
+                        <td class="ops-td-preds"><?php adminRenderMatchPredictors($predsByMatch[$mid] ?? []); ?></td>
+                        <td class="ops-td-score"><?php adminRenderScoreForm($m); ?></td>
+                        <td></td>
+                    </tr>
+                    <?php endforeach; ?>
+                    <?php foreach ($needScore as $m): ?>
+                    <?php $mid = (int) $m['id']; ?>
+                    <tr>
+                        <td>
+                            <?= e(sportCategoryLabel((string) ($m['sport'] ?? ''))) ?>
+                            <div class="ops-sub"><?= e((string) ($m['competition'] ?: 'Sans score API')) ?></div>
+                        </td>
+                        <td>
+                            <strong><?= e($m['equipe_home'] . ' – ' . $m['equipe_away']) ?></strong>
+                            <div class="ops-mono ops-sub">#<?= $mid ?></div>
+                        </td>
+                        <td class="ops-mono ops-nowrap"><?= e(formatMatchWhen($m['date_match'])) ?></td>
+                        <td class="ops-td-preds"><?php adminRenderMatchPredictors($predsByMatch[$mid] ?? []); ?></td>
+                        <td class="ops-td-score"><?php adminRenderScoreForm($m); ?></td>
+                        <td class="ops-td-actions"><?php adminRenderPostponeControls($m); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<div class="ops-panel" id="reportes">
+    <div class="ops-panel-head">Matchs reportés</div>
+    <div class="ops-panel-body">
+        <p class="ops-muted">
+            Ils restent ici tant que tu n’as pas saisi le score ou réactivé le match.
+            Tu peux changer la date, puis entrer le score quand le match a enfin été joué.
+        </p>
+        <?php if ($postponedMatches === []): ?>
+            <p class="ops-muted" style="margin-bottom:0">Aucun match reporté pour le moment.</p>
+        <?php else: ?>
+        <div class="ops-table-wrap ops-table-wrap--scores">
+            <table class="ops-table ops-table--scores">
+                <thead>
+                    <tr>
+                        <th>Sport</th>
+                        <th>Match</th>
+                        <th>Date prévue</th>
+                        <th>Qui a prono</th>
+                        <th>Score</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($postponedMatches as $m): ?>
+                    <?php
+                    $mid = (int) $m['id'];
+                    $dateVal = matchDatetimeLocalValue((string) ($m['date_match'] ?? ''));
+                    ?>
+                    <tr>
+                        <td>
+                            <?= e(sportCategoryLabel((string) ($m['sport'] ?? ''))) ?>
+                            <div><span class="ops-badge ops-badge--warn">reporté</span></div>
+                        </td>
+                        <td>
+                            <strong><?= e($m['equipe_home'] . ' – ' . $m['equipe_away']) ?></strong>
+                            <div class="ops-sub"><?= e((string) ($m['competition'] ?: '—')) ?></div>
+                            <div class="ops-mono ops-sub">#<?= $mid ?></div>
+                        </td>
+                        <td class="ops-td-date">
+                            <div class="ops-mono ops-nowrap"><?= e(formatMatchWhen($m['date_match'])) ?></div>
+                            <form method="post" class="ops-postpone-date-form">
+                                <?= csrfField() ?>
+                                <input type="hidden" name="action" value="postpone_set_date">
+                                <input type="hidden" name="match_id" value="<?= $mid ?>">
+                                <input class="ops-input ops-input-datetime" type="datetime-local" name="new_date" value="<?= e($dateVal) ?>" required>
+                                <button type="submit" class="ops-btn ops-btn-sm">Date</button>
+                            </form>
+                        </td>
+                        <td class="ops-td-preds"><?php adminRenderMatchPredictors($predsByMatch[$mid] ?? []); ?></td>
+                        <td class="ops-td-score"><?php adminRenderScoreForm($m, true); ?></td>
+                        <td class="ops-td-actions">
+                            <form method="post" onsubmit="return confirm('Réactiver ce match (à venir) et rouvrir les pronos ?');">
+                                <?= csrfField() ?>
+                                <input type="hidden" name="action" value="postpone_reactivate">
+                                <input type="hidden" name="match_id" value="<?= $mid ?>">
+                                <input type="hidden" name="new_date" value="<?= e($dateVal) ?>">
+                                <button type="submit" class="ops-btn ops-btn-sm">Réactiver</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<div class="ops-panel" id="points-locaux">
+    <div class="ops-panel-head">Score déjà en base → donner les points</div>
+    <div class="ops-panel-body">
+        <p class="ops-muted">
+            Score connu, pronos encore « en attente ». Un clic, 0 crédit API.
+        </p>
+        <?php if ($needPoints === []): ?>
+            <p class="ops-muted" style="margin-bottom:0.75rem">Rien à faire.</p>
+        <?php else: ?>
+        <div class="ops-table-wrap ops-table-wrap--scores" style="margin-bottom:0.75rem">
+            <table class="ops-table ops-table--scores">
+                <thead>
+                    <tr>
+                        <th>Match</th>
+                        <th>Score</th>
+                        <th>Quand</th>
+                        <th>Qui a prono</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($needPoints as $m): ?>
+                    <?php $mid = (int) $m['id']; ?>
+                    <tr>
+                        <td>
+                            <strong><?= e($m['equipe_home'] . ' – ' . $m['equipe_away']) ?></strong>
+                            <div class="ops-mono ops-sub">#<?= $mid ?></div>
+                        </td>
+                        <td class="ops-mono ops-nowrap"><?= (int) $m['score_home'] ?>–<?= (int) $m['score_away'] ?></td>
+                        <td class="ops-mono ops-nowrap"><?= e(formatMatchWhen($m['date_match'])) ?></td>
+                        <td class="ops-td-preds"><?php adminRenderMatchPredictors($predsByMatch[$mid] ?? []); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
+        <form method="post">
+            <?= csrfField() ?>
+            <input type="hidden" name="action" value="score_local">
+            <button type="submit" class="ops-btn ops-btn-primary" <?= $needPoints === [] ? 'disabled' : '' ?>>
+                Donner les points (0 crédit)
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+(function () {
+    document.querySelectorAll('.ops-pens-toggle').forEach(function (cb) {
+        cb.addEventListener('change', function () {
+            var id = cb.getAttribute('data-pens-for');
+            var sel = document.querySelector('.ops-pens-winner[data-pens-select="' + id + '"]');
+            if (!sel) return;
+            sel.disabled = !cb.checked;
+            if (!cb.checked) sel.value = '';
+        });
+    });
+})();
+</script>
+<?php adminLayoutEnd(); ?>

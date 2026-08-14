@@ -1,0 +1,170 @@
+Date : 2026-08-09 01:52:23
+Directory : /home/tordjman/Documents/prognoz.fr
+Total : 114 files,  19649 codes, 1076 comments, 2569 blanks, all 23294 lines
+
+Languages
++--------------------+------------+------------+------------+------------+------------+
+| language           | files      | code       | comment    | blank      | total      |
++--------------------+------------+------------+------------+------------+------------+
+| PHP                |         81 |     10,635 |        498 |      1,374 |     12,507 |
+| PostCSS            |          2 |      4,077 |         31 |        687 |      4,795 |
+| JavaScript         |          8 |      1,622 |         10 |        193 |      1,825 |
+| Python             |          4 |      1,520 |        458 |        187 |      2,165 |
+| JSON               |          2 |      1,237 |          0 |          2 |      1,239 |
+| MS SQL             |         10 |        335 |         74 |         50 |        459 |
+| Markdown           |          3 |        174 |          0 |         69 |        243 |
+| XML                |          2 |         32 |          0 |          2 |         34 |
+| Dotenv             |          1 |         10 |          5 |          4 |         19 |
+| JSON with Comments |          1 |          7 |          0 |          1 |          8 |
++--------------------+------------+------------+------------+------------+------------+
+
+Directories
++-------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                          | files      | code       | comment    | blank      | total      |
++-------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                             |        114 |     19,649 |      1,076 |      2,569 |     23,294 |
+| . (Files)                                                                     |          4 |      1,518 |         48 |         63 |      1,629 |
+| .cursor                                                                       |          1 |          7 |          0 |          1 |          8 |
+| app                                                                           |         25 |      6,148 |        412 |        874 |      7,434 |
+| db                                                                            |          7 |        161 |         19 |         26 |        206 |
+| db/migrations                                                                 |          7 |        161 |         19 |         26 |        206 |
+| migrations                                                                    |          1 |          4 |          1 |          1 |          6 |
+| public                                                                        |         60 |      9,503 |         71 |      1,299 |     10,873 |
+| public (Files)                                                                |         14 |        503 |          1 |         61 |        565 |
+| public/account                                                                |          4 |      1,115 |          1 |         67 |      1,183 |
+| public/admin                                                                  |          8 |        495 |          5 |         48 |        548 |
+| public/api                                                                    |         12 |        602 |         23 |        123 |        748 |
+| public/assets                                                                 |         11 |      5,660 |         40 |        873 |      6,573 |
+| public/assets/css                                                             |          2 |      4,077 |         31 |        687 |      4,795 |
+| public/assets/img                                                             |          2 |         32 |          0 |          2 |         34 |
+| public/assets/js                                                              |          7 |      1,551 |          9 |        184 |      1,744 |
+| public/auth                                                                   |          5 |        336 |          0 |         32 |        368 |
+| public/communities                                                            |          3 |        532 |          1 |         60 |        593 |
+| public/legal                                                                  |          3 |        260 |          0 |         35 |        295 |
+| scripts                                                                       |          1 |         42 |          7 |          9 |         58 |
+| sql                                                                           |          1 |          7 |          6 |          5 |         18 |
+| tools                                                                         |         14 |      2,259 |        512 |        291 |      3,062 |
+| tools (Files)                                                                 |          8 |        699 |         49 |         86 |        834 |
+| tools/admin_console                                                           |          6 |      1,560 |        463 |        205 |      2,228 |
++-------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| filename                                                                      | language           | code       | comment    | blank      | total      |
++-------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| /home/tordjman/Documents/prognoz.fr/.cursor/settings.json                     | JSON with Comments |          7 |          0 |          1 |          8 |
+| /home/tordjman/Documents/prognoz.fr/README.md                                 | Markdown           |        118 |          0 |         43 |        161 |
+| /home/tordjman/Documents/prognoz.fr/app/admin_auth.php                        | PHP                |        147 |         13 |         27 |        187 |
+| /home/tordjman/Documents/prognoz.fr/app/admin_layout.php                      | PHP                |        101 |          3 |          4 |        108 |
+| /home/tordjman/Documents/prognoz.fr/app/auth.php                              | PHP                |        292 |         17 |         48 |        357 |
+| /home/tordjman/Documents/prognoz.fr/app/badges.php                            | PHP                |        154 |          7 |         14 |        175 |
+| /home/tordjman/Documents/prognoz.fr/app/bootstrap.php                         | PHP                |         45 |          7 |          6 |         58 |
+| /home/tordjman/Documents/prognoz.fr/app/communities.php                       | PHP                |         35 |          2 |          7 |         44 |
+| /home/tordjman/Documents/prognoz.fr/app/config.php                            | PHP                |        176 |         23 |         18 |        217 |
+| /home/tordjman/Documents/prognoz.fr/app/db.php                                | PHP                |         25 |          0 |          2 |         27 |
+| /home/tordjman/Documents/prognoz.fr/app/encryption.php                        | PHP                |        176 |          3 |         30 |        209 |
+| /home/tordjman/Documents/prognoz.fr/app/env.php                               | PHP                |         52 |          1 |          6 |         59 |
+| /home/tordjman/Documents/prognoz.fr/app/friends.php                           | PHP                |        167 |          8 |         26 |        201 |
+| /home/tordjman/Documents/prognoz.fr/app/helpers.php                           | PHP                |        262 |         26 |         50 |        338 |
+| /home/tordjman/Documents/prognoz.fr/app/layout.php                            | PHP                |        489 |          2 |         19 |        510 |
+| /home/tordjman/Documents/prognoz.fr/app/mail.php                              | PHP                |        245 |          7 |         44 |        296 |
+| /home/tordjman/Documents/prognoz.fr/app/maintenance.php                       | PHP                |         69 |          2 |         10 |         81 |
+| /home/tordjman/Documents/prognoz.fr/app/matches.php                           | PHP                |      1,756 |        133 |        261 |      2,150 |
+| /home/tordjman/Documents/prognoz.fr/app/notifications.php                     | PHP                |         77 |          7 |         14 |         98 |
+| /home/tordjman/Documents/prognoz.fr/app/odds_api.php                          | PHP                |        649 |         86 |        111 |        846 |
+| /home/tordjman/Documents/prognoz.fr/app/profile.php                           | PHP                |         60 |         10 |          7 |         77 |
+| /home/tordjman/Documents/prognoz.fr/app/push.php                              | PHP                |        226 |          4 |         39 |        269 |
+| /home/tordjman/Documents/prognoz.fr/app/routes.php                            | PHP                |         21 |          3 |          5 |         29 |
+| /home/tordjman/Documents/prognoz.fr/app/scoring.php                           | PHP                |        159 |         15 |         24 |        198 |
+| /home/tordjman/Documents/prognoz.fr/app/seasons.php                           | PHP                |        383 |         25 |         63 |        471 |
+| /home/tordjman/Documents/prognoz.fr/app/seo.php                               | PHP                |        185 |          3 |         18 |        206 |
+| /home/tordjman/Documents/prognoz.fr/app/user_predictions.php                  | PHP                |        197 |          5 |         21 |        223 |
+| /home/tordjman/Documents/prognoz.fr/composer.json                             | JSON               |          9 |          0 |          1 |         10 |
+| /home/tordjman/Documents/prognoz.fr/composer.lock                             | JSON               |      1,228 |          0 |          1 |      1,229 |
+| /home/tordjman/Documents/prognoz.fr/db/migrations/001_match_probabilities.sql | MS SQL             |          4 |          1 |          1 |          6 |
+| /home/tordjman/Documents/prognoz.fr/db/migrations/002_encryption.sql          | MS SQL             |          7 |          2 |          5 |         14 |
+| /home/tordjman/Documents/prognoz.fr/db/migrations/003_features.sql            | MS SQL             |         57 |          5 |          5 |         67 |
+| /home/tordjman/Documents/prognoz.fr/db/migrations/003_sport_column.sql        | MS SQL             |          1 |          1 |          1 |          3 |
+| /home/tordjman/Documents/prognoz.fr/db/migrations/004_profile_changes.sql     | MS SQL             |         31 |          1 |          3 |         35 |
+| /home/tordjman/Documents/prognoz.fr/db/migrations/005_seasons.sql             | MS SQL             |         49 |          8 |         10 |         67 |
+| /home/tordjman/Documents/prognoz.fr/db/migrations/006_push_subscriptions.sql  | MS SQL             |         12 |          1 |          1 |         14 |
+| /home/tordjman/Documents/prognoz.fr/migrations/001_match_probabilities.sql    | MS SQL             |          4 |          1 |          1 |          6 |
+| /home/tordjman/Documents/prognoz.fr/public/404.php                            | PHP                |         10 |          0 |          2 |         12 |
+| /home/tordjman/Documents/prognoz.fr/public/account/dashboard.php              | PHP                |        200 |          0 |         17 |        217 |
+| /home/tordjman/Documents/prognoz.fr/public/account/friends.php                | PHP                |        150 |          0 |         13 |        163 |
+| /home/tordjman/Documents/prognoz.fr/public/account/profile.php                | PHP                |        183 |          0 |         15 |        198 |
+| /home/tordjman/Documents/prognoz.fr/public/account/settings.php               | PHP                |        582 |          1 |         22 |        605 |
+| /home/tordjman/Documents/prognoz.fr/public/admin/README.md                    | Markdown           |         26 |          0 |         12 |         38 |
+| /home/tordjman/Documents/prognoz.fr/public/admin/dashboard.php                | PHP                |         76 |          0 |          6 |         82 |
+| /home/tordjman/Documents/prognoz.fr/public/admin/index.php                    | PHP                |          9 |          4 |          4 |         17 |
+| /home/tordjman/Documents/prognoz.fr/public/admin/login.php                    | PHP                |         43 |          0 |          6 |         49 |
+| /home/tordjman/Documents/prognoz.fr/public/admin/logout.php                   | PHP                |          6 |          0 |          2 |          8 |
+| /home/tordjman/Documents/prognoz.fr/public/admin/ops.php                      | PHP                |        122 |          0 |          6 |        128 |
+| /home/tordjman/Documents/prognoz.fr/public/admin/scores.php                   | PHP                |         99 |          0 |          6 |        105 |
+| /home/tordjman/Documents/prognoz.fr/public/admin/users.php                    | PHP                |        114 |          1 |          6 |        121 |
+| /home/tordjman/Documents/prognoz.fr/public/api/chat_notifications.php         | PHP                |         36 |          0 |         10 |         46 |
+| /home/tordjman/Documents/prognoz.fr/public/api/fetch_messages.php             | PHP                |         45 |          0 |          9 |         54 |
+| /home/tordjman/Documents/prognoz.fr/public/api/flush_ticket.php               | PHP                |          2 |          1 |          1 |          4 |
+| /home/tordjman/Documents/prognoz.fr/public/api/point_notifications.php        | PHP                |         39 |          0 |         11 |         50 |
+| /home/tordjman/Documents/prognoz.fr/public/api/push_subscribe.php             | PHP                |         49 |          0 |         13 |         62 |
+| /home/tordjman/Documents/prognoz.fr/public/api/push_test.php                  | PHP                |         36 |          0 |          8 |         44 |
+| /home/tordjman/Documents/prognoz.fr/public/api/push_vapid.php                 | PHP                |         11 |          0 |          4 |         15 |
+| /home/tordjman/Documents/prognoz.fr/public/api/send_message.php               | PHP                |         68 |          0 |         15 |         83 |
+| /home/tordjman/Documents/prognoz.fr/public/api/submit_prediction.php          | PHP                |         57 |          0 |         11 |         68 |
+| /home/tordjman/Documents/prognoz.fr/public/api/sync.php                       | PHP                |        190 |         16 |         24 |        230 |
+| /home/tordjman/Documents/prognoz.fr/public/api/test_mail.php                  | PHP                |         22 |          6 |          6 |         34 |
+| /home/tordjman/Documents/prognoz.fr/public/api/validate_ticket.php            | PHP                |         47 |          0 |         11 |         58 |
+| /home/tordjman/Documents/prognoz.fr/public/assets/css/admin.css               | PostCSS            |        323 |          4 |         65 |        392 |
+| /home/tordjman/Documents/prognoz.fr/public/assets/css/style.css               | PostCSS            |      3,754 |         27 |        622 |      4,403 |
+| /home/tordjman/Documents/prognoz.fr/public/assets/img/apple-touch-icon.svg    | XML                |         16 |          0 |          1 |         17 |
+| /home/tordjman/Documents/prognoz.fr/public/assets/img/favicon.svg             | XML                |         16 |          0 |          1 |         17 |
+| /home/tordjman/Documents/prognoz.fr/public/assets/js/chat.js                  | JavaScript         |        177 |          1 |         24 |        202 |
+| /home/tordjman/Documents/prognoz.fr/public/assets/js/match-effects.js         | JavaScript         |         40 |          0 |          7 |         47 |
+| /home/tordjman/Documents/prognoz.fr/public/assets/js/notifications.js         | JavaScript         |        386 |          0 |         38 |        424 |
+| /home/tordjman/Documents/prognoz.fr/public/assets/js/point-toast.js           | JavaScript         |        133 |          0 |         15 |        148 |
+| /home/tordjman/Documents/prognoz.fr/public/assets/js/predictions.js           | JavaScript         |        588 |          3 |         61 |        652 |
+| /home/tordjman/Documents/prognoz.fr/public/assets/js/site-notifications.js    | JavaScript         |        216 |          5 |         37 |        258 |
+| /home/tordjman/Documents/prognoz.fr/public/assets/js/theme-time.js            | JavaScript         |         11 |          0 |          2 |         13 |
+| /home/tordjman/Documents/prognoz.fr/public/auth/forgot-password.php           | PHP                |         63 |          0 |          5 |         68 |
+| /home/tordjman/Documents/prognoz.fr/public/auth/login.php                     | PHP                |         70 |          0 |          8 |         78 |
+| /home/tordjman/Documents/prognoz.fr/public/auth/logout.php                    | PHP                |         38 |          0 |          5 |         43 |
+| /home/tordjman/Documents/prognoz.fr/public/auth/register.php                  | PHP                |         95 |          0 |          9 |        104 |
+| /home/tordjman/Documents/prognoz.fr/public/auth/reset-password.php            | PHP                |         70 |          0 |          5 |         75 |
+| /home/tordjman/Documents/prognoz.fr/public/communities.php                    | PHP                |          3 |          0 |          1 |          4 |
+| /home/tordjman/Documents/prognoz.fr/public/communities/index.php              | PHP                |        114 |          0 |         15 |        129 |
+| /home/tordjman/Documents/prognoz.fr/public/communities/invite.php             | PHP                |        114 |          0 |         16 |        130 |
+| /home/tordjman/Documents/prognoz.fr/public/communities/view.php               | PHP                |        304 |          1 |         29 |        334 |
+| /home/tordjman/Documents/prognoz.fr/public/community.php                      | PHP                |          3 |          0 |          1 |          4 |
+| /home/tordjman/Documents/prognoz.fr/public/confidentialite.php                | PHP                |          3 |          0 |          1 |          4 |
+| /home/tordjman/Documents/prognoz.fr/public/dashboard.php                      | PHP                |          3 |          0 |          1 |          4 |
+| /home/tordjman/Documents/prognoz.fr/public/index.php                          | PHP                |        372 |          0 |         32 |        404 |
+| /home/tordjman/Documents/prognoz.fr/public/invite.php                         | PHP                |          3 |          0 |          1 |          4 |
+| /home/tordjman/Documents/prognoz.fr/public/legal/cgu.php                      | PHP                |         76 |          0 |         13 |         89 |
+| /home/tordjman/Documents/prognoz.fr/public/legal/comment-ca-marche.php        | PHP                |         48 |          0 |          6 |         54 |
+| /home/tordjman/Documents/prognoz.fr/public/legal/confidentialite.php          | PHP                |        136 |          0 |         16 |        152 |
+| /home/tordjman/Documents/prognoz.fr/public/login.php                          | PHP                |          3 |          0 |          1 |          4 |
+| /home/tordjman/Documents/prognoz.fr/public/logout.php                         | PHP                |          3 |          0 |          1 |          4 |
+| /home/tordjman/Documents/prognoz.fr/public/maintenance.php                    | PHP                |         16 |          0 |          4 |         20 |
+| /home/tordjman/Documents/prognoz.fr/public/register.php                       | PHP                |          3 |          0 |          1 |          4 |
+| /home/tordjman/Documents/prognoz.fr/public/robots.php                         | PHP                |          5 |          0 |          3 |          8 |
+| /home/tordjman/Documents/prognoz.fr/public/sitemap.php                        | PHP                |          5 |          0 |          3 |          8 |
+| /home/tordjman/Documents/prognoz.fr/public/sw-notifications.js                | JavaScript         |         71 |          1 |          9 |         81 |
+| /home/tordjman/Documents/prognoz.fr/schema.sql                                | MS SQL             |        163 |         48 |         18 |        229 |
+| /home/tordjman/Documents/prognoz.fr/scripts/encrypt_sensitive_data.php        | PHP                |         42 |          7 |          9 |         58 |
+| /home/tordjman/Documents/prognoz.fr/sql/migrate_encryption.sql                | MS SQL             |          7 |          6 |          5 |         18 |
+| /home/tordjman/Documents/prognoz.fr/tools/admin_console/README.md             | Markdown           |         30 |          0 |         14 |         44 |
+| /home/tordjman/Documents/prognoz.fr/tools/admin_console/config.example.env    | Dotenv             |         10 |          5 |          4 |         19 |
+| /home/tordjman/Documents/prognoz.fr/tools/admin_console/prognoz_admin.py      | Python             |      1,107 |          5 |        135 |      1,247 |
+| /home/tordjman/Documents/prognoz.fr/tools/admin_console/prognoz_crypto.py     | Python             |         26 |          0 |         11 |         37 |
+| /home/tordjman/Documents/prognoz.fr/tools/admin_console/prognoz_db.py         | Python             |        262 |        434 |         25 |        721 |
+| /home/tordjman/Documents/prognoz.fr/tools/admin_console/prognoz_ops.py        | Python             |        125 |         19 |         16 |        160 |
+| /home/tordjman/Documents/prognoz.fr/tools/diagnose_results.php                | PHP                |        106 |          6 |         10 |        122 |
+| /home/tordjman/Documents/prognoz.fr/tools/generate_admin_credentials.php      | PHP                |         37 |          5 |          9 |         51 |
+| /home/tordjman/Documents/prognoz.fr/tools/generate_vapid.php                  | PHP                |         76 |          5 |         13 |         94 |
+| /home/tordjman/Documents/prognoz.fr/tools/ops_terminal.php                    | PHP                |        309 |         11 |         23 |        343 |
+| /home/tordjman/Documents/prognoz.fr/tools/prepare_season_reset.php            | PHP                |         90 |          8 |         15 |        113 |
+| /home/tordjman/Documents/prognoz.fr/tools/prune_db.php                        | PHP                |         20 |          4 |          3 |         27 |
+| /home/tordjman/Documents/prognoz.fr/tools/resolve_results.php                 | PHP                |         29 |          6 |          6 |         41 |
+| /home/tordjman/Documents/prognoz.fr/tools/sync_matches.php                    | PHP                |         32 |          4 |          7 |         43 |
+| Total                                                                         |                    |     19,649 |      1,076 |      2,569 |     23,294 |
++-------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
