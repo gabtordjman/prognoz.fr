@@ -6,7 +6,7 @@ Points, communautés, chat chiffré, saisons.
 | | |
 |---|---|
 | **Site** | [prognoz.fr](https://www.prognoz.fr) |
-| **Version** | **1.1.1** |
+| **Version** | **1.1.2** |
 | **Document root** | `public/` uniquement (`app/` jamais exposé) |
 
 ---

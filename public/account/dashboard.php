@@ -222,18 +222,18 @@ $seasonRewards = fetchUserSeasonRewards($pdo, $userId, 5);
     </section>
     <?php endif; ?>
 
-    <section class="panel" aria-label="<?= e(t('dash.personalize')) ?>">
+    <section class="panel dash-profile-panel" aria-label="<?= e(t('dash.personalize')) ?>">
         <div class="panel-head"><?= e(t('dash.personalize')) ?></div>
-        <div class="panel-body">
+        <div class="panel-body dash-profile-body">
             <form method="post" class="dash-profile-form">
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="save_profile_extras">
-                <div class="field-group">
+                <div class="dash-profile-field">
                     <label class="field-label" for="dashBio"><?= e(t('dash.bio')) ?></label>
                     <textarea class="field-input" id="dashBio" name="bio" rows="2" maxlength="200"
                               placeholder="<?= e(t('dash.bio_ph')) ?>"><?= e((string) ($user['bio'] ?? '')) ?></textarea>
                 </div>
-                <div class="field-group">
+                <div class="dash-profile-field dash-profile-field--sport">
                     <label class="field-label" for="dashFavSport"><?= e(t('dash.fav_sport')) ?></label>
                     <select class="field-input" id="dashFavSport" name="sport_favori">
                         <option value=""><?= e(t('dash.fav_sport_none')) ?></option>
@@ -242,7 +242,9 @@ $seasonRewards = fetchUserSeasonRewards($pdo, $userId, 5);
                         <option value="tennis" <?= ($user['sport_favori'] ?? '') === 'tennis' ? 'selected' : '' ?>><?= e(t('sport.tennis')) ?></option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary btn-sm"><?= e(t('dash.save_profile')) ?></button>
+                <div class="dash-profile-actions">
+                    <button type="submit" class="btn btn-primary btn-sm"><?= e(t('dash.save_profile')) ?></button>
+                </div>
             </form>
         </div>
     </section>
