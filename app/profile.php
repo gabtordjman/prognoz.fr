@@ -20,7 +20,7 @@ function fetchPublicUserProfile(PDO $pdo, int $userId): ?array
         return null;
     }
     $stmt = $pdo->prepare(
-        'SELECT id, pseudo, points_totaux, serie_en_cours, avatar_url, created_at
+        'SELECT id, pseudo, points_totaux, serie_en_cours, avatar_url, created_at, bio, sport_favori
          FROM users WHERE id = ? AND actif = 1'
     );
     $stmt->execute([$userId]);

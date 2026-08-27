@@ -41,10 +41,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             adminFlash('success', $msg);
             $anchor = !empty($_POST['from_postponed']) ? '#reportes' : '#file';
+        } elseif ($action === 'clear_match_score') {
+            $cleared = clearManualMatchScore($pdo, (int) ($_POST['match_id'] ?? 0));
+            adminFlash(
+                'success',
+                'Score effacé — '
+                . (int) $cleared['reopened'] . ' prono(s) rouvert(s), '
+                . (int) $cleared['points_reversed'] . ' pt retirés. '
+                . 'Tu peux resaisir le bon score (cherche le match).'
+            );
+            $anchor = '#saisie';
         } elseif ($action === 'cancel_match') {
-            $n = cancelMatch($pdo, (int) ($_POST['match_id'] ?? 0));
-            adminFlash('success', 'Match annulé — ' . $n . ' prono(s) à 0 pt.');
-            $anchor = '#file';
+            $reason = normalizeMatchCancelReason((string) ($_POST['cancel_reason'] ?? ''));
+            if ($reason === null) {
+                throw new InvalidArgumentException('Choisis une raison d’annulation.');
+            }
+            $n = cancelMatch($pdo, (int) ($_POST['match_id'] ?? 0), $reason);
+            $label = matchCancelReasonOptions()[$reason] ?? $reason;
+            adminFlash(
+                'success',
+                'Match annulé (' . $label . ') — ' . $n . ' prono(s) à 0 pt.'
+            );
+            $anchor = !empty($_POST['from_search']) ? '#saisie' : '#file';
         } elseif ($action === 'postpone_match') {
             $dateRaw = trim((string) ($_POST['new_date'] ?? ''));
             $newDateUtc = $dateRaw !== '' ? parseAdminMatchDatetime($dateRaw) : null;
@@ -73,6 +91,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $scored = scorePendingFinishedMatches($pdo);
             adminFlash('success', 'Points locaux : ' . $scored . ' match(s) traités.');
             $anchor = '#points-locaux';
+        } elseif ($action === 'catchup_scores') {
+            @set_time_limit(240);
+            $rec = catchUpMissingScoresFromApi($pdo);
+            if (!empty($rec['quota_blocked'])) {
+                adminFlash('error', 'Rattrapage bloqué : quota API trop bas.');
+            } else {
+                adminFlash(
+                    (int) $rec['resolved'] > 0 ? 'success' : 'info',
+                    'Rattrapage API : '
+                    . (int) $rec['sports_queried'] . ' ligue(s) (~'
+                    . (int) $rec['credits_est'] . ' crédits) · '
+                    . (int) $rec['resolved'] . ' score(s) · '
+                    . 'reste ' . (int) $rec['still_stuck']
+                    . ' (récupérables API=' . (int) $rec['still_api']
+                    . ', trop vieux=' . (int) $rec['too_old'] . ')'
+                );
+            }
+            $anchor = '#file';
         } elseif ($action === 'recover_postponed_scores') {
             $rec = recoverPostponedScoresFromApi($pdo, 3);
             $msg = 'Récupération API reportés : '
@@ -136,10 +172,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$needScore = listStuckMatchesForManualScore($pdo, 40);
+$needScore = listStuckMatchesForManualScore($pdo, 100);
 $needPoints = listMatchesAwaitingLocalScore($pdo, 40);
 $voidedMatches = listVoidedMatchesForManualScore($pdo, 40);
 $postponedMatches = listPostponedMatchesForAdmin($pdo, 80);
+$stuckSummary = summarizeStuckScoresQueue($pdo);
+$needScoreApi = [];
+$needScoreOld = [];
+foreach ($needScore as $m) {
+    if (matchIsInScoresApiWindow($m)) {
+        $needScoreApi[] = $m;
+    } else {
+        $needScoreOld[] = $m;
+    }
+}
 
 $predMatchIds = array_values(array_unique(array_merge(
     array_map(static fn ($m) => (int) $m['id'], $needScore),
@@ -201,6 +247,36 @@ function adminRenderScoreForm(array $m, bool $fromPostponed = false): void
 /**
  * @param array<string,mixed> $m
  */
+function adminRenderCancelForm(array $m, bool $fromSearch = false): void
+{
+    $id = (int) $m['id'];
+    $reasons = matchCancelReasonOptions();
+    ?>
+    <form method="post" class="ops-cancel-form"
+          onsubmit="return confirm('Annuler ce match ? Pronos → 0 pt, avec la raison choisie.');">
+        <?= csrfField() ?>
+        <input type="hidden" name="action" value="cancel_match">
+        <input type="hidden" name="match_id" value="<?= $id ?>">
+        <?php if ($fromSearch): ?>
+        <input type="hidden" name="from_search" value="1">
+        <?php endif; ?>
+        <label class="ops-cancel-reason">
+            <span>Raison</span>
+            <select class="ops-select ops-select-sm" name="cancel_reason" required>
+                <option value="">Choisir…</option>
+                <?php foreach ($reasons as $code => $label): ?>
+                <option value="<?= e($code) ?>"><?= e($label) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </label>
+        <button type="submit" class="ops-btn ops-btn-danger ops-btn-sm">Annuler le match</button>
+    </form>
+    <?php
+}
+
+/**
+ * @param array<string,mixed> $m
+ */
 function adminRenderPostponeControls(array $m): void
 {
     $id = (int) $m['id'];
@@ -219,12 +295,7 @@ function adminRenderPostponeControls(array $m): void
                 <button type="submit" class="ops-btn ops-btn-sm">Reporté</button>
             </div>
         </form>
-        <form method="post" class="ops-postpone-cancel" onsubmit="return confirm('Match vraiment annulé ? Pronos → 0 pt.');">
-            <?= csrfField() ?>
-            <input type="hidden" name="action" value="cancel_match">
-            <input type="hidden" name="match_id" value="<?= $id ?>">
-            <button type="submit" class="ops-btn ops-btn-danger ops-btn-sm">Annulé</button>
-        </form>
+        <?php adminRenderCancelForm($m); ?>
     </div>
     <?php
 }
@@ -333,15 +404,20 @@ adminLayoutStart('Résultats & scores manuels', 'scores');
                         <th>État</th>
                         <th>Pronos</th>
                         <th>Score</th>
+                        <th>Annuler</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($searchResults as $m): ?>
                     <?php
                     $mid = (int) $m['id'];
-                    $canScore = empty($m['resultat_1x2'])
+                    $statut = (string) ($m['statut'] ?? '');
+                    $alreadyCancelled = $statut === 'annule';
+                    $canScore = !$alreadyCancelled && (
+                        empty($m['resultat_1x2'])
                         || (int) ($m['voided_count'] ?? 0) > 0
-                        || (int) ($m['pending_count'] ?? 0) > 0;
+                        || (int) ($m['pending_count'] ?? 0) > 0
+                    );
                     ?>
                     <tr>
                         <td>
@@ -356,10 +432,31 @@ adminLayoutStart('Résultats & scores manuels', 'scores');
                         <td class="ops-mono"><?= e(adminMatchStatusLabel($m)) ?></td>
                         <td class="ops-td-preds"><?php adminRenderMatchPredictors($predsByMatch[$mid] ?? []); ?></td>
                         <td class="ops-td-score">
-                            <?php if ($canScore): ?>
+                            <?php if ($alreadyCancelled): ?>
+                                <span class="ops-muted">Déjà annulé</span>
+                            <?php elseif ($canScore): ?>
                                 <?php adminRenderScoreForm($m); ?>
                             <?php else: ?>
-                                <span class="ops-muted">Déjà scoré</span>
+                                <div class="ops-muted" style="margin-bottom:0.35rem">
+                                    Déjà scoré
+                                    <?php if ($m['score_home'] !== null && $m['score_away'] !== null): ?>
+                                        · <?= (int) $m['score_home'] ?>–<?= (int) $m['score_away'] ?>
+                                    <?php endif; ?>
+                                </div>
+                                <form method="post"
+                                      onsubmit="return confirm('Effacer ce score, retirer les points et rouvrir les pronos ?');">
+                                    <?= csrfField() ?>
+                                    <input type="hidden" name="action" value="clear_match_score">
+                                    <input type="hidden" name="match_id" value="<?= $mid ?>">
+                                    <button type="submit" class="ops-btn ops-btn-sm">Effacer le score</button>
+                                </form>
+                            <?php endif; ?>
+                        </td>
+                        <td class="ops-td-actions">
+                            <?php if ($alreadyCancelled): ?>
+                                <span class="ops-muted">—</span>
+                            <?php else: ?>
+                                <?php adminRenderCancelForm($m, true); ?>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -376,12 +473,39 @@ adminLayoutStart('Résultats & scores manuels', 'scores');
     <div class="ops-panel-body">
         <p class="ops-muted">
             Matchs qui attendent encore un score ou un recalcul.
-            Sans score API : <span class="ops-mono"><?= count($needScore) ?></span>
+            Sans score : <span class="ops-mono"><?= (int) $stuckSummary['total'] ?></span>
+            · Récupérables API (≤ <?= (int) SCORES_CATCHUP_DAYS ?> j) :
+            <span class="ops-mono"><?= (int) $stuckSummary['api_window'] ?></span>
+            · Trop vieux (saisie manuelle) :
+            <span class="ops-mono"><?= (int) $stuckSummary['too_old'] ?></span>
             · Données indispo. : <span class="ops-mono"><?= count($voidedMatches) ?></span>
             · Reportés : <span class="ops-mono"><?= count($postponedMatches) ?></span>
             <?php if ($postponedMatches !== []): ?>
                 · <a href="#reportes">Voir les reportés ↓</a>
             <?php endif; ?>
+        </p>
+        <div class="ops-form-row" style="margin-bottom:0.85rem; flex-wrap:wrap; gap:0.5rem;">
+            <form method="post"
+                  onsubmit="return confirm('Rattraper via API toutes les ligues bloquées (≤ <?= (int) SCORES_CATCHUP_DAYS ?> j) ?\nEnviron <?= (int) $stuckSummary['sports_api'] ?> ligue(s) ≈ <?= (int) $stuckSummary['credits_est'] ?> crédits.');">
+                <?= csrfField() ?>
+                <input type="hidden" name="action" value="catchup_scores">
+                <button type="submit" class="ops-btn ops-btn-primary"
+                    <?= (int) $stuckSummary['sports_api'] === 0 ? 'disabled' : '' ?>>
+                    Rattrapage API multi-ligues
+                    (<?= (int) $stuckSummary['sports_api'] ?> ligue<?= (int) $stuckSummary['sports_api'] > 1 ? 's' : '' ?>
+                    · ~<?= (int) $stuckSummary['credits_est'] ?> crédits)
+                </button>
+            </form>
+            <form method="post">
+                <?= csrfField() ?>
+                <input type="hidden" name="action" value="score_local">
+                <button type="submit" class="ops-btn">Points locaux (0 crédit)</button>
+            </form>
+        </div>
+        <p class="ops-muted" style="margin-top:0">
+            Les matchs <strong>trop vieux</strong> (&gt; <?= (int) SCORES_CATCHUP_DAYS ?> j) ne sont plus dans l’API :
+            saisie manuelle ou annulation. Le cron horaire traite jusqu’à
+            <?= (int) SCORES_MAX_SPORTS_BACKLOG ?> ligues s’il y a du retard.
         </p>
 
         <?php if ($needScore === [] && $voidedMatches === []): ?>
@@ -406,6 +530,7 @@ adminLayoutStart('Résultats & scores manuels', 'scores');
                         <td>
                             <?= e(sportCategoryLabel((string) ($m['sport'] ?? ''))) ?>
                             <div class="ops-sub"><?= e((string) ($m['competition'] ?: 'Données indisponibles')) ?></div>
+                            <div><span class="ops-badge ops-badge--warn">indispo.</span></div>
                         </td>
                         <td>
                             <strong><?= e($m['equipe_home'] . ' – ' . $m['equipe_away']) ?></strong>
@@ -417,12 +542,31 @@ adminLayoutStart('Résultats & scores manuels', 'scores');
                         <td></td>
                     </tr>
                     <?php endforeach; ?>
-                    <?php foreach ($needScore as $m): ?>
+                    <?php foreach ($needScoreApi as $m): ?>
                     <?php $mid = (int) $m['id']; ?>
                     <tr>
                         <td>
                             <?= e(sportCategoryLabel((string) ($m['sport'] ?? ''))) ?>
                             <div class="ops-sub"><?= e((string) ($m['competition'] ?: 'Sans score API')) ?></div>
+                            <div><span class="ops-badge">API ≤ <?= (int) SCORES_CATCHUP_DAYS ?> j</span></div>
+                        </td>
+                        <td>
+                            <strong><?= e($m['equipe_home'] . ' – ' . $m['equipe_away']) ?></strong>
+                            <div class="ops-mono ops-sub">#<?= $mid ?></div>
+                        </td>
+                        <td class="ops-mono ops-nowrap"><?= e(formatMatchWhen($m['date_match'])) ?></td>
+                        <td class="ops-td-preds"><?php adminRenderMatchPredictors($predsByMatch[$mid] ?? []); ?></td>
+                        <td class="ops-td-score"><?php adminRenderScoreForm($m); ?></td>
+                        <td class="ops-td-actions"><?php adminRenderPostponeControls($m); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                    <?php foreach ($needScoreOld as $m): ?>
+                    <?php $mid = (int) $m['id']; ?>
+                    <tr>
+                        <td>
+                            <?= e(sportCategoryLabel((string) ($m['sport'] ?? ''))) ?>
+                            <div class="ops-sub"><?= e((string) ($m['competition'] ?: 'Hors fenêtre API')) ?></div>
+                            <div><span class="ops-badge ops-badge--warn">trop vieux</span></div>
                         </td>
                         <td>
                             <strong><?= e($m['equipe_home'] . ' – ' . $m['equipe_away']) ?></strong>

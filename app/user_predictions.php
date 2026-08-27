@@ -110,7 +110,7 @@ function formatMatchResultLine(array $row): string
         return t('dash.match_postponed');
     }
     if ($matchStatut === 'annule') {
-        return t('dash.match_cancelled');
+        return formatCancelledMatchResultLine($row['annulation_raison'] ?? null);
     }
     if ($row['score_home'] !== null && $row['score_away'] !== null) {
         return (int) $row['score_home'] . ' – ' . (int) $row['score_away'];
@@ -151,11 +151,13 @@ function predictionHistoryPresentation(array $h): array
         ];
     }
     if ($matchCancelled) {
+        $resultLine = formatCancelledMatchResultLine($h['annulation_raison'] ?? null);
+
         return [
             'item_class'   => 'void',
             'badge_class'  => 'void',
             'badge_label'  => t('dash.match_cancelled'),
-            'result'       => t('dash.match_cancelled'),
+            'result'       => $resultLine,
         ];
     }
     if ($voided) {
@@ -189,12 +191,13 @@ function predictionHistoryPresentation(array $h): array
 function getUserPredictionHistory(PDO $pdo, int $userId, int $limit = 25): array
 {
     ensurePredictionHistorySchema($pdo);
+    ensureMatchCancelReasonSchema($pdo);
     $limit = max(1, min(50, $limit));
     $stmt = $pdo->prepare(
         "SELECT p.id, p.reponse, p.statut, p.points_gagnes, p.resolved_at, p.created_at,
                 pm.type AS market_type, pm.points_si_correct,
                 m.equipe_home, m.equipe_away, m.competition, m.sport, m.statut AS match_statut,
-                m.score_home, m.score_away, m.resultat_1x2, m.date_match
+                m.score_home, m.score_away, m.resultat_1x2, m.date_match, m.annulation_raison
          FROM predictions p
          INNER JOIN prediction_markets pm ON pm.id = p.market_id
          INNER JOIN matches m ON m.id = pm.match_id

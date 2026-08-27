@@ -1296,16 +1296,35 @@ function maybeRefreshMatchesFromCache(PDO $pdo): bool
  * Ligues à interroger : uniquement celles qui ont des pronos encore en attente
  * sur des matchs réellement terminés. Priorité au plus gros volume de pronos.
  * (Interroger une ligue sans prono = 2 crédits jetés.)
+ *
+ * @return list<string>
  */
 function sportsAwaitingResults(PDO $pdo, int $maxSports): array
+{
+    $rows = listSportsAwaitingResults($pdo, $maxSports);
+
+    return array_values(array_map(
+        static fn (array $r): string => (string) ($r['sport'] ?? ''),
+        $rows
+    ));
+}
+
+/**
+ * Détail des ligues en attente de score API (pour admin / budget backlog).
+ *
+ * @return list<array{sport:string,pending_count:int,match_count:int,oldest:?string}>
+ */
+function listSportsAwaitingResults(PDO $pdo, int $maxSports = 50): array
 {
     $now      = matchSqlNow();
     $maxWait  = (int) RESULT_MAX_WAIT_DAYS;
     $readyMin = (int) MATCH_RESULT_READY_MINUTES;
+    $maxSports = max(1, min(80, $maxSports));
 
     $stmt = $pdo->query(
         "SELECT m.sport,
                 COUNT(p.id) AS pending_count,
+                COUNT(DISTINCT m.id) AS match_count,
                 MIN(m.date_match) AS oldest
          FROM matches m
          INNER JOIN prediction_markets pm ON pm.match_id = m.id
@@ -1314,16 +1333,75 @@ function sportsAwaitingResults(PDO $pdo, int $maxSports): array
            AND m.date_match >= DATE_SUB({$now}, INTERVAL {$maxWait} DAY)
            AND m.statut NOT IN ('annule', 'reporte')
            AND (m.resultat_1x2 IS NULL OR m.resultat_1x2 = '')
+           AND m.sport <> ''
          GROUP BY m.sport
          ORDER BY pending_count DESC, oldest ASC
-         LIMIT " . max(1, $maxSports)
+         LIMIT {$maxSports}"
     );
 
-    return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $out = [];
+    foreach ($stmt->fetchAll() ?: [] as $row) {
+        $sport = (string) ($row['sport'] ?? '');
+        if ($sport === '') {
+            continue;
+        }
+        $out[] = [
+            'sport'         => $sport,
+            'pending_count' => (int) ($row['pending_count'] ?? 0),
+            'match_count'   => (int) ($row['match_count'] ?? 0),
+            'oldest'        => $row['oldest'] !== null ? (string) $row['oldest'] : null,
+        ];
+    }
+
+    return $out;
+}
+
+/** True si le coup d’envoi est encore dans la fenêtre /scores de l’API (~3 j). */
+function matchIsInScoresApiWindow(array $match): bool
+{
+    $ts = utcDatetimeTimestamp((string) ($match['date_match'] ?? ''));
+    if ($ts === false) {
+        return false;
+    }
+
+    return $ts >= (time() - ((int) SCORES_CATCHUP_DAYS * 86400));
 }
 
 /**
- * Budget sports /scores pour cette passe : 0 si quota mort, sinon 1 ligue max.
+ * Synthèse file d’attente admin : récupérables API vs trop vieux.
+ *
+ * @return array{
+ *   total:int,api_window:int,too_old:int,sports_api:int,
+ *   credits_est:int,sports:list<array{sport:string,pending_count:int,match_count:int,oldest:?string}>
+ * }
+ */
+function summarizeStuckScoresQueue(PDO $pdo): array
+{
+    $stuck = listStuckMatchesForManualScore($pdo, 200);
+    $api = 0;
+    $old = 0;
+    foreach ($stuck as $m) {
+        if (matchIsInScoresApiWindow($m)) {
+            $api++;
+        } else {
+            $old++;
+        }
+    }
+    $sports = listSportsAwaitingResults($pdo, 50);
+
+    return [
+        'total'       => count($stuck),
+        'api_window'  => $api,
+        'too_old'     => $old,
+        'sports_api'  => count($sports),
+        'credits_est' => count($sports) * 2,
+        'sports'      => $sports,
+    ];
+}
+
+/**
+ * Budget sports /scores pour cette passe : 0 si quota mort.
+ * Calme = 1 ligue ; backlog (plusieurs ligues bloquées) = jusqu’à SCORES_MAX_SPORTS_BACKLOG.
  */
 function scoresSportsBudget(): int
 {
@@ -1333,12 +1411,22 @@ function scoresSportsBudget(): int
     }
     // Chaque ligue coûte 2 crédits : ne jamais programmer plus que le stock permet.
     $maxByCredits = $remaining === null
-        ? (int) SCORES_MAX_SPORTS_PER_RUN
+        ? (int) SCORES_MAX_SPORTS_BACKLOG
         : (int) floor(max(0, $remaining - (int) ODDS_QUOTA_RESERVE_SCORES) / 2);
 
     $cap = ($remaining !== null && $remaining <= (int) ODDS_QUOTA_RESERVE_ODDS)
         ? (int) SCORES_MAX_SPORTS_LOW_QUOTA
         : (int) SCORES_MAX_SPORTS_PER_RUN;
+
+    // Backlog : accélère le rattrapage sans exploser le quota mensuel.
+    try {
+        $backlog = count(listSportsAwaitingResults(getPDO(), 20));
+        if ($backlog > 1) {
+            $cap = max($cap, min((int) SCORES_MAX_SPORTS_BACKLOG, $backlog));
+        }
+    } catch (Throwable $e) {
+        // ignore
+    }
 
     return max(0, min($cap, $maxByCredits));
 }
@@ -1627,14 +1715,15 @@ function voidStalePredictions(PDO $pdo): int
     $rows = $detailStmt->fetchAll() ?: [];
 
     $withPendingStmt = $pdo->query(
-        "SELECT DISTINCT m.id
+        "SELECT m.id
          FROM matches m
          INNER JOIN prediction_markets pm ON pm.match_id = m.id
          INNER JOIN predictions p ON p.market_id = pm.id AND p.statut = 'en_attente'
          WHERE m.date_match < DATE_SUB({$now}, INTERVAL {$maxWait} DAY)
            AND (m.resultat_1x2 IS NULL OR m.resultat_1x2 = '')
            AND m.statut NOT IN ('annule', 'reporte')
-         ORDER BY m.date_match ASC
+         GROUP BY m.id
+         ORDER BY MIN(m.date_match) ASC
          LIMIT 80"
     );
     $withPendingIds = array_map('intval', $withPendingStmt->fetchAll(PDO::FETCH_COLUMN) ?: []);
@@ -1707,14 +1796,15 @@ function voidStalePredictions(PDO $pdo): int
         }
 
         $withPendingStmt = $pdo->query(
-            "SELECT DISTINCT m.id
+            "SELECT m.id
              FROM matches m
              INNER JOIN prediction_markets pm ON pm.match_id = m.id
              INNER JOIN predictions p ON p.market_id = pm.id AND p.statut = 'en_attente'
              WHERE m.date_match < DATE_SUB({$now}, INTERVAL {$maxWait} DAY)
                AND (m.resultat_1x2 IS NULL OR m.resultat_1x2 = '')
                AND m.statut NOT IN ('annule', 'reporte')
-             ORDER BY m.date_match ASC
+             GROUP BY m.id
+             ORDER BY MIN(m.date_match) ASC
              LIMIT 80"
         );
         $withPendingIds = array_map('intval', $withPendingStmt->fetchAll(PDO::FETCH_COLUMN) ?: []);
@@ -1884,10 +1974,93 @@ function resolveMatchResults(PDO $pdo, bool $force = false): array
 
     @file_put_contents($file, (string) time());
 
-    // force = ignore le throttle, PAS le cache fichier (évite de re-payer pour la même réponse).
+    // force = ignore le throttle ; cache fichier conservé sauf catch-up admin.
     $out['resolved'] = syncMatchScores($pdo, null, null, false);
     $out['scored']   = scorePendingFinishedMatches($pdo);
     $out['voided']   = voidStalePredictions($pdo);
+
+    return $out;
+}
+
+/**
+ * Rattrapage admin : interroge d’un coup toutes les ligues bloquées (fenêtre API ~3 j).
+ * Bypass cache + ignore le throttle horaire. Coût ≈ 2 crédits × nb ligues.
+ *
+ * @return array{
+ *   sports:list<string>,sports_queried:int,resolved:int,scored:int,voided:int,
+ *   still_stuck:int,still_api:int,too_old:int,credits_est:int,
+ *   quota_blocked:bool,quota_remaining:?int
+ * }
+ */
+function catchUpMissingScoresFromApi(PDO $pdo, ?int $maxSports = null, bool $bypassCache = true): array
+{
+    $maxSports = $maxSports ?? (int) SCORES_ADMIN_CATCHUP_MAX_SPORTS;
+    $maxSports = max(1, min(30, $maxSports));
+
+    $out = [
+        'sports'          => [],
+        'sports_queried'  => 0,
+        'resolved'        => 0,
+        'scored'          => 0,
+        'voided'          => 0,
+        'still_stuck'     => 0,
+        'still_api'       => 0,
+        'too_old'         => 0,
+        'credits_est'     => 0,
+        'quota_blocked'   => false,
+        'quota_remaining' => oddsQuotaRemaining(),
+    ];
+
+    if (!oddsApiConfigured()) {
+        return $out;
+    }
+
+    $remaining = oddsQuotaRemaining();
+    if ($remaining !== null && $remaining <= (int) ODDS_QUOTA_RESERVE_SCORES) {
+        $out['quota_blocked'] = true;
+        $out['scored'] = scorePendingFinishedMatches($pdo);
+        $out['voided'] = voidStalePredictions($pdo);
+        $summary = summarizeStuckScoresQueue($pdo);
+        $out['still_stuck'] = $summary['total'];
+        $out['still_api'] = $summary['api_window'];
+        $out['too_old'] = $summary['too_old'];
+        return $out;
+    }
+
+    if ($remaining !== null) {
+        $affordable = (int) floor(max(0, $remaining - (int) ODDS_QUOTA_RESERVE_SCORES) / 2);
+        $maxSports = min($maxSports, max(0, $affordable));
+    }
+    if ($maxSports <= 0) {
+        $out['quota_blocked'] = true;
+        return $out;
+    }
+
+    $sportKeys = sportsAwaitingResults($pdo, $maxSports);
+    $out['sports'] = $sportKeys;
+    $out['sports_queried'] = count($sportKeys);
+    $out['credits_est'] = count($sportKeys) * 2;
+
+    if ($sportKeys !== []) {
+        if (ensureAppCacheDir()) {
+            @file_put_contents(scoresSyncLastRunPath(), (string) time());
+        }
+        $out['resolved'] = syncMatchScores(
+            $pdo,
+            (int) SCORES_CATCHUP_DAYS,
+            count($sportKeys),
+            $bypassCache
+        );
+    }
+
+    $out['scored'] = scorePendingFinishedMatches($pdo);
+    $out['voided'] = voidStalePredictions($pdo);
+    $out['quota_remaining'] = oddsQuotaRemaining();
+
+    $summary = summarizeStuckScoresQueue($pdo);
+    $out['still_stuck'] = $summary['total'];
+    $out['still_api'] = $summary['api_window'];
+    $out['too_old'] = $summary['too_old'];
 
     return $out;
 }
@@ -2208,14 +2381,183 @@ function applyManualMatchScore(
 }
 
 /**
- * Match annulé sans vainqueur : 0 pt pour tous les pronos en attente.
- * Visible côté joueur comme « Match annulé » (statut prédiction = annule).
+ * Annule un score manuel (ou API) : retire les points déjà donnés, remet les pronos
+ * en attente, efface resultat/score. Sert à corriger un mauvais match scoré.
  *
- * @return int Nombre de pronos annulés
+ * @return array{reopened:int,points_reversed:int}
  */
-function cancelMatch(PDO $pdo, int $matchId): int
+function clearManualMatchScore(PDO $pdo, int $matchId): array
 {
-    return finalizeMatchWithoutScore($pdo, $matchId, 'annule');
+    ensurePredictionHistorySchema($pdo);
+    ensureMatchStatutSchema($pdo);
+    ensureMatchCancelReasonSchema($pdo);
+
+    $stmt = $pdo->prepare('SELECT * FROM matches WHERE id = ?');
+    $stmt->execute([$matchId]);
+    $match = $stmt->fetch();
+    if (!$match) {
+        throw new InvalidArgumentException('Match introuvable.');
+    }
+    if ($match['resultat_1x2'] === null || $match['resultat_1x2'] === '') {
+        throw new InvalidArgumentException('Ce match n’a pas de score à effacer.');
+    }
+
+    $predStmt = $pdo->prepare(
+        'SELECT p.id, p.user_id, p.statut, p.points_gagnes, pm.type AS market_type
+         FROM predictions p
+         INNER JOIN prediction_markets pm ON pm.id = p.market_id
+         WHERE pm.match_id = ?
+           AND p.statut IN (\'correct\', \'incorrect\')'
+    );
+    $predStmt->execute([$matchId]);
+    $preds = $predStmt->fetchAll() ?: [];
+
+    $pointsReversed = 0;
+    foreach ($preds as $pred) {
+        $pts = (int) ($pred['points_gagnes'] ?? 0);
+        $uid = (int) ($pred['user_id'] ?? 0);
+        if ($uid <= 0) {
+            continue;
+        }
+        if ($pts > 0) {
+            $pdo->prepare(
+                'UPDATE users SET points_totaux = GREATEST(0, points_totaux - ?) WHERE id = ?'
+            )->execute([$pts, $uid]);
+            addSeasonPoints($pdo, $uid, -$pts);
+            $pointsReversed += $pts;
+        }
+        // Série 1x2 : on décrémente si c’était un bon prono ; l’inverse (mauvais prono)
+        // ne peut pas restaurer l’ancienne série — approximation acceptable.
+        if (($pred['market_type'] ?? '') === '1x2' && ($pred['statut'] ?? '') === 'correct') {
+            $pdo->prepare(
+                'UPDATE users SET serie_en_cours = GREATEST(0, serie_en_cours - 1) WHERE id = ?'
+            )->execute([$uid]);
+        }
+    }
+
+    $reopen = $pdo->prepare(
+        'UPDATE predictions p
+         INNER JOIN prediction_markets pm ON pm.id = p.market_id
+         SET p.statut = \'en_attente\', p.points_gagnes = 0, p.resolved_at = NULL, p.result_notified = 0
+         WHERE pm.match_id = ? AND p.statut IN (\'correct\', \'incorrect\')'
+    );
+    $reopen->execute([$matchId]);
+    $reopened = $reopen->rowCount();
+
+    $pdo->prepare(
+        'UPDATE matches
+         SET statut = \'a_venir\', resultat_1x2 = NULL, score_home = NULL, score_away = NULL,
+             annulation_raison = NULL
+         WHERE id = ?'
+    )->execute([$matchId]);
+
+    return ['reopened' => $reopened, 'points_reversed' => $pointsReversed];
+}
+
+/**
+ * Raisons d’annulation proposées en admin (code => libellé FR).
+ *
+ * @return array<string,string>
+ */
+function matchCancelReasonOptions(): array
+{
+    return [
+        'api_doublon'   => 'Doublon / mauvais adversaire (API)',
+        'non_joue'      => 'Match non joué / abandonné',
+        'forfait'       => 'Forfait',
+        'erreur_saisie' => 'Erreur de saisie admin',
+        'autre'         => 'Autre',
+    ];
+}
+
+function normalizeMatchCancelReason(?string $code): ?string
+{
+    $code = trim((string) $code);
+    if ($code === '') {
+        return null;
+    }
+    $opts = matchCancelReasonOptions();
+    if (!isset($opts[$code])) {
+        throw new InvalidArgumentException('Choisis une raison d’annulation dans la liste.');
+    }
+
+    return $code;
+}
+
+/** Libellé joueur (i18n) pour une raison d’annulation. */
+function matchCancelReasonLabel(?string $code): string
+{
+    $code = trim((string) $code);
+    if ($code === '') {
+        return '';
+    }
+    $key = 'cancel.reason.' . $code;
+    $label = t($key);
+    if ($label === $key) {
+        $opts = matchCancelReasonOptions();
+        return $opts[$code] ?? t('cancel.reason.autre');
+    }
+
+    return $label;
+}
+
+/** Ligne résultat joueur pour un match annulé (+ raison si présente). */
+function formatCancelledMatchResultLine(?string $reasonCode = null): string
+{
+    $reason = matchCancelReasonLabel($reasonCode);
+    if ($reason === '') {
+        return t('dash.match_cancelled');
+    }
+
+    return t('dash.match_cancelled_reason', ['reason' => $reason]);
+}
+
+function ensureMatchCancelReasonSchema(PDO $pdo): void
+{
+    static $done = false;
+    if ($done) {
+        return;
+    }
+    $done = true;
+    try {
+        $col = $pdo->query('SHOW COLUMNS FROM matches LIKE "annulation_raison"')->fetch();
+        if (!$col) {
+            $pdo->exec(
+                'ALTER TABLE matches ADD COLUMN annulation_raison VARCHAR(64) NULL DEFAULT NULL
+                 AFTER statut'
+            );
+        }
+    } catch (PDOException $e) {
+        // Migration manuelle si droits limités
+    }
+}
+
+/**
+ * Match annulé sans vainqueur : 0 pt pour tous les pronos en attente.
+ * Visible côté joueur comme « Match annulé » (+ raison éventuelle).
+ * Si un score avait déjà été saisi, il est d’abord effacé (points retirés).
+ *
+ * @return int Nombre de pronos annulés / rouverts puis annulés
+ */
+function cancelMatch(PDO $pdo, int $matchId, ?string $reasonCode = null): int
+{
+    $reason = null;
+    if ($reasonCode !== null && trim($reasonCode) !== '') {
+        $reason = normalizeMatchCancelReason($reasonCode);
+    }
+
+    ensureMatchCancelReasonSchema($pdo);
+    $stmt = $pdo->prepare('SELECT id, resultat_1x2 FROM matches WHERE id = ?');
+    $stmt->execute([$matchId]);
+    $match = $stmt->fetch();
+    if (!$match) {
+        throw new InvalidArgumentException('Match introuvable.');
+    }
+    if ($match['resultat_1x2'] !== null && $match['resultat_1x2'] !== '') {
+        clearManualMatchScore($pdo, $matchId);
+    }
+
+    return finalizeMatchWithoutScore($pdo, $matchId, 'annule', $reason);
 }
 
 /**
@@ -2239,11 +2581,17 @@ function postponeMatch(PDO $pdo, int $matchId, ?string $newDateUtc = null): int
  * Clôture un match sans score (annulé ou reporté) et void les pronos en attente.
  *
  * @param 'annule'|'reporte' $matchStatut
+ * @param string|null $cancelReason Code raison (uniquement si annule)
  */
-function finalizeMatchWithoutScore(PDO $pdo, int $matchId, string $matchStatut): int
-{
+function finalizeMatchWithoutScore(
+    PDO $pdo,
+    int $matchId,
+    string $matchStatut,
+    ?string $cancelReason = null
+): int {
     ensurePredictionHistorySchema($pdo);
     ensureMatchStatutSchema($pdo);
+    ensureMatchCancelReasonSchema($pdo);
 
     if (!in_array($matchStatut, ['annule', 'reporte'], true)) {
         throw new InvalidArgumentException('Statut de clôture invalide.');
@@ -2263,10 +2611,12 @@ function finalizeMatchWithoutScore(PDO $pdo, int $matchId, string $matchStatut):
         );
     }
 
+    $reason = $matchStatut === 'annule' ? $cancelReason : null;
     $pdo->prepare(
-        'UPDATE matches SET statut = ?, score_home = NULL, score_away = NULL
+        'UPDATE matches
+         SET statut = ?, score_home = NULL, score_away = NULL, annulation_raison = ?
          WHERE id = ? AND (resultat_1x2 IS NULL OR resultat_1x2 = "")'
-    )->execute([$matchStatut, $matchId]);
+    )->execute([$matchStatut, $reason, $matchId]);
 
     $stmt = $pdo->prepare(
         'UPDATE predictions p
@@ -2362,7 +2712,8 @@ function reactivatePostponedMatch(PDO $pdo, int $matchId, ?string $newDateUtc = 
     $dateUtc = $newDateUtc ?: (string) $match['date_match'];
     $pdo->prepare(
         'UPDATE matches
-         SET statut = "a_venir", date_match = ?, score_home = NULL, score_away = NULL, resultat_1x2 = NULL
+         SET statut = "a_venir", date_match = ?, score_home = NULL, score_away = NULL,
+             resultat_1x2 = NULL, annulation_raison = NULL
          WHERE id = ?'
     )->execute([$dateUtc, $matchId]);
     syncMatchMarketCloseTimes($pdo, $matchId, $dateUtc);

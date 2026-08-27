@@ -59,7 +59,27 @@ function wantsRetroUi(): bool
 /** Attribut class pour la balise <html> (vide si site moderne). */
 function htmlUiClassAttr(): string
 {
-    return wantsRetroUi() ? ' class="theme-retro"' : '';
+    $classes = [];
+    if (wantsRetroUi()) {
+        $classes[] = 'theme-retro';
+    }
+    try {
+        if (function_exists('getDisplaySiteEvent') && function_exists('primaryEventThemeSlug')) {
+            $ev = getDisplaySiteEvent(getPDO());
+            if ($ev) {
+                $theme = primaryEventThemeSlug(getPDO());
+                if ($theme === '' || $theme === 'default') {
+                    $classes[] = 'event-theme-default';
+                } else {
+                    $classes[] = 'event-theme-' . $theme;
+                }
+            }
+        }
+    } catch (Throwable $e) {
+        // ignore
+    }
+
+    return $classes === [] ? '' : ' class="' . e(implode(' ', $classes)) . '"';
 }
 
 function retroUiCookieIsSet(): bool

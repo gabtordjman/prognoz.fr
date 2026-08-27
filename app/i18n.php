@@ -109,6 +109,39 @@ function detectBrowserLang(): string
     return 'fr';
 }
 
+/**
+ * Clés récentes : si le fichier lang déployé est en retard, on évite d’afficher la clé brute.
+ *
+ * @return array<string, string>
+ */
+function i18nCriticalFallbacks(string $lang): array
+{
+    $rows = [
+        'dash.personalize'     => ['fr' => 'Mon profil', 'en' => 'My profile'],
+        'dash.bio'             => ['fr' => 'Bio', 'en' => 'Bio'],
+        'dash.bio_ph'          => ['fr' => 'Quelques mots…', 'en' => 'A few words…'],
+        'dash.bio_too_long'    => ['fr' => 'Bio trop longue (200 car. max).', 'en' => 'Bio too long (200 chars max).'],
+        'dash.fav_sport'       => ['fr' => 'Sport favori', 'en' => 'Favorite sport'],
+        'dash.fav_sport_none'  => ['fr' => 'Aucun', 'en' => 'None'],
+        'dash.sport_invalid'   => ['fr' => 'Sport invalide.', 'en' => 'Invalid sport.'],
+        'dash.save_profile'    => ['fr' => 'Enregistrer', 'en' => 'Save'],
+        'dash.profile_saved'   => ['fr' => 'Profil enregistré.', 'en' => 'Profile saved.'],
+        'event.active'         => ['fr' => 'Événement', 'en' => 'Event'],
+        'event.until'          => ['fr' => 'Jusqu’à {when}', 'en' => 'Until {when}'],
+        'profile.self_sub'     => ['fr' => 'C’est toi', 'en' => 'That’s you'],
+        'season.badge_bronze_streak' => ['fr' => 'Bronze · série {n}', 'en' => 'Bronze · streak {n}'],
+        'season.badge_gold_streak'   => ['fr' => 'Or · série {n}', 'en' => 'Gold · streak {n}'],
+        'season.badge_silver_streak' => ['fr' => 'Argent · série {n}', 'en' => 'Silver · streak {n}'],
+    ];
+    $code = $lang === 'en' ? 'en' : 'fr';
+    $out = [];
+    foreach ($rows as $key => $pair) {
+        $out[$key] = $pair[$code] ?? $pair['fr'];
+    }
+
+    return $out;
+}
+
 function loadLangCatalog(string $lang): void
 {
     $path = dirname(__DIR__) . '/lang/' . $lang . '.php';
@@ -117,7 +150,8 @@ function loadLangCatalog(string $lang): void
     }
     /** @var array<string, string> $catalog */
     $catalog = require $path;
-    $GLOBALS['_APP_I18N'] = is_array($catalog) ? $catalog : [];
+    $fallbacks = i18nCriticalFallbacks($lang === 'en' ? 'en' : 'fr');
+    $GLOBALS['_APP_I18N'] = array_merge($fallbacks, is_array($catalog) ? $catalog : []);
 }
 
 function currentLang(): string

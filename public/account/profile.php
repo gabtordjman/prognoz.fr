@@ -97,6 +97,20 @@ $seasonRewards = fetchUserSeasonRewards($pdo, $profileId, 5, $viewerId);
                         <?= e(t('profile.title')) ?>
                     <?php endif; ?>
                 </p>
+                <?php
+                $favLbl = userFavoriteSportLabel($profile['sport_favori'] ?? null);
+                $bioTxt = trim((string) ($profile['bio'] ?? ''));
+                if ($favLbl !== '' || $bioTxt !== ''):
+                ?>
+                <p class="dash-id-bio">
+                    <?php if ($favLbl !== ''): ?>
+                        <span class="dash-fav-sport"><?= e($favLbl) ?></span>
+                    <?php endif; ?>
+                    <?php if ($bioTxt !== ''): ?>
+                        <?= $favLbl !== '' ? ' · ' : '' ?><?= e($bioTxt) ?>
+                    <?php endif; ?>
+                </p>
+                <?php endif; ?>
                 <?php if (!$isSelf && ($friendStatus === 'friends' || $friendStatus === 'pending_in' || $friendStatus !== 'pending_out')): ?>
                 <div class="profile-head-actions">
                     <?php if ($friendStatus === 'friends'): ?>

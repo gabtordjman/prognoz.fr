@@ -141,6 +141,9 @@ function layoutTopbar(?array $user, string $active = ''): void
         <?= e(t('retro.banner')) ?>
     </div>
     <?php endif; ?>
+    <?php if (function_exists('renderSiteEventBanner')) {
+        renderSiteEventBanner();
+    } ?>
     <div class="topbar">
         <div class="topbar-inner">
             <div class="topbar-side topbar-side-left">
@@ -274,6 +277,9 @@ function layoutFooter(): void
     <?php if (!(function_exists('wantsRetroUi') && wantsRetroUi())): ?>
     <script src="<?= e(url('assets/js/theme-time.js')) ?>"></script>
     <?php endif; ?>
+    <?php if (function_exists('renderSiteEventStarRain')) {
+        renderSiteEventStarRain();
+    } ?>
     <?php
 }
 

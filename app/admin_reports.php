@@ -625,6 +625,7 @@ function fetchUserCorrectionLines(PDO $pdo, int $userId, array $matchIds, array 
     }
 
     ensurePredictionHistorySchema($pdo);
+    ensureMatchCancelReasonSchema($pdo);
     $params = [$userId];
     $where  = ['p.user_id = ?'];
 
@@ -643,7 +644,7 @@ function fetchUserCorrectionLines(PDO $pdo, int $userId, array $matchIds, array 
     $sql = 'SELECT p.id, p.reponse, p.statut, p.points_gagnes,
                    pm.type AS market_type,
                    m.id AS match_id, m.equipe_home, m.equipe_away, m.statut AS match_statut,
-                   m.score_home, m.score_away, m.resultat_1x2, m.date_match
+                   m.score_home, m.score_away, m.resultat_1x2, m.date_match, m.annulation_raison
             FROM predictions p
             INNER JOIN prediction_markets pm ON pm.id = p.market_id
             INNER JOIN matches m ON m.id = pm.match_id

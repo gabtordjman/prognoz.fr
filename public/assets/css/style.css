@@ -5005,3 +5005,241 @@ a.dash-stat:hover .dash-stat-val {
     }
 }
 
+/* —— Événements site (bannière intégrée, thème discret) —— */
+.site-event-preview-bar {
+    background: #3d2a1a;
+    color: #e8d078;
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 0.4rem var(--page-gutter);
+}
+
+.site-event-preview-bar a {
+    color: #fffef8;
+    margin-left: 0.5rem;
+    text-decoration: underline;
+}
+
+.site-event-banner {
+    background: linear-gradient(135deg, #f8f4e8 0%, #efe8d8 100%);
+    border-bottom: 1px solid rgba(120, 90, 40, 0.28);
+    color: #2a2218;
+    font-size: 0.9rem;
+    line-height: 1.35;
+}
+
+.site-event-banner-inner {
+    max-width: var(--page-max);
+    margin: 0 auto;
+    padding: 0.65rem var(--page-gutter);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+}
+
+.site-event-banner-icon {
+    color: #6a5018;
+    font-size: 1.05rem;
+    line-height: 1.4;
+    flex-shrink: 0;
+}
+
+.site-event-banner-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    min-width: 0;
+}
+
+.site-event-banner-title {
+    font-weight: 700;
+    color: #1a140e;
+    font-size: 0.95rem;
+}
+
+.site-event-banner-msg {
+    color: #5a5040;
+    font-size: 0.86rem;
+}
+
+/* Teintes légères — on ne retile PAS le fond (évite l’effet « rayures »). */
+html.event-theme-double body,
+html.event-theme-default body {
+    --brass: #a67c1c;
+    --brass-light: #c4a035;
+}
+
+html.event-theme-night body {
+    --brass: #8a9a70;
+    --brass-light: #a8b890;
+}
+
+html.event-theme-fest body {
+    --brass: #b8861a;
+    --brass-light: #d4a93a;
+}
+
+html.event-theme-double body::after,
+html.event-theme-default body::after,
+html.event-theme-night body::after,
+html.event-theme-fest body::after {
+    display: block;
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+html.event-theme-double body::after,
+html.event-theme-default body::after {
+    background: linear-gradient(180deg, rgba(154, 116, 32, 0.1) 0%, transparent 28%);
+}
+
+html.event-theme-night body::after {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.18) 0%, transparent 32%);
+}
+
+html.event-theme-fest body::after {
+    background: linear-gradient(135deg, rgba(154, 116, 32, 0.12) 0%, transparent 40%);
+}
+
+/* Pluie d’étoiles — une passe légère à l’ouverture de page */
+.event-star-rain {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 70;
+    overflow: hidden;
+}
+
+.event-star {
+    position: absolute;
+    top: -1.2rem;
+    color: #c4a035;
+    line-height: 1;
+    text-shadow: 0 0 6px rgba(196, 160, 53, 0.35);
+    animation-name: event-star-fall;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+    will-change: transform, opacity;
+}
+
+.event-star::before {
+    content: '★';
+}
+
+html.event-theme-night .event-star {
+    color: #d8c878;
+    text-shadow: 0 0 7px rgba(216, 200, 120, 0.4);
+}
+
+@keyframes event-star-fall {
+    0% {
+        transform: translate3d(0, 0, 0) rotate(0deg);
+        opacity: 0;
+    }
+    12% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate3d(var(--drift, 0px), 110vh, 0) rotate(120deg);
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .event-star-rain {
+        display: none;
+    }
+}
+
+.dash-id-bio {
+    margin: 0.35rem 0 0;
+    color: var(--muted);
+    font-size: 0.92rem;
+    max-width: 36rem;
+}
+
+.dash-fav-sport {
+    display: inline-block;
+    font-weight: 700;
+    color: var(--green-dark);
+    font-size: 0.82rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.dash-event-panel {
+    margin-bottom: var(--section-gap);
+}
+
+.dash-event-card {
+    padding: 0.15rem 0;
+}
+
+.dash-event-kicker {
+    margin: 0 0 0.25rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--brass);
+}
+
+.dash-event-title {
+    margin: 0 0 0.3rem;
+    font-size: 1.15rem;
+    color: var(--ink);
+}
+
+.dash-event-msg {
+    margin: 0;
+    color: var(--muted);
+}
+
+.dash-event-until {
+    margin: 0.45rem 0 0;
+    font-size: 0.8rem;
+    font-family: var(--font-mono);
+    color: var(--muted);
+}
+
+.dash-profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    max-width: 28rem;
+}
+
+.dash-profile-form .field-group {
+    margin: 0;
+}
+
+.dash-profile-form .field-label {
+    margin-bottom: 0.2rem;
+}
+
+.dash-profile-form .field-input,
+.dash-profile-form textarea.field-input {
+    width: 100%;
+    margin: 0;
+    min-height: 0;
+    line-height: 1.35;
+}
+
+.dash-profile-form textarea.field-input {
+    resize: vertical;
+    min-height: 3.2rem;
+    max-height: 7rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.dash-profile-form .btn {
+    margin-top: 0.15rem;
+    width: 100%;
+}
+
+
+

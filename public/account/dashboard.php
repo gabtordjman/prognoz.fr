@@ -23,6 +23,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($action === 'remove_avatar') {
             removeUserAvatar($pdo, $userId);
             flash('success', t('avatar.ok_remove'));
+        } elseif ($action === 'save_profile_extras') {
+            updateUserProfileExtras(
+                $pdo,
+                $userId,
+                (string) ($_POST['bio'] ?? ''),
+                (string) ($_POST['sport_favori'] ?? '')
+            );
+            clearCurrentUserCache();
+            flash('success', t('dash.profile_saved'));
         }
     } catch (InvalidArgumentException $e) {
         flash('error', $e->getMessage());
@@ -39,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $user = currentUser($pdo);
 $userId = (int) $user['id'];
 $hasAvatar = avatarPublicUrl($user['avatar_url'] ?? null) !== null;
+$activeEvent = getPrimarySiteEvent($pdo);
 
 $stmt = $pdo->prepare(
     "SELECT c.id, c.nom, c.est_generale,
@@ -126,6 +136,20 @@ $seasonRewards = fetchUserSeasonRewards($pdo, $userId, 5);
                             : t('dash.sub_awaiting_other', ['n' => $pronosAwaitingResult])) ?>
                     <?php endif; ?>
                 </p>
+                <?php
+                $favLbl = userFavoriteSportLabel($user['sport_favori'] ?? null);
+                $bioTxt = trim((string) ($user['bio'] ?? ''));
+                if ($favLbl !== '' || $bioTxt !== ''):
+                ?>
+                <p class="dash-id-bio">
+                    <?php if ($favLbl !== ''): ?>
+                        <span class="dash-fav-sport"><?= e($favLbl) ?></span>
+                    <?php endif; ?>
+                    <?php if ($bioTxt !== ''): ?>
+                        <?= $favLbl !== '' ? ' · ' : '' ?><?= e($bioTxt) ?>
+                    <?php endif; ?>
+                </p>
+                <?php endif; ?>
             </div>
         </div>
         <nav class="dash-links" aria-label="<?= e(t('dash.title')) ?>">
@@ -187,6 +211,41 @@ $seasonRewards = fetchUserSeasonRewards($pdo, $userId, 5);
     </section>
 
     <?php renderSeasonBanner($activeSeason, 'dashboard'); ?>
+
+    <?php if ($activeEvent): ?>
+    <section class="panel dash-event-panel" aria-label="<?= e(t('event.active')) ?>">
+        <div class="dash-event-card">
+            <p class="dash-event-kicker"><?= e(t('event.active')) ?></p>
+            <h3 class="dash-event-title"><?= e((string) $activeEvent['title']) ?></h3>
+            <p class="dash-event-msg"><?= e((string) $activeEvent['message']) ?></p>
+        </div>
+    </section>
+    <?php endif; ?>
+
+    <section class="panel" aria-label="<?= e(t('dash.personalize')) ?>">
+        <div class="panel-head"><?= e(t('dash.personalize')) ?></div>
+        <div class="panel-body">
+            <form method="post" class="dash-profile-form">
+                <?= csrfField() ?>
+                <input type="hidden" name="action" value="save_profile_extras">
+                <div class="field-group">
+                    <label class="field-label" for="dashBio"><?= e(t('dash.bio')) ?></label>
+                    <textarea class="field-input" id="dashBio" name="bio" rows="2" maxlength="200"
+                              placeholder="<?= e(t('dash.bio_ph')) ?>"><?= e((string) ($user['bio'] ?? '')) ?></textarea>
+                </div>
+                <div class="field-group">
+                    <label class="field-label" for="dashFavSport"><?= e(t('dash.fav_sport')) ?></label>
+                    <select class="field-input" id="dashFavSport" name="sport_favori">
+                        <option value=""><?= e(t('dash.fav_sport_none')) ?></option>
+                        <option value="soccer" <?= ($user['sport_favori'] ?? '') === 'soccer' ? 'selected' : '' ?>><?= e(t('sport.soccer')) ?></option>
+                        <option value="basketball" <?= ($user['sport_favori'] ?? '') === 'basketball' ? 'selected' : '' ?>><?= e(t('sport.basketball')) ?></option>
+                        <option value="tennis" <?= ($user['sport_favori'] ?? '') === 'tennis' ? 'selected' : '' ?>><?= e(t('sport.tennis')) ?></option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm"><?= e(t('dash.save_profile')) ?></button>
+            </form>
+        </div>
+    </section>
 
     <?php renderOnboardingChecklist($pdo, $user); ?>
 

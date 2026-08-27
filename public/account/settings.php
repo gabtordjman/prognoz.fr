@@ -119,7 +119,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!userCanForceSync($pdo, $userId)) {
                 flash('error', 'Action réservée à l’administrateur du site.');
             } else {
-                $voided = cancelMatch($pdo, (int) ($_POST['match_id'] ?? 0));
+                $reason = normalizeMatchCancelReason((string) ($_POST['cancel_reason'] ?? 'autre'));
+                if ($reason === null) {
+                    $reason = 'autre';
+                }
+                $voided = cancelMatch($pdo, (int) ($_POST['match_id'] ?? 0), $reason);
                 flash(
                     'success',
                     'Match annulé — ' . $voided . ' prono(s) à 0 pt (visible « Match annulé »).'
@@ -372,8 +376,9 @@ $plannedSeasonEnd = nextMonthStartDatetime(); // 2026-08-01… tant qu’on est 
                 <?php endif; ?>
             </p>
             <p class="settings-hint">
-                Budget auto : max <?= (int) SCORES_MAX_SPORTS_PER_RUN ?> ligue / <?= (int) (SCORES_SYNC_INTERVAL_SECONDS / 60) ?> min
-                (<?= (int) SCORES_MAX_SPORTS_PER_RUN * 2 ?> crédits), uniquement si des pronos sont bloqués.
+                Budget auto : max <?= (int) SCORES_MAX_SPORTS_BACKLOG ?> ligues / <?= (int) (SCORES_SYNC_INTERVAL_SECONDS / 60) ?> min
+                si backlog (sinon <?= (int) SCORES_MAX_SPORTS_PER_RUN ?>),
+                uniquement si des pronos sont bloqués.
                 Cache scores <?= (int) (ODDS_CACHE_TTL_SCORES / 3600) ?> h · cotes coupées sous <?= (int) ODDS_QUOTA_RESERVE_ODDS ?> crédits ·
                 jamais de cotes dans le cron.
             </p>
@@ -459,6 +464,12 @@ $plannedSeasonEnd = nextMonthStartDatetime(); // 2026-08-01… tant qu’on est 
                             <?= csrfField() ?>
                             <input type="hidden" name="action" value="cancel_match">
                             <input type="hidden" name="match_id" value="<?= (int) $sm['id'] ?>">
+                            <select name="cancel_reason" class="field-input field-input-sm" required>
+                                <option value="">Raison…</option>
+                                <?php foreach (matchCancelReasonOptions() as $code => $label): ?>
+                                <option value="<?= e($code) ?>"><?= e($label) ?></option>
+                                <?php endforeach; ?>
+                            </select>
                             <button type="submit" class="btn btn-ghost btn-sm">Annuler</button>
                         </form>
                     </div>

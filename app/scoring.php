@@ -102,7 +102,17 @@ function applyPredictionResult(PDO $pdo, array $pred, bool $correct, int $points
             )->execute([$pred['user_id']]);
         }
     } elseif ($affectsSerie) {
-        $pdo->prepare('UPDATE users SET serie_en_cours = 0 WHERE id = ?')->execute([$pred['user_id']]);
+        $shield = false;
+        if (function_exists('eventHasStreakShield')) {
+            try {
+                $shield = eventHasStreakShield($pdo);
+            } catch (Throwable $e) {
+                $shield = false;
+            }
+        }
+        if (!$shield) {
+            $pdo->prepare('UPDATE users SET serie_en_cours = 0 WHERE id = ?')->execute([$pred['user_id']]);
+        }
     }
 }
 
@@ -161,6 +171,18 @@ function scoreMarket(PDO $pdo, array $match, array $market): void
 
     if ($result === null || $result === '') {
         return;
+    }
+
+    $mult = 1.0;
+    if (function_exists('eventPointsMultiplier')) {
+        try {
+            $mult = eventPointsMultiplier($pdo, $match);
+        } catch (Throwable $e) {
+            $mult = 1.0;
+        }
+    }
+    if ($mult > 1.0) {
+        $points = (int) max(0, (int) round($points * $mult));
     }
 
     foreach ($predictions as $pred) {

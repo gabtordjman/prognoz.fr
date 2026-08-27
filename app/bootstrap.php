@@ -44,6 +44,7 @@ require __DIR__ . '/push.php';
 require __DIR__ . '/seasons.php';
 require __DIR__ . '/layout.php';
 require __DIR__ . '/matches.php';
+require __DIR__ . '/events.php';
 require __DIR__ . '/notifications.php';
 require __DIR__ . '/communities.php';
 require __DIR__ . '/chat_typing.php';
@@ -68,6 +69,8 @@ try {
     maintainSeasons($pdoBoot);
     ensurePushSubscriptionSchema($pdoBoot);
     ensureAvatarSchema($pdoBoot);
+    ensureSiteEventsSchema($pdoBoot);
+    ensureUserProfileExtrasSchema($pdoBoot);
 } catch (Throwable $e) {
     // Connexion / ALTER : géré ailleurs ou migration manuelle
 }

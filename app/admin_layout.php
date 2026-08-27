@@ -5,7 +5,7 @@ if (!defined('APP_BOOT')) {
 }
 
 /**
- * @param 'dashboard'|'scores'|'users'|'ops'|'seasons'|'messages'|'reports' $active
+ * @param 'dashboard'|'scores'|'users'|'ops'|'seasons'|'messages'|'reports'|'events' $active
  */
 function adminLayoutStart(string $title, string $active = 'dashboard'): void
 {
@@ -38,6 +38,7 @@ function adminLayoutStart(string $title, string $active = 'dashboard'): void
             'label' => 'Compétition',
             'items' => [
                 ['id' => 'seasons', 'label' => 'Saisons', 'href' => url('admin/seasons.php')],
+                ['id' => 'events', 'label' => 'Événements', 'href' => url('admin/events.php')],
             ],
         ],
     ];

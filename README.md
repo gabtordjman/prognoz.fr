@@ -6,7 +6,7 @@ Points, communautés, chat chiffré, saisons.
 | | |
 |---|---|
 | **Site** | [prognoz.fr](https://www.prognoz.fr) |
-| **Version** | **1.0.1** (stable / petite beta) |
+| **Version** | **1.1.1** |
 | **Document root** | `public/` uniquement (`app/` jamais exposé) |
 
 ---
@@ -29,11 +29,12 @@ Points, communautés, chat chiffré, saisons.
 
 | Domaine | Contenu |
 |---------|---------|
-| Compte | Inscription, connexion, reset MDP e-mail, photo de profil |
+| Compte | Inscription, connexion, reset MDP e-mail, photo, bio, sport favori |
 | Matchs | Import The Odds API — 1/N/2, score exact, buteur (foot) |
 | Ticket | Brouillon local + validation batch (mobile OK) |
 | Points | Barème 1 / 2 / 3 pts, séries, historique |
 | Saisons | Reset classement tous les 14 jours, badges podium |
+| Événements | Campagnes site (×points, thème, bannière, pluie d’étoiles) |
 | Social | Communautés, invitations, chat AES-256-GCM, amis |
 | Notifs | Web Push (chat, gains, saison, rappels matchs) |
 | Légal | CGU, confidentialité, comment ça marche |
@@ -47,7 +48,7 @@ app/                 Logique PHP (hors web)
 public/              Document root Apache/Nginx
   account/ auth/ api/ admin/ legal/ uploads/
 var/cache/           Cache runtime
-db/migrations/       Migrations SQL (001 → 007)
+db/migrations/       Migrations SQL (001 → 008)
 schema.sql           Schéma complet (install neuve)
 tools/               CLI (sync, vapid, diagnose…)
 docs/                Guides détaillés
@@ -79,6 +80,7 @@ mysql -u root -p pronosocial < db/migrations/004_profile_changes.sql
 mysql -u root -p pronosocial < db/migrations/005_seasons.sql
 mysql -u root -p pronosocial < db/migrations/006_push_subscriptions.sql
 mysql -u root -p pronosocial < db/migrations/007_avatars.sql
+mysql -u root -p pronosocial < db/migrations/008_site_events.sql
 ```
 
 (Beaucoup de colonnes sont aussi créées au boot si possible.)

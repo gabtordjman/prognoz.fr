@@ -392,6 +392,32 @@ html, body {
     width: 100%;
 }
 
+.ops-cancel-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 11rem;
+}
+
+.ops-cancel-reason {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.68rem;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.ops-cancel-form .ops-btn {
+    width: 100%;
+}
+
+.ops-select-sm {
+    font-size: 0.78rem;
+    padding: 0.28rem 0.4rem;
+    min-height: 1.9rem;
+}
+
 .ops-postpone-date-form {
     display: flex;
     flex-direction: column;
@@ -808,3 +834,30 @@ html, body {
 @media (max-width: 520px) {
     .ops-grid { grid-template-columns: 1fr; }
 }
+
+.ops-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.ops-event-form .ops-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 0.65rem;
+}
+
+.ops-event-form .ops-field > span {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+}
+
+@media (max-width: 720px) {
+    .ops-form-grid { grid-template-columns: 1fr; }
+}
+

@@ -3,8 +3,6 @@ require __DIR__ . '/../../app/bootstrap.php';
 requireAdminLogin();
 
 $pdo = getPDO();
-$appUrl = rtrim((string) env('APP_URL', ''), '/');
-$cron = CRON_SECRET;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrfCheck()) {
@@ -51,31 +49,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ? 'Sync encore active — attendez 1–2 min.'
                     : 'Verrou sync libéré (ou déjà libre).'
             );
-        } elseif (in_array($action, ['cron', 'matches', 'odds', 'score_local'], true)) {
-            if ($appUrl === '' || $cron === '') {
-                throw new InvalidArgumentException('APP_URL ou CRON_SECRET manquant dans .env');
-            }
-            $params = match ($action) {
-                'cron' => ['cron' => '1', 'key' => $cron],
-                'matches' => ['key' => $cron, 'force' => '1', 'refresh' => '1', 'wait' => '1'],
-                'odds' => ['mode' => 'odds', 'force' => '1', 'key' => $cron],
-                default => ['mode' => 'score_local', 'key' => $cron],
-            };
-            $url = $appUrl . '/api/sync.php?' . http_build_query($params);
-            $ctx = stream_context_create([
-                'http' => [
-                    'timeout' => $action === 'matches' ? 150 : 90,
-                    'header'  => "Accept: application/json\r\nUser-Agent: PrognozOps/1.0\r\n",
-                ],
-            ]);
-            $raw = @file_get_contents($url, false, $ctx);
-            $data = is_string($raw) ? json_decode($raw, true) : null;
-            if (!is_array($data)) {
-                throw new InvalidArgumentException('Réponse sync invalide.');
-            }
+        } elseif ($action === 'score_local') {
+            $scored = scorePendingFinishedMatches($pdo);
+            $closed = closeExpiredMatches($pdo);
             adminFlash(
-                !empty($data['ok']) ? 'success' : 'error',
-                'Sync ' . $action . ' : ' . substr(json_encode($data, JSON_UNESCAPED_UNICODE), 0, 400)
+                'success',
+                'Points locaux : ' . $scored . ' match(s) scorés · fermés=' . $closed
+            );
+        } elseif ($action === 'cron') {
+            @set_time_limit(180);
+            // Appel direct PHP (plus d’HTTP vers APP_URL → plus de « réponse sync invalide »).
+            $lifecycle = maintainMatchLifecycle($pdo, false);
+            $reminders = maybeSendDailyMatchReminders($pdo);
+            $summary = summarizeStuckScoresQueue($pdo);
+            adminFlash(
+                'success',
+                'Cron scores (local) : scores_run='
+                . (!empty($lifecycle['scores']) ? 'oui' : 'non/throttle')
+                . ' · cache=' . (!empty($lifecycle['cache']) ? 'oui' : 'non')
+                . ' · fermés=' . (int) ($lifecycle['closed'] ?? 0)
+                . ' · rappels_push=' . (int) ($reminders['sent_push'] ?? 0)
+                . ' · rappels_mail=' . (int) ($reminders['sent_mail'] ?? 0)
+                . ' · encore sans score=' . (int) $summary['total']
+                . ' (API≤3j=' . (int) $summary['api_window']
+                . ', trop vieux=' . (int) $summary['too_old'] . ')'
+                . ' · quota=' . (oddsQuotaRemaining() ?? '?')
+            );
+        } elseif ($action === 'catchup_scores') {
+            @set_time_limit(240);
+            $rec = catchUpMissingScoresFromApi($pdo);
+            if (!empty($rec['quota_blocked'])) {
+                adminFlash('error', 'Rattrapage bloqué : quota API trop bas.');
+            } else {
+                adminFlash(
+                    'success',
+                    'Rattrapage scores : '
+                    . (int) $rec['sports_queried'] . ' ligue(s) (~'
+                    . (int) $rec['credits_est'] . ' crédits) · '
+                    . (int) $rec['resolved'] . ' score(s) appliqué(s) · '
+                    . (int) $rec['scored'] . ' points locaux · '
+                    . (int) $rec['voided'] . ' void/report · '
+                    . 'reste ' . (int) $rec['still_stuck']
+                    . ' (API=' . (int) $rec['still_api']
+                    . ', vieux=' . (int) $rec['too_old'] . ')'
+                    . ' · quota=' . ($rec['quota_remaining'] ?? '?')
+                );
+            }
+        } elseif ($action === 'matches') {
+            @set_time_limit(150);
+            $syncResult = runMatchImportSync($pdo, true, true);
+            adminFlash(
+                !empty($syncResult['ran']) ? 'success' : 'info',
+                'Import matchs : ran=' . (!empty($syncResult['ran']) ? 'oui' : 'non')
+                . ' · skip=' . (string) ($syncResult['skip_reason'] ?? '—')
+                . ' · sports=' . (int) ($syncResult['sports_checked'] ?? 0)
+                . ' · events=' . (int) ($syncResult['events_fetched'] ?? 0)
+                . ' · importés=' . (int) ($syncResult['events_imported'] ?? 0)
+            );
+        } elseif ($action === 'odds') {
+            @set_time_limit(90);
+            $odds = maybeSyncOdds($pdo, true);
+            $coverage = countDisplayedOddsCoverage($pdo);
+            adminFlash(
+                'success',
+                'Cotes : ran=' . (!empty($odds['ran']) ? 'oui' : 'non')
+                . ' · maj=' . (int) ($odds['updated'] ?? 0)
+                . ' · couverture=' . (int) ($coverage['with'] ?? 0) . '/' . (int) ($coverage['total'] ?? 0)
+                . ' · quota=' . (oddsQuotaRemaining() ?? '?')
             );
         }
     } catch (InvalidArgumentException $e) {
@@ -89,6 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $quota = oddsQuotaState();
 $pruneStats = staleMatchDataStats($pdo);
+$stuckSummary = summarizeStuckScoresQueue($pdo);
 $buteurDays = (int) BUTEUR_OPTIONS_RETENTION_DAYS;
 $purgeTotal = (int) $pruneStats['score_options']
     + (int) $pruneStats['buteur_options']
@@ -122,9 +163,28 @@ adminLayoutStart('Sync API & crédits', 'ops');
 </div>
 
 <div class="ops-panel">
+    <div class="ops-panel-head">File scores (aperçu)</div>
+    <div class="ops-panel-body">
+        <p class="ops-muted">
+            Sans score : <span class="ops-mono"><?= (int) $stuckSummary['total'] ?></span>
+            · Récupérables API (≤ <?= (int) SCORES_CATCHUP_DAYS ?> j) :
+            <span class="ops-mono"><?= (int) $stuckSummary['api_window'] ?></span>
+            · Trop vieux : <span class="ops-mono"><?= (int) $stuckSummary['too_old'] ?></span>
+            · Ligues à interroger : <span class="ops-mono"><?= (int) $stuckSummary['sports_api'] ?></span>
+            (~<?= (int) $stuckSummary['credits_est'] ?> crédits)
+        </p>
+        <p class="ops-muted" style="margin-bottom:0">
+            Le cron horaire ne fait plus qu’1 ligue si tout est calme ;
+            en backlog il monte jusqu’à <?= (int) SCORES_MAX_SPORTS_BACKLOG ?> ligues / passe.
+            Pour tout rattraper d’un coup → bouton ci-dessous ou page Résultats.
+        </p>
+    </div>
+</div>
+
+<div class="ops-panel">
     <div class="ops-panel-head">Actions serveur</div>
     <div class="ops-panel-body">
-        <p class="ops-muted">Appelle le site via APP_URL + CRON_SECRET (équivalent console Python).</p>
+        <p class="ops-muted">Exécution <strong>locale PHP</strong> (plus d’appel HTTP vers APP_URL).</p>
         <div class="ops-actions">
             <form method="post">
                 <?= csrfField() ?>
@@ -141,10 +201,16 @@ adminLayoutStart('Sync API & crédits', 'ops');
                 <input type="hidden" name="action" value="odds">
                 <button class="ops-btn ops-btn-ghost" type="submit">Cotes manquantes</button>
             </form>
-            <form method="post" onsubmit="return confirm('Cron scores — jusqu’à 2 crédits ?');">
+            <form method="post" onsubmit="return confirm('Passe cron scores (budget auto / throttle) ?');">
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="cron">
                 <button class="ops-btn ops-btn-ghost" type="submit">Cron scores</button>
+            </form>
+            <form method="post"
+                  onsubmit="return confirm('Rattrapage multi-ligues : jusqu’à <?= (int) min((int) SCORES_ADMIN_CATCHUP_MAX_SPORTS, max(1, (int) $stuckSummary['sports_api'])) ?> ligue(s) ≈ <?= (int) min((int) SCORES_ADMIN_CATCHUP_MAX_SPORTS, max(1, (int) $stuckSummary['sports_api'])) * 2 ?> crédits. Continuer ?');">
+                <?= csrfField() ?>
+                <input type="hidden" name="action" value="catchup_scores">
+                <button class="ops-btn ops-btn-primary" type="submit">Rattrapage scores (multi-ligues)</button>
             </form>
             <form method="post">
                 <?= csrfField() ?>
