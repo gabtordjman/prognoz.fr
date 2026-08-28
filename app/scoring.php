@@ -83,6 +83,32 @@ function computeResult1x2(string $homeTeam, string $awayTeam, ?array $scores, bo
     return result1x2FromScores($extracted['home'], $extracted['away'], $hasDraw);
 }
 
+/** Multiplicateur de points pour une série 1x2 (après le gain courant). */
+function streakPointsMultiplier(int $serieAfter): float
+{
+    if ($serieAfter < 2) {
+        return 1.0;
+    }
+    $tiers = STREAK_POINT_MULTIPLIERS;
+    krsort($tiers, SORT_NUMERIC);
+    foreach ($tiers as $minSerie => $mult) {
+        if ($serieAfter >= (int) $minSerie) {
+            return (float) $mult;
+        }
+    }
+
+    return 1.0;
+}
+
+function userCurrentSerie(PDO $pdo, int $userId): int
+{
+    $stmt = $pdo->prepare('SELECT serie_en_cours FROM users WHERE id = ? LIMIT 1');
+    $stmt->execute([$userId]);
+    $row = $stmt->fetch();
+
+    return $row ? max(0, (int) $row['serie_en_cours']) : 0;
+}
+
 function applyPredictionResult(PDO $pdo, array $pred, bool $correct, int $points, bool $affectsSerie): void
 {
     $statut = $correct ? 'correct' : 'incorrect';
@@ -173,28 +199,51 @@ function scoreMarket(PDO $pdo, array $match, array $market): void
         return;
     }
 
-    $mult = 1.0;
+    $eventMult = 1.0;
     if (function_exists('eventPointsMultiplier')) {
         try {
-            $mult = eventPointsMultiplier($pdo, $match);
+            $eventMult = eventPointsMultiplier($pdo, $match);
         } catch (Throwable $e) {
-            $mult = 1.0;
+            $eventMult = 1.0;
         }
     }
-    if ($mult > 1.0) {
-        $points = (int) max(0, (int) round($points * $mult));
+    if ($eventMult < 1.0) {
+        $eventMult = 1.0;
+    }
+
+    $serieByUser = [];
+    if ($affectsSerie) {
+        foreach ($predictions as $pred) {
+            $uid = (int) $pred['user_id'];
+            if (!isset($serieByUser[$uid])) {
+                $serieByUser[$uid] = userCurrentSerie($pdo, $uid);
+            }
+        }
     }
 
     foreach ($predictions as $pred) {
         $correct = ($pred['reponse'] === $result);
-        applyPredictionResult($pdo, $pred, $correct, $points, $affectsSerie);
+        $award = $points;
+        if ($correct) {
+            $streakMult = 1.0;
+            if ($affectsSerie) {
+                $uid = (int) $pred['user_id'];
+                $serieAfter = ($serieByUser[$uid] ?? 0) + 1;
+                $streakMult = streakPointsMultiplier($serieAfter);
+            }
+            $combined = $eventMult * $streakMult;
+            if ($combined > 1.0) {
+                $award = (int) max(0, (int) round($points * $combined));
+            }
+        }
+        applyPredictionResult($pdo, $pred, $correct, $award, $affectsSerie);
         if ($correct) {
             $matchLabel = ($match['equipe_home'] ?? '') . ' – ' . ($match['equipe_away'] ?? '');
             notifyWinPush(
                 $pdo,
                 (int) $pred['user_id'],
                 (int) $pred['id'],
-                $points,
+                $award,
                 $matchLabel,
                 marketTypeLabel($type)
             );

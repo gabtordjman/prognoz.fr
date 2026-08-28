@@ -123,6 +123,7 @@ function layoutTopbar(?array $user, string $active = ''): void
     $unseenResults = 0;
     $seasonPoints  = 0;
     $seasonLabel   = '';
+    $annPayload    = ['unread_count' => 0, 'latest' => null];
     if ($user) {
         try {
             $pdoTop = getPDO();
@@ -132,10 +133,14 @@ function layoutTopbar(?array $user, string $active = ''): void
                 $seasonPoints = getUserGeneralSeasonPoints($pdoTop, (int) $user['id'], (int) $activeSeason['id']);
                 $seasonLabel  = seasonCountdownLabel($activeSeason);
             }
+            if (function_exists('siteAnnouncementsClientPayload')) {
+                $annPayload = siteAnnouncementsClientPayload($pdoTop, (int) $user['id']);
+            }
         } catch (Throwable $e) {
             $unseenResults = 0;
         }
     }
+    $annUnread = (int) ($annPayload['unread_count'] ?? 0);
     if (function_exists('wantsRetroUi') && wantsRetroUi()): ?>
     <div class="retro-banner" role="status">
         <?= e(t('retro.banner')) ?>
@@ -150,6 +155,20 @@ function layoutTopbar(?array $user, string $active = ''): void
                 <?php if ($user): ?>
                     <button type="button" class="pill-points pill-points-btn" id="pointsHelpBtn" aria-haspopup="dialog" aria-controls="pointsHelpModal" title="<?= $seasonLabel !== '' ? e(t('nav.season_pts')) . ' · ' . e($seasonLabel) . ' · ' : '' ?><?= e(t('nav.total_pts', ['n' => (int) $user['points_totaux']])) ?>">
                         <?php if (!(function_exists('wantsRetroUi') && wantsRetroUi())): ?><i class="fa-solid fa-coins"></i> <?php endif; ?><?= $seasonPoints ?> <?= e(t('common.pts')) ?>
+                    </button>
+                    <button type="button"
+                            class="topbar-announce-btn<?= $annUnread > 0 ? ' has-unread' : '' ?>"
+                            id="announceBtn"
+                            aria-haspopup="dialog"
+                            aria-controls="announcePanel"
+                            aria-label="<?= e(t('announce.aria')) ?>"
+                            title="<?= e(t('announce.aria')) ?>">
+                        <?php if (!(function_exists('wantsRetroUi') && wantsRetroUi())): ?>
+                            <i class="fa-solid fa-microphone" aria-hidden="true"></i>
+                        <?php else: ?>
+                            Mic
+                        <?php endif; ?>
+                        <span class="topbar-announce-badge" id="announceBadge"<?= $annUnread > 0 ? '' : ' hidden' ?>><?= $annUnread > 9 ? '9+' : $annUnread ?></span>
                     </button>
                 <?php endif; ?>
             </div>
@@ -191,6 +210,19 @@ function layoutTopbar(?array $user, string $active = ''): void
             </div>
         </div>
     </div>
+    <?php if ($user): ?>
+    <div class="announce-panel" id="announcePanel" role="dialog" aria-modal="true" aria-labelledby="announceTitle" hidden>
+        <div class="announce-panel-inner">
+            <p class="announce-kicker"><?= e(t('announce.kicker')) ?></p>
+            <h2 class="announce-title" id="announceTitle"></h2>
+            <p class="announce-body" id="announceBody"></p>
+            <button type="button" class="btn btn-primary btn-sm" id="announceGotIt"><?= e(t('announce.got_it')) ?></button>
+        </div>
+    </div>
+    <script>
+        window.PRONO_ANNOUNCE = <?= json_encode($annPayload, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;
+    </script>
+    <?php endif; ?>
     <?php layoutI18nScript(); ?>
     <?php layoutBetaRibbon(); ?>
     <?php layoutBetaWelcome(); ?>
@@ -509,6 +541,7 @@ function layoutPointToasts(): void
     <script src="<?= e(assetUrl('assets/js/notifications.js')) ?>"></script>
     <script src="<?= e(assetUrl('assets/js/point-toast.js')) ?>"></script>
     <script src="<?= e(assetUrl('assets/js/site-notifications.js')) ?>"></script>
+    <script src="<?= e(assetUrl('assets/js/announcements.js')) ?>"></script>
     <script>
     (function () {
         var prompt = document.getElementById('notifyPrompt');

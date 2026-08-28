@@ -6,7 +6,7 @@ Gratuit, sans argent réel : on joue pour les points et le classement.
 | | |
 |---|---|
 | Site | [prognoz.fr](https://www.prognoz.fr) |
-| Version | **1.1.3** |
+| Version | **1.2.0** |
 | Doc détaillée | [Wiki Gitea](http://192.168.1.65:3000/tordjman/prognoz/wiki) (sources dans `wiki/`) |
 
 Le serveur web ne doit servir que le dossier **`public/`**. Le reste (`app/`, `.env`, etc.) reste hors web.
@@ -20,8 +20,10 @@ Le serveur web ne doit servir que le dossier **`public/`**. Le reste (`app/`, `.
 - Ticket de pronos + points / séries / saisons
 - Communautés, amis, chat chiffré
 - Événements site (×points, thème, bannière)
+- Série 1x2 : ×1.5 / ×2 / ×2.5 selon la longueur
+- Annonces admin (micro + pastille)
 - Notifications push
-- Admin (scores, sync, événements…)
+- Admin (scores, sync, événements, annonces…)
 
 ---
 
@@ -103,6 +105,7 @@ wiki/           Pages pour le Wiki Gitea
 docs/           Notes lab / API
 lang/           FR / EN
 tools/          CLI (sync, vapid, diagnose…)
+db/migrations/  SQL (jusqu’à 009_site_announcements)
 ```
 
 Ne pas versionner : `.env`, caches, uploads utilisateurs.

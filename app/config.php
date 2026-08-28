@@ -8,7 +8,7 @@ if (!defined('APP_BOOT')) {
 }
 
 define('APP_NAME', 'Prognoz');
-define('APP_VERSION', '1.1.3');
+define('APP_VERSION', '1.2.0');
 define('APP_BETA', envBool('APP_BETA', false));
 define('APP_MAINTENANCE', envBool('APP_MAINTENANCE', false));
 define('APP_CONTACT_EMAIL', env('APP_CONTACT_EMAIL', 'contact@example.com'));
@@ -28,6 +28,17 @@ define('DB_CHARSET', 'utf8mb4');
 define('POINTS_1X2', 1);
 define('POINTS_BUTEUR', 2);
 define('POINTS_SCORE_EXACT', 3);
+
+/**
+ * Multiplicateur de points selon la série 1x2 après le gain en cours.
+ * Clés = série minimale atteinte (ordre décroissant à tester).
+ */
+define('STREAK_POINT_MULTIPLIERS', [
+    5 => 2.5,
+    3 => 2.0,
+    2 => 1.5,
+]);
+
 define('SAISON_DUREE_JOURS', 14);
 
 /** Bonus podium fin de saison (top 1 / 2 / 3) — ajoutés au score final de la saison. */

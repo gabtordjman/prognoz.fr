@@ -148,6 +148,7 @@ function renderStreakBanner(int $serie): void
         return;
     }
     $unlocked = $serie >= 3;
+    $mult = function_exists('streakPointsMultiplier') ? streakPointsMultiplier($serie) : 1.0;
     ?>
     <div class="streak-banner<?= $unlocked ? ' streak-banner--unlocked' : '' ?>"
          id="streakBanner"
@@ -159,6 +160,9 @@ function renderStreakBanner(int $serie): void
             <p class="streak-banner-line">
                 <strong class="streak-banner-num"><?= $serie ?></strong>
                 <?= e(streakBannerLabel($serie)) ?>
+                <?php if ($mult > 1.0): ?>
+                    <span class="streak-banner-mult">×<?= rtrim(rtrim(number_format($mult, 1, '.', ''), '0'), '.') ?></span>
+                <?php endif; ?>
             </p>
         </div>
     </div>

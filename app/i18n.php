@@ -132,6 +132,9 @@ function i18nCriticalFallbacks(string $lang): array
         'season.badge_bronze_streak' => ['fr' => 'Bronze · série {n}', 'en' => 'Bronze · streak {n}'],
         'season.badge_gold_streak'   => ['fr' => 'Or · série {n}', 'en' => 'Gold · streak {n}'],
         'season.badge_silver_streak' => ['fr' => 'Argent · série {n}', 'en' => 'Silver · streak {n}'],
+        'announce.aria'              => ['fr' => 'Annonces', 'en' => 'Announcements'],
+        'announce.got_it'            => ['fr' => 'Compris', 'en' => 'Got it'],
+        'announce.kicker'            => ['fr' => 'Annonce', 'en' => 'News'],
     ];
     $code = $lang === 'en' ? 'en' : 'fr';
     $out = [];
