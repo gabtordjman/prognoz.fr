@@ -398,6 +398,39 @@
             b.classList.toggle('pick-locked', locked);
             b.disabled = locked;
         });
+        var scoreCustom = document.querySelector('.score-custom[data-market="' + marketId + '"]');
+        if (scoreCustom) {
+            var inGrid = false;
+            if (pick) {
+                document.querySelectorAll('.score-grid[data-market="' + marketId + '"] .score-btn').forEach(function (b) {
+                    if (b.dataset.pick === pick) {
+                        inGrid = true;
+                    }
+                });
+            }
+            var homeIn = scoreCustom.querySelector('.score-custom-home');
+            var awayIn = scoreCustom.querySelector('.score-custom-away');
+            var applyBtn = scoreCustom.querySelector('.score-custom-apply');
+            if (pick && /^\d+-\d+$/.test(pick) && !inGrid) {
+                var parts = pick.split('-');
+                if (homeIn) homeIn.value = parts[0];
+                if (awayIn) awayIn.value = parts[1];
+                scoreCustom.classList.add('selected');
+            } else {
+                scoreCustom.classList.remove('selected');
+                if (!pick) {
+                    if (homeIn) homeIn.value = '';
+                    if (awayIn) awayIn.value = '';
+                } else if (inGrid) {
+                    if (homeIn) homeIn.value = '';
+                    if (awayIn) awayIn.value = '';
+                }
+            }
+            if (homeIn) homeIn.disabled = locked;
+            if (awayIn) awayIn.disabled = locked;
+            if (applyBtn) applyBtn.disabled = locked;
+            scoreCustom.classList.toggle('pick-locked', locked);
+        }
         document.querySelectorAll('.scorer-grid[data-market="' + marketId + '"] .scorer-btn').forEach(function (b) {
             b.classList.toggle('selected', !!pick && b.dataset.pick === pick);
             b.classList.toggle('pick-locked', locked);
@@ -635,6 +668,45 @@
                     handlePick(marketId, btn.dataset.pick, true);
                 } else {
                     handlePick(marketId, btn.dataset.pick, false);
+                }
+            });
+        });
+    });
+
+    document.querySelectorAll('.score-custom[data-market]').forEach(function (wrap) {
+        var marketId = parseInt(wrap.dataset.market, 10);
+        var maxGoals = parseInt(wrap.dataset.max || '20', 10);
+        if (isNaN(maxGoals) || maxGoals < 0) {
+            maxGoals = 20;
+        }
+        var homeIn = wrap.querySelector('.score-custom-home');
+        var awayIn = wrap.querySelector('.score-custom-away');
+        var applyBtn = wrap.querySelector('.score-custom-apply');
+
+        function applyCustomScore() {
+            if (isValidatedMarket(marketId)) {
+                showFlash(i18n('js.already_validated'), false);
+                return;
+            }
+            var h = homeIn ? parseInt(String(homeIn.value).trim(), 10) : NaN;
+            var a = awayIn ? parseInt(String(awayIn.value).trim(), 10) : NaN;
+            if (isNaN(h) || isNaN(a) || h < 0 || a < 0 || h > maxGoals || a > maxGoals) {
+                showFlash(i18n('js.score_custom_invalid', { max: maxGoals }), false);
+                return;
+            }
+            var score = String(h) + '-' + String(a);
+            handlePick(marketId, score, false);
+        }
+
+        if (applyBtn) {
+            applyBtn.addEventListener('click', applyCustomScore);
+        }
+        [homeIn, awayIn].forEach(function (inp) {
+            if (!inp) return;
+            inp.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    applyCustomScore();
                 }
             });
         });

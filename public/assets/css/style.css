@@ -1340,6 +1340,10 @@ button.pill-points-btn:active {
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
+    max-height: 16.5rem;
+    overflow-y: auto;
+    padding-right: 0.15rem;
+    scrollbar-gutter: stable;
 }
 
 .score-picker .score-btn {
@@ -1347,6 +1351,75 @@ button.pill-points-btn:active {
     font-size: 0.78rem;
     padding: 0.42rem 0.2rem;
     border-radius: var(--radius-sm);
+}
+
+.score-custom {
+    margin-top: 0.65rem;
+    padding-top: 0.55rem;
+    border-top: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+}
+
+.score-custom-label {
+    display: block;
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    margin: 0 0 0.35rem;
+}
+
+.score-custom-row {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.score-custom-home,
+.score-custom-away {
+    width: 3.2rem;
+    min-height: 2.2rem;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: 1px solid var(--border, #c8c8c8);
+    border-radius: var(--radius-sm);
+    background: var(--surface, #fff);
+    color: inherit;
+    padding: 0.25rem 0.2rem;
+}
+
+.score-custom.selected .score-custom-home,
+.score-custom.selected .score-custom-away {
+    border-color: var(--accent, #1a7a4c);
+    box-shadow: 0 0 0 1px var(--accent, #1a7a4c);
+}
+
+.score-custom-sep {
+    font-weight: 700;
+    color: var(--muted);
+}
+
+.score-custom-apply {
+    min-height: 2.2rem;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border, #c8c8c8);
+    background: var(--surface-2, #f3f3f3);
+    cursor: pointer;
+}
+
+.score-custom-apply:hover:not(:disabled) {
+    border-color: var(--accent, #1a7a4c);
+}
+
+.score-custom.pick-locked .score-custom-apply,
+.score-custom-apply:disabled {
+    opacity: 0.55;
+    cursor: default;
 }
 
 .score-btn { font-size: 0.72rem; padding: 0.38rem 0.15rem; border-radius: var(--radius-sm); }

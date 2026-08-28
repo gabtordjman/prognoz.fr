@@ -287,6 +287,16 @@ releaseSession();
                             $midScore = (int) $marketScore['id'];
                             $choixScore = $predictions[$midScore]['reponse'] ?? null;
                             $scoreGroups = groupExactScores($marketScore['options'] ?? []);
+                            $scoreCustomMax = defined('EXACT_SCORE_CUSTOM_MAX') ? (int) EXACT_SCORE_CUSTOM_MAX : 20;
+                            $customHome = '';
+                            $customAway = '';
+                            $isCustomScorePick = false;
+                            if (is_string($choixScore) && preg_match('/^(\d+)-(\d+)$/', $choixScore, $cm)
+                                && !in_array($choixScore, COMMON_SCORES, true)) {
+                                $customHome = $cm[1];
+                                $customAway = $cm[2];
+                                $isCustomScorePick = true;
+                            }
                         ?>
                         <div class="market-block market-block-extra">
                             <div class="market-label"><?= e(t('home.exact_score')) ?> <span class="pts-tag pts-3">+3</span></div>
@@ -313,6 +323,31 @@ releaseSession();
                                     </div>
                                 </div>
                                 <?php endforeach; ?>
+                            </div>
+                            <div class="score-custom<?= $isCustomScorePick ? ' selected' : '' ?>"
+                                 data-market="<?= $midScore ?>"
+                                 data-max="<?= $scoreCustomMax ?>">
+                                <span class="score-custom-label"><?= e(t('home.exact_score_custom')) ?></span>
+                                <div class="score-custom-row">
+                                    <input type="number"
+                                           class="score-custom-home"
+                                           inputmode="numeric"
+                                           min="0"
+                                           max="<?= $scoreCustomMax ?>"
+                                           step="1"
+                                           value="<?= e($customHome) ?>"
+                                           aria-label="<?= e(t('home.exact_score_home')) ?>">
+                                    <span class="score-custom-sep" aria-hidden="true">-</span>
+                                    <input type="number"
+                                           class="score-custom-away"
+                                           inputmode="numeric"
+                                           min="0"
+                                           max="<?= $scoreCustomMax ?>"
+                                           step="1"
+                                           value="<?= e($customAway) ?>"
+                                           aria-label="<?= e(t('home.exact_score_away')) ?>">
+                                    <button type="button" class="score-custom-apply"><?= e(t('home.exact_score_apply')) ?></button>
+                                </div>
                             </div>
                         </div>
                         <?php endif; ?>

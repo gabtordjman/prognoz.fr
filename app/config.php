@@ -51,13 +51,21 @@ define('MATCHS_PAR_CATEGORIE', 15);
 define('MATCHS_AFFICHES', MATCHS_PAR_CATEGORIE * 3);
 
 define('COMMON_SCORES', [
-    // Victoire domicile (tri : buts home, puis away)
+    // Victoire domicile
     '1-0', '2-0', '2-1', '3-0', '3-1', '3-2',
+    '4-0', '4-1', '4-2', '4-3',
+    '5-0', '5-1', '5-2', '5-3',
+    '6-0', '6-1', '6-2', '6-3',
     // Nuls
-    '0-0', '1-1', '2-2',
-    // Victoire extérieur (tri : buts away, puis home)
+    '0-0', '1-1', '2-2', '3-3', '4-4',
+    // Victoire extérieur
     '0-1', '0-2', '1-2', '0-3', '1-3', '2-3',
+    '0-4', '1-4', '2-4', '3-4',
+    '0-5', '1-5', '2-5', '3-5',
+    '0-6', '1-6', '2-6', '3-6',
 ]);
+/** Plafond buts pour un score exact saisi librement (hors grille). */
+define('EXACT_SCORE_CUSTOM_MAX', 20);
 /** Matchs des mois précédents : purge possible (sauf erreurs à corriger). */
 define('MATCH_ORPHAN_RETENTION_DAYS', 21);
 /** Options buteurs : inutiles une fois le match fini — purge après N jours. */

@@ -172,6 +172,28 @@ function groupExactScores(array $scores): array
     ];
 }
 
+/**
+ * Score exact valide : grille COMMON_SCORES ou saisie libre H-A (0…EXACT_SCORE_CUSTOM_MAX).
+ */
+function isValidExactScorePick(string $reponse): bool
+{
+    $reponse = trim($reponse);
+    if ($reponse === '') {
+        return false;
+    }
+    if (in_array($reponse, COMMON_SCORES, true)) {
+        return true;
+    }
+    if (!preg_match('/^(\d{1,2})-(\d{1,2})$/', $reponse, $m)) {
+        return false;
+    }
+    $h = (int) $m[1];
+    $a = (int) $m[2];
+    $max = defined('EXACT_SCORE_CUSTOM_MAX') ? (int) EXACT_SCORE_CUSTOM_MAX : 20;
+
+    return $h >= 0 && $a >= 0 && $h <= $max && $a <= $max;
+}
+
 function matchWindowBounds(): array
 {
     return [
@@ -3468,7 +3490,7 @@ function submitPrediction(PDO $pdo, int $userId, int $marketId, string $reponse)
             throw new InvalidArgumentException('Choix invalide.');
         }
     } elseif ($type === 'score_exact') {
-        if (!in_array($reponse, COMMON_SCORES, true)) {
+        if (!isValidExactScorePick($reponse)) {
             throw new InvalidArgumentException('Score invalide.');
         }
     } elseif ($type === 'buteur') {

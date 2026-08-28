@@ -267,6 +267,7 @@ function i18nJsCatalog(): array
     $keys = [
         'js.draw',
         'js.score_prefix',
+        'js.score_custom_invalid',
         'js.remove',
         'js.remove_aria',
         'js.already_validated',
