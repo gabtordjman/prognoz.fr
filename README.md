@@ -6,7 +6,7 @@ Gratuit, sans argent réel : on joue pour les points et le classement.
 | | |
 |---|---|
 | Site | [prognoz.fr](https://www.prognoz.fr) |
-| Version | **1.2.1** |
+| Version | **1.2.2** |
 | Doc détaillée | [Wiki Gitea](http://192.168.1.65:3000/tordjman/prognoz/wiki) (sources dans `wiki/`) |
 
 Le serveur web ne doit servir que le dossier **`public/`**. Le reste (`app/`, `.env`, etc.) reste hors web.

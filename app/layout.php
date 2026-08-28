@@ -156,10 +156,12 @@ function layoutTopbar(?array $user, string $active = ''): void
                     <button type="button" class="pill-points pill-points-btn" id="pointsHelpBtn" aria-haspopup="dialog" aria-controls="pointsHelpModal" title="<?= $seasonLabel !== '' ? e(t('nav.season_pts')) . ' · ' . e($seasonLabel) . ' · ' : '' ?><?= e(t('nav.total_pts', ['n' => (int) $user['points_totaux']])) ?>">
                         <?php if (!(function_exists('wantsRetroUi') && wantsRetroUi())): ?><i class="fa-solid fa-coins"></i> <?php endif; ?><?= $seasonPoints ?> <?= e(t('common.pts')) ?>
                     </button>
+                    <div class="topbar-announce" id="announceWrap">
                     <button type="button"
                             class="topbar-announce-btn<?= $annUnread > 0 ? ' has-unread' : '' ?>"
                             id="announceBtn"
                             aria-haspopup="dialog"
+                            aria-expanded="false"
                             aria-controls="announcePanel"
                             aria-label="<?= e(t('announce.aria')) ?>"
                             title="<?= e(t('announce.aria')) ?>">
@@ -170,6 +172,18 @@ function layoutTopbar(?array $user, string $active = ''): void
                         <?php endif; ?>
                         <span class="topbar-announce-dot" id="announceBadge"<?= $annUnread > 0 ? '' : ' hidden' ?> aria-hidden="true"></span>
                     </button>
+                    <div class="announce-panel" id="announcePanel" role="dialog" aria-labelledby="announceListTitle" hidden>
+                        <span class="announce-panel-caret" aria-hidden="true"></span>
+                        <div class="announce-panel-inner">
+                            <div class="announce-panel-head">
+                                <h2 class="announce-list-title" id="announceListTitle"><?= e(t('announce.aria')) ?></h2>
+                                <button type="button" class="announce-panel-close" id="announceClose" aria-label="<?= e(t('common.close')) ?>">&times;</button>
+                            </div>
+                            <div class="announce-list" id="announceList"></div>
+                            <p class="announce-empty" id="announceEmpty" hidden><?= e(t('announce.empty')) ?></p>
+                        </div>
+                    </div>
+                    </div>
                 <?php endif; ?>
             </div>
 
@@ -211,16 +225,6 @@ function layoutTopbar(?array $user, string $active = ''): void
         </div>
     </div>
     <?php if ($user): ?>
-    <div class="announce-panel" id="announcePanel" role="dialog" aria-labelledby="announceListTitle" hidden>
-        <div class="announce-panel-inner">
-            <div class="announce-panel-head">
-                <h2 class="announce-list-title" id="announceListTitle"><?= e(t('announce.aria')) ?></h2>
-                <button type="button" class="announce-panel-close" id="announceClose" aria-label="<?= e(t('common.close')) ?>">&times;</button>
-            </div>
-            <div class="announce-list" id="announceList"></div>
-            <p class="announce-empty" id="announceEmpty" hidden><?= e(t('announce.empty')) ?></p>
-        </div>
-    </div>
     <script>
         window.PRONO_ANNOUNCE = <?= json_encode($annPayload, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;
     </script>

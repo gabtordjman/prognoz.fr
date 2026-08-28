@@ -2,6 +2,7 @@
     'use strict';
 
     var data = window.PRONO_ANNOUNCE || { unread_count: 0, items: [] };
+    var wrap = document.getElementById('announceWrap');
     var panel = document.getElementById('announcePanel');
     var btn = document.getElementById('announceBtn');
     var badge = document.getElementById('announceBadge');
@@ -85,7 +86,11 @@
     function openPanel() {
         renderList();
         panel.hidden = false;
+        // Force reflow so the open animation plays
+        void panel.offsetWidth;
         panel.classList.add('is-open');
+        if (wrap) wrap.classList.add('is-open');
+        btn.setAttribute('aria-expanded', 'true');
         if ((data.unread_count || 0) > 0) {
             markAllRead();
         }
@@ -93,7 +98,13 @@
 
     function closePanel() {
         panel.classList.remove('is-open');
-        panel.hidden = true;
+        if (wrap) wrap.classList.remove('is-open');
+        btn.setAttribute('aria-expanded', 'false');
+        window.setTimeout(function () {
+            if (!panel.classList.contains('is-open')) {
+                panel.hidden = true;
+            }
+        }, 220);
     }
 
     btn.addEventListener('click', function (e) {
@@ -111,7 +122,7 @@
 
     document.addEventListener('click', function (e) {
         if (!panel.classList.contains('is-open')) return;
-        if (panel.contains(e.target) || btn.contains(e.target)) return;
+        if ((wrap && wrap.contains(e.target)) || panel.contains(e.target) || btn.contains(e.target)) return;
         closePanel();
     });
 
