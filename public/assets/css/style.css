@@ -1878,11 +1878,18 @@ button.pill-points-btn:active {
 }
 
 .community-badge-generale {
+    display: inline-block;
     font-size: 0.62rem;
-    background: var(--paper-dark);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #6b5418;
+    background: rgba(232, 208, 120, 0.45);
+    border: 1px solid rgba(154, 116, 32, 0.4);
     padding: 0.15rem 0.45rem;
     margin-left: 0.35rem;
     border-radius: var(--radius-sm);
+    vertical-align: middle;
 }
 
 .leaderboard-row {
@@ -5156,7 +5163,7 @@ html.event-theme-night .event-star {
 
 .dash-id-bio {
     margin: 0.35rem 0 0;
-    color: var(--muted);
+    color: rgba(232, 224, 206, 0.82);
     font-size: 0.92rem;
     max-width: 36rem;
 }
@@ -5164,7 +5171,7 @@ html.event-theme-night .event-star {
 .dash-fav-sport {
     display: inline-block;
     font-weight: 700;
-    color: var(--green-dark);
+    color: var(--brass-shine);
     font-size: 0.82rem;
     letter-spacing: 0.02em;
     text-transform: uppercase;

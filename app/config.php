@@ -8,7 +8,7 @@ if (!defined('APP_BOOT')) {
 }
 
 define('APP_NAME', 'Prognoz');
-define('APP_VERSION', '1.1.2');
+define('APP_VERSION', '1.1.3');
 define('APP_BETA', envBool('APP_BETA', false));
 define('APP_MAINTENANCE', envBool('APP_MAINTENANCE', false));
 define('APP_CONTACT_EMAIL', env('APP_CONTACT_EMAIL', 'contact@example.com'));
