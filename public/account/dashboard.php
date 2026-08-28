@@ -48,7 +48,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $user = currentUser($pdo);
 $userId = (int) $user['id'];
 $hasAvatar = avatarPublicUrl($user['avatar_url'] ?? null) !== null;
-$activeEvent = getPrimarySiteEvent($pdo);
 
 $stmt = $pdo->prepare(
     "SELECT c.id, c.nom, c.est_generale,
@@ -211,16 +210,6 @@ $seasonRewards = fetchUserSeasonRewards($pdo, $userId, 5);
     </section>
 
     <?php renderSeasonBanner($activeSeason, 'dashboard'); ?>
-
-    <?php if ($activeEvent): ?>
-    <section class="panel dash-event-panel" aria-label="<?= e(t('event.active')) ?>">
-        <div class="dash-event-card">
-            <p class="dash-event-kicker"><?= e(t('event.active')) ?></p>
-            <h3 class="dash-event-title"><?= e((string) $activeEvent['title']) ?></h3>
-            <p class="dash-event-msg"><?= e((string) $activeEvent['message']) ?></p>
-        </div>
-    </section>
-    <?php endif; ?>
 
     <section class="panel dash-profile-panel" aria-label="<?= e(t('dash.personalize')) ?>">
         <div class="panel-head"><?= e(t('dash.personalize')) ?></div>

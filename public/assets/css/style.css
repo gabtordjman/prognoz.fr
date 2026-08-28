@@ -5170,41 +5170,6 @@ html.event-theme-night .event-star {
     text-transform: uppercase;
 }
 
-.dash-event-panel {
-    margin-bottom: var(--section-gap);
-}
-
-.dash-event-card {
-    padding: 0.15rem 0;
-}
-
-.dash-event-kicker {
-    margin: 0 0 0.25rem;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--brass);
-}
-
-.dash-event-title {
-    margin: 0 0 0.3rem;
-    font-size: 1.15rem;
-    color: var(--ink);
-}
-
-.dash-event-msg {
-    margin: 0;
-    color: var(--muted);
-}
-
-.dash-event-until {
-    margin: 0.45rem 0 0;
-    font-size: 0.8rem;
-    font-family: var(--font-mono);
-    color: var(--muted);
-}
-
 .dash-profile-panel {
     margin-bottom: var(--section-gap);
 }
