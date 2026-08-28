@@ -375,6 +375,7 @@ return [
     'nav.season_pts' => 'Season',
     'nav.total_pts' => '{n} pts total',
     'announce.aria' => 'Announcements',
+    'announce.empty' => 'No announcements yet.',
     'announce.got_it' => 'Got it',
     'announce.kicker' => 'News',
     'notify.allow' => 'Allow',

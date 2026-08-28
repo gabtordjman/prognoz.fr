@@ -174,22 +174,67 @@ function markSiteAnnouncementRead(PDO $pdo, int $userId, int $announcementId): v
     $stmt->execute([$userId, $announcementId]);
 }
 
+function markAllSiteAnnouncementsRead(PDO $pdo, int $userId): void
+{
+    ensureSiteAnnouncementsSchema($pdo);
+    $pdo->prepare(
+        'INSERT IGNORE INTO site_announcement_reads (user_id, announcement_id, read_at)
+         SELECT ?, a.id, UTC_TIMESTAMP()
+         FROM site_announcements a
+         WHERE a.published = 1'
+    )->execute([$userId]);
+}
+
+function formatAnnouncementDate(?string $datetime): string
+{
+    if ($datetime === null || $datetime === '') {
+        return '';
+    }
+    $dt = function_exists('parseUtcDatetime') ? parseUtcDatetime($datetime) : null;
+    if (!$dt) {
+        try {
+            $dt = new DateTimeImmutable($datetime, new DateTimeZone('UTC'));
+        } catch (Throwable $e) {
+            return substr($datetime, 0, 10);
+        }
+    }
+    if (function_exists('appTimezone')) {
+        $dt = $dt->setTimezone(appTimezone());
+    }
+
+    return $dt->format('d/m/Y');
+}
+
 /**
- * Données pour le front (badge + popup).
+ * Données pour le front (point + liste).
  *
- * @return array{unread_count:int,latest:?array{id:int,title:string,body:string}}
+ * @return array{unread_count:int,items:list<array{id:int,title:string,body:string,date:string,unread:bool}>}
  */
 function siteAnnouncementsClientPayload(PDO $pdo, int $userId): array
 {
-    $unread = listUnreadSiteAnnouncements($pdo, $userId);
-    $latest = $unread[0] ?? null;
+    ensureSiteAnnouncementsSchema($pdo);
+    $published = listSiteAnnouncements($pdo, true);
+    $unreadRows = listUnreadSiteAnnouncements($pdo, $userId);
+    $unreadIds = [];
+    foreach ($unreadRows as $row) {
+        $unreadIds[(int) $row['id']] = true;
+    }
+
+    $items = [];
+    foreach ($published as $row) {
+        $id = (int) $row['id'];
+        $when = (string) ($row['published_at'] ?? $row['created_at'] ?? '');
+        $items[] = [
+            'id'     => $id,
+            'title'  => (string) $row['title'],
+            'body'   => (string) $row['body'],
+            'date'   => formatAnnouncementDate($when),
+            'unread' => isset($unreadIds[$id]),
+        ];
+    }
 
     return [
-        'unread_count' => count($unread),
-        'latest'       => $latest ? [
-            'id'    => (int) $latest['id'],
-            'title' => (string) $latest['title'],
-            'body'  => (string) $latest['body'],
-        ] : null,
+        'unread_count' => count($unreadIds),
+        'items'        => $items,
     ];
 }

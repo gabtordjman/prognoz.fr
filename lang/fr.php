@@ -375,6 +375,7 @@ return [
     'nav.season_pts' => 'Saison',
     'nav.total_pts' => '{n} pts au total',
     'announce.aria' => 'Annonces',
+    'announce.empty' => 'Aucune annonce pour le moment.',
     'announce.got_it' => 'Compris',
     'announce.kicker' => 'Annonce',
     'notify.allow' => 'Autoriser',

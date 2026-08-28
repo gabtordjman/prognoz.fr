@@ -312,21 +312,15 @@ button.pill-points-btn:active {
     color: var(--brass-shine);
 }
 
-.topbar-announce-badge {
+.topbar-announce-dot {
     position: absolute;
-    top: -0.35rem;
-    right: -0.35rem;
-    min-width: 1.05rem;
-    height: 1.05rem;
-    padding: 0 0.22rem;
-    border-radius: 999px;
-    background: var(--brass);
-    color: #1a140e;
-    font-size: 0.62rem;
-    font-weight: 800;
-    line-height: 1.05rem;
-    text-align: center;
-    border: 1px solid rgba(0, 0, 0, 0.2);
+    top: 0.15rem;
+    right: 0.15rem;
+    width: 0.48rem;
+    height: 0.48rem;
+    border-radius: 50%;
+    background: #d4a824;
+    box-shadow: 0 0 0 1.5px rgba(20, 28, 22, 0.85);
 }
 
 .announce-panel {
@@ -334,7 +328,7 @@ button.pill-points-btn:active {
     z-index: 90;
     top: 4.25rem;
     left: var(--page-gutter);
-    width: min(22rem, calc(100vw - 2 * var(--page-gutter)));
+    width: min(24rem, calc(100vw - 2 * var(--page-gutter)));
     pointer-events: none;
 }
 
@@ -347,11 +341,14 @@ button.pill-points-btn:active {
     border: 1px solid rgba(120, 90, 40, 0.32);
     border-radius: var(--radius);
     box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
-    padding: 0.85rem 0.95rem 0.9rem;
+    padding: 0.7rem 0.75rem 0.75rem;
     color: var(--ink);
     opacity: 0;
     transform: translateY(-6px);
-    transition: opacity 0.22s ease, transform 0.22s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    max-height: min(70vh, 28rem);
+    display: flex;
+    flex-direction: column;
 }
 
 .announce-panel.is-open .announce-panel-inner {
@@ -359,33 +356,79 @@ button.pill-points-btn:active {
     transform: translateY(0);
 }
 
-.announce-kicker {
-    margin: 0 0 0.2rem;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--brass);
+.announce-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.45rem;
+    flex-shrink: 0;
 }
 
-.announce-title {
-    margin: 0 0 0.35rem;
+.announce-list-title {
+    margin: 0;
     font-family: var(--font-display);
-    font-size: 1rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.announce-panel-close {
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0.1rem 0.25rem;
+}
+
+.announce-list {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    min-height: 0;
+}
+
+.announce-item {
+    padding: 0.55rem 0.6rem;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(90, 75, 55, 0.16);
+}
+
+.announce-item.is-unread {
+    border-color: rgba(154, 116, 32, 0.45);
+    background: rgba(232, 208, 120, 0.22);
+}
+
+.announce-item-date {
+    display: block;
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    color: var(--muted);
+    margin-bottom: 0.15rem;
+}
+
+.announce-item-title {
+    margin: 0 0 0.25rem;
+    font-size: 0.9rem;
     font-weight: 700;
     line-height: 1.3;
 }
 
-.announce-body {
-    margin: 0 0 0.75rem;
-    font-size: 0.88rem;
+.announce-item-body {
+    margin: 0;
+    font-size: 0.84rem;
     line-height: 1.4;
-    color: var(--muted);
+    color: #4a4338;
     white-space: pre-wrap;
 }
 
-.announce-panel .btn {
-    width: 100%;
+.announce-empty {
+    margin: 0.35rem 0 0;
+    font-size: 0.84rem;
+    color: var(--muted);
 }
 
 @media (prefers-reduced-motion: reduce) {

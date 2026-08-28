@@ -168,7 +168,7 @@ function layoutTopbar(?array $user, string $active = ''): void
                         <?php else: ?>
                             Mic
                         <?php endif; ?>
-                        <span class="topbar-announce-badge" id="announceBadge"<?= $annUnread > 0 ? '' : ' hidden' ?>><?= $annUnread > 9 ? '9+' : $annUnread ?></span>
+                        <span class="topbar-announce-dot" id="announceBadge"<?= $annUnread > 0 ? '' : ' hidden' ?> aria-hidden="true"></span>
                     </button>
                 <?php endif; ?>
             </div>
@@ -211,12 +211,14 @@ function layoutTopbar(?array $user, string $active = ''): void
         </div>
     </div>
     <?php if ($user): ?>
-    <div class="announce-panel" id="announcePanel" role="dialog" aria-modal="true" aria-labelledby="announceTitle" hidden>
+    <div class="announce-panel" id="announcePanel" role="dialog" aria-labelledby="announceListTitle" hidden>
         <div class="announce-panel-inner">
-            <p class="announce-kicker"><?= e(t('announce.kicker')) ?></p>
-            <h2 class="announce-title" id="announceTitle"></h2>
-            <p class="announce-body" id="announceBody"></p>
-            <button type="button" class="btn btn-primary btn-sm" id="announceGotIt"><?= e(t('announce.got_it')) ?></button>
+            <div class="announce-panel-head">
+                <h2 class="announce-list-title" id="announceListTitle"><?= e(t('announce.aria')) ?></h2>
+                <button type="button" class="announce-panel-close" id="announceClose" aria-label="<?= e(t('common.close')) ?>">&times;</button>
+            </div>
+            <div class="announce-list" id="announceList"></div>
+            <p class="announce-empty" id="announceEmpty" hidden><?= e(t('announce.empty')) ?></p>
         </div>
     </div>
     <script>

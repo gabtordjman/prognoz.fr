@@ -78,7 +78,7 @@ adminLayoutStart('Annonces', 'announcements');
     <div class="ops-panel-head"><?= $form['id'] ? 'Modifier #' . (int) $form['id'] : 'Nouvelle annonce' ?></div>
     <div class="ops-panel-body">
         <p class="ops-muted" style="margin-top:0">
-            Publiée = visible sur le site (micro + pastille + popup discrète pour les joueurs non lus).
+            Publiée = point sur le micro + liste des news au clic (sans popup auto).
         </p>
         <form method="post" class="ops-event-form">
             <?= csrfField() ?>
