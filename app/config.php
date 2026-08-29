@@ -8,7 +8,7 @@ if (!defined('APP_BOOT')) {
 }
 
 define('APP_NAME', 'Prognoz');
-define('APP_VERSION', '1.2.3');
+define('APP_VERSION', '1.3.0');
 define('APP_BETA', envBool('APP_BETA', false));
 define('APP_MAINTENANCE', envBool('APP_MAINTENANCE', false));
 define('APP_CONTACT_EMAIL', env('APP_CONTACT_EMAIL', 'contact@example.com'));
@@ -28,6 +28,10 @@ define('DB_CHARSET', 'utf8mb4');
 define('POINTS_1X2', 1);
 define('POINTS_BUTEUR', 2);
 define('POINTS_SCORE_EXACT', 3);
+/** Points de base marché équipe préférée (avant ×2 si gagné). */
+define('POINTS_FAV_TEAM', 2);
+/** Bonus ×2 uniquement sur le marché fav_team gagné. */
+define('FAV_TEAM_WIN_MULTIPLIER', 2);
 
 /**
  * Multiplicateur de points selon la série 1x2 après le gain en cours.

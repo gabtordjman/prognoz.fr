@@ -168,6 +168,48 @@ function scoreMarket(PDO $pdo, array $match, array $market): void
         return;
     }
 
+    $eventMult = 1.0;
+    if (function_exists('eventPointsMultiplier')) {
+        try {
+            $eventMult = eventPointsMultiplier($pdo, $match);
+        } catch (Throwable $e) {
+            $eventMult = 1.0;
+        }
+    }
+    if ($eventMult < 1.0) {
+        $eventMult = 1.0;
+    }
+
+    // Équipe préférée : résultat relatif à chaque user (pas une réponse unique).
+    if ($type === 'fav_team') {
+        if (($match['resultat_1x2'] ?? null) === null || $match['resultat_1x2'] === '') {
+            return;
+        }
+        $mult = defined('FAV_TEAM_WIN_MULTIPLIER') ? (float) FAV_TEAM_WIN_MULTIPLIER : 2.0;
+        foreach ($predictions as $pred) {
+            $fav = fetchUserFavoriteTeam($pdo, (int) $pred['user_id']);
+            $correct = favTeamPickIsCorrect($match, $fav, (string) $pred['reponse']);
+            $award = 0;
+            if ($correct) {
+                $award = (int) max(0, (int) round($points * $mult * $eventMult));
+            }
+            applyPredictionResult($pdo, $pred, $correct, $award, false);
+            if ($correct) {
+                $matchLabel = ($match['equipe_home'] ?? '') . ' – ' . ($match['equipe_away'] ?? '');
+                notifyWinPush(
+                    $pdo,
+                    (int) $pred['user_id'],
+                    (int) $pred['id'],
+                    $award,
+                    $matchLabel,
+                    marketTypeLabel($type)
+                );
+            }
+        }
+
+        return;
+    }
+
     $affectsSerie = ($type === '1x2');
     $result       = null;
 
@@ -197,18 +239,6 @@ function scoreMarket(PDO $pdo, array $match, array $market): void
 
     if ($result === null || $result === '') {
         return;
-    }
-
-    $eventMult = 1.0;
-    if (function_exists('eventPointsMultiplier')) {
-        try {
-            $eventMult = eventPointsMultiplier($pdo, $match);
-        } catch (Throwable $e) {
-            $eventMult = 1.0;
-        }
-    }
-    if ($eventMult < 1.0) {
-        $eventMult = 1.0;
     }
 
     $serieByUser = [];

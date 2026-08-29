@@ -37,17 +37,21 @@ foreach ($matchsByCategoryDisplay as $catMatchs) {
 
 $predictions = getUserPredictions($pdo, $user ? (int) $user['id'] : null, $allMarketIds);
 $flashes = getFlashes();
+$userFavTeam = $user ? userFavoriteTeam($user) : null;
 
 $marketsMeta = [];
 foreach ($matchs as $m) {
     foreach ($m['markets'] as $mk) {
+        $mType = (string) ($mk['type'] ?? '');
         $marketsMeta[(int) $mk['id']] = [
             'competition' => $m['competition'],
             'home'        => $m['equipe_home'],
             'away'        => $m['equipe_away'],
-            'type'        => $mk['type'],
-            'label'       => marketTypeLabel($mk['type']),
-            'points'      => (int) $mk['points_si_correct'],
+            'type'        => $mType,
+            'label'       => marketTypeLabel($mType),
+            'points'      => $mType === 'fav_team'
+                ? marketPoints('fav_team')
+                : (int) $mk['points_si_correct'],
             'probs'       => [
                 '1' => $m['prob_1'] !== null ? (float) $m['prob_1'] : null,
                 'N' => $m['prob_n'] !== null ? (float) $m['prob_n'] : null,
@@ -182,10 +186,12 @@ releaseSession();
                         $market1x2 = null;
                         $marketScore = null;
                         $marketButeur = null;
+                        $marketFav = null;
                         foreach ($m['markets'] as $mk) {
                             if ($mk['type'] === '1x2') $market1x2 = $mk;
                             if ($mk['type'] === 'score_exact') $marketScore = $mk;
                             if ($mk['type'] === 'buteur') $marketButeur = $mk;
+                            if ($mk['type'] === 'fav_team') $marketFav = $mk;
                         }
                         if (!$market1x2) continue;
                         $mid1x2 = (int) $market1x2['id'];
@@ -199,12 +205,17 @@ releaseSession();
                             && soccerSportHasScorerOdds($m['sport'])
                             && !empty($marketButeur['options']);
                         $buteurOptions = $hasButeurMarket ? ($marketButeur['options'] ?? []) : [];
-                        $hasExtraMarkets = $hasScoreMarket || $hasButeurMarket;
+                        $hasFavMarket = $user && $marketFav && matchIncludesFavoriteTeam($m, $userFavTeam);
+                        $hasExtraMarkets = $hasScoreMarket || $hasButeurMarket || $hasFavMarket;
                         $extraHints = array_values(array_filter([
+                            $hasFavMarket ? t('home.fav_team') : null,
                             $hasScoreMarket ? t('home.exact_score') : null,
                             $hasButeurMarket ? t('home.scorer') : null,
                         ]));
                         $extraPts = [];
+                        if ($hasFavMarket) {
+                            $extraPts[] = '+' . marketPoints('fav_team');
+                        }
                         if ($hasButeurMarket) {
                             $extraPts[] = '+' . POINTS_BUTEUR;
                         }
@@ -213,7 +224,7 @@ releaseSession();
                         }
                         $extraOpen = false;
                         if ($hasExtraMarkets) {
-                            foreach ([$marketScore, $marketButeur] as $extraMarket) {
+                            foreach ([$marketFav, $marketScore, $marketButeur] as $extraMarket) {
                                 if (!$extraMarket) {
                                     continue;
                                 }
@@ -282,6 +293,32 @@ releaseSession();
                         <div class="match-markets-extra"
                              id="matchMarkets-<?= (int) $m['id'] ?>"
                              <?= $extraOpen ? '' : 'hidden' ?>>
+
+                        <?php if ($hasFavMarket):
+                            $midFav = (int) $marketFav['id'];
+                            $choixFav = $predictions[$midFav]['reponse'] ?? null;
+                            $favPts = marketPoints('fav_team');
+                        ?>
+                        <div class="market-block market-block-extra market-block-fav">
+                            <div class="market-label">
+                                <?= e(t('home.fav_team')) ?>
+                                <span class="pts-tag pts-2">+<?= (int) $favPts ?></span>
+                            </div>
+                            <p class="fav-team-hint"><?= e(t('home.fav_team_of', ['team' => (string) $userFavTeam])) ?></p>
+                            <div class="pick-row pick-row-2 fav-team-picks" data-market="<?= $midFav ?>">
+                                <button type="button"
+                                        class="pick-btn pick-btn--no-prob<?= $choixFav === 'W' ? ' selected' : '' ?>"
+                                        data-pick="W">
+                                    <span class="pick-val"><?= e(t('home.fav_win')) ?></span>
+                                </button>
+                                <button type="button"
+                                        class="pick-btn pick-btn--no-prob<?= $choixFav === 'L' ? ' selected' : '' ?>"
+                                        data-pick="L">
+                                    <span class="pick-val"><?= e(t('home.fav_lose')) ?></span>
+                                </button>
+                            </div>
+                        </div>
+                        <?php endif; ?>
 
                         <?php if ($hasScoreMarket):
                             $midScore = (int) $marketScore['id'];

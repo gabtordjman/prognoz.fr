@@ -81,6 +81,16 @@ function ensureUserProfileExtrasSchema(PDO $pdo): void
     } catch (PDOException $e) {
         // ignore
     }
+    try {
+        $col = $pdo->query('SHOW COLUMNS FROM users LIKE "equipe_favorie"')->fetch();
+        if (!$col) {
+            $pdo->exec(
+                'ALTER TABLE users ADD COLUMN equipe_favorie VARCHAR(150) NULL DEFAULT NULL AFTER sport_favori'
+            );
+        }
+    } catch (PDOException $e) {
+        // ignore
+    }
 }
 
 /**
@@ -772,9 +782,17 @@ function userFavoriteSportLabel(?string $sport): string
 /**
  * @throws InvalidArgumentException
  */
-function updateUserProfileExtras(PDO $pdo, int $userId, ?string $bio, ?string $sportFavori): void
-{
+function updateUserProfileExtras(
+    PDO $pdo,
+    int $userId,
+    ?string $bio,
+    ?string $sportFavori,
+    ?string $equipeFavorie = null
+): void {
     ensureUserProfileExtrasSchema($pdo);
+    if (function_exists('ensureFavoriteTeamSchema')) {
+        ensureFavoriteTeamSchema($pdo);
+    }
     $bio = $bio !== null ? trim($bio) : '';
     if (mb_strlen($bio) > 200) {
         throw new InvalidArgumentException(t('dash.bio_too_long'));
@@ -789,6 +807,18 @@ function updateUserProfileExtras(PDO $pdo, int $userId, ?string $bio, ?string $s
     if ($sportFavori === '') {
         $sportFavori = null;
     }
-    $pdo->prepare('UPDATE users SET bio = ?, sport_favori = ? WHERE id = ?')
-        ->execute([$bio, $sportFavori, $userId]);
+
+    $equipeFavorie = $equipeFavorie !== null ? trim($equipeFavorie) : '';
+    if ($equipeFavorie === '') {
+        $equipeFavorie = null;
+    } else {
+        $canonical = resolveFavoriteTeamCanonical($pdo, $equipeFavorie);
+        if ($canonical === null) {
+            throw new InvalidArgumentException(t('dash.fav_team_invalid'));
+        }
+        $equipeFavorie = $canonical;
+    }
+
+    $pdo->prepare('UPDATE users SET bio = ?, sport_favori = ?, equipe_favorie = ? WHERE id = ?')
+        ->execute([$bio, $sportFavori, $equipeFavorie, $userId]);
 }

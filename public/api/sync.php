@@ -38,6 +38,7 @@ if ($cronLight) {
     // les cotes sont un luxe (admin / mode=odds), pas un besoin toutes les heures.
     $lifecycle = maintainMatchLifecycle($pdo, false);
     $reminders = maybeSendDailyMatchReminders($pdo);
+    $favNotifs = maybeNotifyFavoriteTeamMatches($pdo);
     echo json_encode([
         'ok'              => true,
         'mode'            => 'cron',
@@ -45,6 +46,7 @@ if ($cronLight) {
         'scores_synced'   => $lifecycle['scores'],
         'closed'          => $lifecycle['closed'],
         'reminders'       => $reminders,
+        'fav_team'        => $favNotifs,
         'quota_remaining' => oddsQuotaRemaining(),
     ]);
     exit;

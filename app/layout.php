@@ -370,6 +370,7 @@ function layoutPointsHelp(): void
             <ul class="points-help-list points-help-list-compact">
                 <li><strong>+<?= (int) POINTS_1X2 ?> <?= e(t('common.pt')) ?></strong> — <?= e(t('points.earn_1x2')) ?></li>
                 <li><strong>+<?= (int) POINTS_SCORE_EXACT ?> <?= e(t('common.pts')) ?></strong> — <?= e(t('points.earn_score')) ?></li>
+                <li><strong>+<?= (int) (POINTS_FAV_TEAM * FAV_TEAM_WIN_MULTIPLIER) ?> <?= e(t('common.pts')) ?></strong> — <?= e(t('points.earn_fav')) ?></li>
             </ul>
             <p class="points-help-foot"><?= e(t('points.foot')) ?></p>
         </div>

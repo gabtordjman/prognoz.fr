@@ -47,6 +47,9 @@
     function pickLabel(meta, reponse) {
         if (meta.type === 'score_exact') return i18n('js.score_prefix') + ' ' + reponse;
         if (meta.type === 'buteur') return reponse;
+        if (meta.type === 'fav_team') {
+            return reponse === 'L' ? i18n('js.fav_lose') : i18n('js.fav_win');
+        }
         if (reponse === '1') return meta.home;
         if (reponse === '2') return meta.away;
         return i18n('js.draw');

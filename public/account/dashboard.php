@@ -28,7 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo,
                 $userId,
                 (string) ($_POST['bio'] ?? ''),
-                (string) ($_POST['sport_favori'] ?? '')
+                (string) ($_POST['sport_favori'] ?? ''),
+                (string) ($_POST['equipe_favorie'] ?? '')
             );
             clearCurrentUserCache();
             flash('success', t('dash.profile_saved'));
@@ -78,6 +79,11 @@ $friendCount = countAcceptedFriends($pdo, $userId);
 $activeSeason = getActiveSeason($pdo);
 $seasonPoints = $activeSeason ? getUserGeneralSeasonPoints($pdo, $userId, (int) $activeSeason['id']) : 0;
 $seasonRewards = fetchUserSeasonRewards($pdo, $userId, 5);
+$favTeamChoices = listFavoriteTeamChoices($pdo);
+$currentFavTeam = userFavoriteTeam($user);
+if ($currentFavTeam !== null && !in_array($currentFavTeam, $favTeamChoices, true)) {
+    array_unshift($favTeamChoices, $currentFavTeam);
+}
 ?>
 <!DOCTYPE html>
 <html lang="<?= e(htmlLang()) ?>"<?= function_exists('htmlUiClassAttr') ? htmlUiClassAttr() : '' ?>>
@@ -217,7 +223,7 @@ $seasonRewards = fetchUserSeasonRewards($pdo, $userId, 5);
             <form method="post" class="dash-profile-form">
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="save_profile_extras">
-                <div class="dash-profile-field">
+                <div class="dash-profile-field dash-profile-field--bio">
                     <label class="field-label" for="dashBio"><?= e(t('dash.bio')) ?></label>
                     <textarea class="field-input" id="dashBio" name="bio" rows="2" maxlength="200"
                               placeholder="<?= e(t('dash.bio_ph')) ?>"><?= e((string) ($user['bio'] ?? '')) ?></textarea>
@@ -230,6 +236,16 @@ $seasonRewards = fetchUserSeasonRewards($pdo, $userId, 5);
                         <option value="basketball" <?= ($user['sport_favori'] ?? '') === 'basketball' ? 'selected' : '' ?>><?= e(t('sport.basketball')) ?></option>
                         <option value="tennis" <?= ($user['sport_favori'] ?? '') === 'tennis' ? 'selected' : '' ?>><?= e(t('sport.tennis')) ?></option>
                     </select>
+                </div>
+                <div class="dash-profile-field dash-profile-field--team">
+                    <label class="field-label" for="dashFavTeam"><?= e(t('dash.fav_team')) ?></label>
+                    <select class="field-input" id="dashFavTeam" name="equipe_favorie">
+                        <option value=""><?= e(t('dash.fav_team_none')) ?></option>
+                        <?php foreach ($favTeamChoices as $teamName): ?>
+                            <option value="<?= e($teamName) ?>" <?= $currentFavTeam === $teamName ? 'selected' : '' ?>><?= e($teamName) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p class="dash-profile-hint"><?= e(t('dash.fav_team_hint')) ?></p>
                 </div>
                 <div class="dash-profile-actions">
                     <button type="submit" class="btn btn-primary btn-sm"><?= e(t('dash.save_profile')) ?></button>

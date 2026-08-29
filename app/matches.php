@@ -110,6 +110,7 @@ function marketTypeLabel(string $type): string
         case '1x2':         return t('market.result');
         case 'buteur':      return t('market.scorer');
         case 'score_exact': return t('market.exact_score');
+        case 'fav_team':    return t('market.fav_team');
         default:            return $type;
     }
 }
@@ -120,6 +121,7 @@ function marketPoints(string $type): int
         case '1x2':         return POINTS_1X2;
         case 'buteur':      return POINTS_BUTEUR;
         case 'score_exact': return POINTS_SCORE_EXACT;
+        case 'fav_team':    return (int) POINTS_FAV_TEAM * (int) FAV_TEAM_WIN_MULTIPLIER;
         default:            return 0;
     }
 }
@@ -132,6 +134,9 @@ function formatPickLabel(array $row, string $reponse): string
     }
     if ($type === 'buteur') {
         return $reponse;
+    }
+    if ($type === 'fav_team') {
+        return $reponse === 'L' ? t('market.fav_lose') : t('market.fav_win');
     }
     if ($reponse === '1') {
         return $row['equipe_home'];
@@ -281,6 +286,9 @@ function syncMatchMarketCloseTimes(PDO $pdo, int $matchId, string $fermeLeUtc): 
 
 function ensureMatchMarkets(PDO $pdo, int $matchId, string $sportKey, string $fermeLe): void
 {
+    if (function_exists('ensureFavoriteTeamSchema')) {
+        ensureFavoriteTeamSchema($pdo);
+    }
     $stmt = $pdo->prepare('SELECT type FROM prediction_markets WHERE match_id = ?');
     $stmt->execute([$matchId]);
     $existing = $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -289,6 +297,12 @@ function ensureMatchMarkets(PDO $pdo, int $matchId, string $sportKey, string $fe
         $pdo->prepare(
             'INSERT INTO prediction_markets (match_id, type, points_si_correct, ferme_le) VALUES (?, "1x2", ?, ?)'
         )->execute([$matchId, POINTS_1X2, $fermeLe]);
+    }
+
+    if (!in_array('fav_team', $existing, true)) {
+        $pdo->prepare(
+            'INSERT INTO prediction_markets (match_id, type, points_si_correct, ferme_le) VALUES (?, "fav_team", ?, ?)'
+        )->execute([$matchId, POINTS_FAV_TEAM, $fermeLe]);
     }
 
     if (!isSoccerSport($sportKey)) {
@@ -2158,7 +2172,7 @@ function fetchAdminMatchPredictions(PDO $pdo, array $matchIds, ?array $statuts =
          INNER JOIN matches m ON m.id = pm.match_id
          WHERE pm.match_id IN ($phM)
            AND p.statut IN ($phS)
-         ORDER BY u.pseudo ASC, FIELD(pm.type, '1x2', 'score_exact', 'buteur'), p.id ASC"
+         ORDER BY u.pseudo ASC, FIELD(pm.type, '1x2', 'fav_team', 'score_exact', 'buteur'), p.id ASC"
     );
     $stmt->execute([...$matchIds, ...$statuts]);
 
@@ -3025,7 +3039,7 @@ function getMarketsForMatches(PDO $pdo, array $matchIds): array
         "SELECT id, match_id, type, points_si_correct, ferme_le
          FROM prediction_markets
          WHERE match_id IN ($placeholders)
-         ORDER BY match_id, FIELD(type, '1x2', 'score_exact', 'buteur')"
+         ORDER BY match_id, FIELD(type, '1x2', 'fav_team', 'score_exact', 'buteur')"
     );
     $stmt->execute($matchIds);
     $rows = $stmt->fetchAll();
@@ -3384,11 +3398,15 @@ function countUserAwaitingResultPredictions(PDO $pdo, int $userId): int
 function ticketItemToArray(array $row): array
 {
     $type = $row['market_type'] ?? '1x2';
+    $points = $type === 'fav_team'
+        ? marketPoints('fav_team')
+        : (int) ($row['points_si_correct'] ?? marketPoints($type));
+
     return [
         'market_id'    => (int) $row['market_id'],
         'market_type'  => $type,
         'market_label' => marketTypeLabel($type),
-        'points'       => (int) ($row['points_si_correct'] ?? marketPoints($type)),
+        'points'       => $points,
         'reponse'      => $row['reponse'],
         'pick_label'   => formatPickLabel($row, $row['reponse']),
         'competition'  => $row['competition'],
@@ -3527,12 +3545,22 @@ function submitPrediction(PDO $pdo, int $userId, int $marketId, string $reponse)
         if (!isValidExactScorePick($reponse)) {
             throw new InvalidArgumentException('Score invalide.');
         }
+    } elseif ($type === 'fav_team') {
+        if (!in_array($reponse, ['W', 'L'], true)) {
+            throw new InvalidArgumentException(t('fav.pick_invalid'));
+        }
+        $fav = fetchUserFavoriteTeam($pdo, $userId);
+        if (!matchIncludesFavoriteTeam($market, $fav)) {
+            throw new InvalidArgumentException(t('fav.not_in_match'));
+        }
     } elseif ($type === 'buteur') {
         $opt = $pdo->prepare('SELECT COUNT(*) FROM market_options WHERE market_id = ? AND libelle = ?');
         $opt->execute([$marketId, $reponse]);
         if ((int) $opt->fetchColumn() === 0) {
             throw new InvalidArgumentException('Buteur invalide pour ce match.');
         }
+    } else {
+        throw new InvalidArgumentException('Type de marché invalide.');
     }
 
     $stmt = $pdo->prepare('SELECT id, statut, reponse FROM predictions WHERE user_id = ? AND market_id = ?');

@@ -273,6 +273,8 @@ function i18nJsCatalog(): array
         'js.draw',
         'js.score_prefix',
         'js.score_custom_invalid',
+        'js.fav_win',
+        'js.fav_lose',
         'js.remove',
         'js.remove_aria',
         'js.already_validated',
