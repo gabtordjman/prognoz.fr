@@ -51,7 +51,8 @@ define('SEASON_REWARD_LABELS', [1 => 'Badge Or', 2 => 'Badge Argent', 3 => 'Badg
 
 define('MATCHS_HORIZON_JOURS', 7);
 define('MATCHS_IMPORT_HORIZON_JOURS', 14); // import BDD : plus large que l'affichage
-define('MATCHS_PAR_CATEGORIE', 15);
+/** Max matchs affichés par catégorie (foot / basket / tennis). */
+define('MATCHS_PAR_CATEGORIE', 25);
 define('MATCHS_AFFICHES', MATCHS_PAR_CATEGORIE * 3);
 
 define('COMMON_SCORES', [

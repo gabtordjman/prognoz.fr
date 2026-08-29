@@ -2896,10 +2896,28 @@ function maybePruneStaleMatchData(PDO $pdo): ?array
     return $result;
 }
 
+/** Boost d’affichage selon l’ordre ODDS_SPORT_PRIORITY (Ligue 1 > ligues mineures). */
+function sportLeagueDisplayBoost(string $sport): int
+{
+    static $rank = null;
+    if ($rank === null) {
+        $rank = [];
+        foreach (ODDS_SPORT_PRIORITY as $keys) {
+            foreach ($keys as $i => $key) {
+                // Plus tôt dans la liste = plus important (Ligue 1 = +100).
+                $rank[$key] = 100 - min(99, (int) $i * 3);
+            }
+        }
+    }
+
+    return $rank[$sport] ?? 0;
+}
+
 function matchDisplayPriority(array $m): int
 {
     $score = 0;
     $sport = (string) ($m['sport'] ?? '');
+    $score += sportLeagueDisplayBoost($sport);
     if (!empty($m['prob_1']) && !empty($m['prob_2'])) {
         $score += 20;
     }
@@ -2924,12 +2942,18 @@ function matchDisplayPriority(array $m): int
 
 function sortMatchesForDisplay(array &$matches): void
 {
+    // Jour d’abord, puis ligue prioritaire (L1 ce soir > Ekstraklasa 15h), puis heure.
     usort($matches, static function ($a, $b) {
-        $dateCmp = strcmp($a['date_match'] ?? '', $b['date_match'] ?? '');
-        if ($dateCmp !== 0) {
-            return $dateCmp;
+        $dayA = substr((string) ($a['date_match'] ?? ''), 0, 10);
+        $dayB = substr((string) ($b['date_match'] ?? ''), 0, 10);
+        if ($dayA !== $dayB) {
+            return strcmp($dayA, $dayB);
         }
-        return matchDisplayPriority($b) - matchDisplayPriority($a);
+        $prio = matchDisplayPriority($b) - matchDisplayPriority($a);
+        if ($prio !== 0) {
+            return $prio;
+        }
+        return strcmp((string) ($a['date_match'] ?? ''), (string) ($b['date_match'] ?? ''));
     });
 }
 
@@ -2939,8 +2963,8 @@ function getUpcomingMatchesByCategory(PDO $pdo, ?int $perCategory = null): array
     $horizon     = (int) MATCHS_HORIZON_JOURS;
     $closeMins   = (int) MATCH_CLOSE_AFTER_MINUTES;
     $now         = matchSqlNow();
-    // Marge : tri priorité après coup, sans se faire manger par le foot dans un LIMIT global.
-    $fetchLimit  = max($perCategory * 4, 40);
+    // Marge large : on retrie (ligues prio) puis on coupe à perCategory.
+    $fetchLimit  = max($perCategory * 5, 80);
 
     $sportLike = [
         'tennis'     => "m.sport LIKE 'tennis_%'",
