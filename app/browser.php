@@ -66,7 +66,7 @@ function htmlUiClassAttr(): string
     try {
         if (function_exists('getDisplaySiteEvent') && function_exists('primaryEventThemeSlug')) {
             $ev = getDisplaySiteEvent(getPDO());
-            if ($ev) {
+            if ($ev && empty($ev['_upcoming'])) {
                 $theme = primaryEventThemeSlug(getPDO());
                 if ($theme === '' || $theme === 'default') {
                     $classes[] = 'event-theme-default';

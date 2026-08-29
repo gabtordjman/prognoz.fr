@@ -357,18 +357,18 @@ function layoutPointsHelp(): void
                 <li><strong><?= e(t('points.season_rank')) ?></strong> — <?= e(t('points.season_reset', ['n' => (int) SAISON_DUREE_JOURS])) ?></li>
                 <li><strong><?= e(t('points.podium')) ?></strong> — <?= e(t('points.podium_bonus', ['a' => (int) SEASON_PODIUM_BONUS[1], 'b' => (int) SEASON_PODIUM_BONUS[2], 'c' => (int) SEASON_PODIUM_BONUS[3]])) ?></li>
                 <li><strong><?= e(t('points.streak')) ?></strong> — <?= e(t('points.streak_desc')) ?></li>
+                <li><strong><?= e(t('points.events')) ?></strong> — <?= e(t('points.events_desc')) ?></li>
                 <li><strong><?= e(t('points.badges')) ?></strong> — <?= e(t('points.badges_desc')) ?></li>
             </ul>
             <div class="points-help-badges" aria-hidden="true">
                 <span class="lb-pill lb-pill-gold"><?= e(t('points.1st')) ?></span>
                 <span class="lb-pill lb-pill-silver"><?= e(t('points.2nd')) ?></span>
                 <span class="lb-pill lb-pill-bronze"><?= e(t('points.3rd')) ?></span>
-                <span class="lb-pill lb-pill-fire">×5</span>
+                <span class="lb-pill lb-pill-fire">×2.5</span>
             </div>
             <h3 class="points-help-subtitle"><?= e(t('points.subtitle_how')) ?></h3>
             <ul class="points-help-list points-help-list-compact">
                 <li><strong>+<?= (int) POINTS_1X2 ?> <?= e(t('common.pt')) ?></strong> — <?= e(t('points.earn_1x2')) ?></li>
-                <li><strong>+<?= (int) POINTS_BUTEUR ?> <?= e(t('common.pts')) ?></strong> — <?= e(t('points.earn_scorer')) ?></li>
                 <li><strong>+<?= (int) POINTS_SCORE_EXACT ?> <?= e(t('common.pts')) ?></strong> — <?= e(t('points.earn_score')) ?></li>
             </ul>
             <p class="points-help-foot"><?= e(t('points.foot')) ?></p>

@@ -86,7 +86,7 @@ function ensureUserProfileExtrasSchema(PDO $pdo): void
 /**
  * Types d’événements proposés en admin.
  *
- * @return array<string,array{label:string,hint:string}>
+ * @return array<string,array{label:string,hint:string,icon:string}>
  */
 function siteEventTypeCatalog(): array
 {
@@ -94,18 +94,22 @@ function siteEventTypeCatalog(): array
         'points_multiplier' => [
             'label' => 'Points multipliés',
             'hint'  => 'Tous les bons pronos rapportent ×1.5 / ×2 / ×3 pendant la période.',
+            'icon'  => 'fa-bolt',
         ],
         'featured_sport' => [
             'label' => 'Sport en vedette',
             'hint'  => 'Uniquement foot, basket ou tennis : multiplicateur sur ce sport.',
+            'icon'  => 'fa-star',
         ],
         'streak_shield' => [
             'label' => 'Série protégée',
             'hint'  => 'Un prono 1/N/2 raté ne remet pas la série à zéro.',
+            'icon'  => 'fa-shield-halved',
         ],
         'happy_hour' => [
             'label' => 'Happy hour (multiplicateur)',
             'hint'  => 'Comme points multipliés — idéal pour une soirée courte.',
+            'icon'  => 'fa-champagne-glasses',
         ],
     ];
 }
@@ -182,6 +186,35 @@ function getActiveSiteEvents(PDO $pdo): array
     return $stmt->fetchAll() ?: [];
 }
 
+/**
+ * Prochains événements publiés (pas encore commencés).
+ *
+ * @return list<array<string,mixed>>
+ */
+function getUpcomingSiteEvents(PDO $pdo, int $limit = 5): array
+{
+    ensureSiteEventsSchema($pdo);
+    $limit = max(1, min(20, $limit));
+    $stmt = $pdo->query(
+        "SELECT * FROM site_events
+         WHERE enabled = 1
+           AND published = 1
+           AND starts_at > UTC_TIMESTAMP()
+         ORDER BY starts_at ASC, id ASC
+         LIMIT {$limit}"
+    );
+
+    return $stmt->fetchAll() ?: [];
+}
+
+/** Prochain événement planifié (publié), ou null. */
+function getNextUpcomingSiteEvent(PDO $pdo): ?array
+{
+    $list = getUpcomingSiteEvents($pdo, 1);
+
+    return $list[0] ?? null;
+}
+
 /** Admin connecté (panel) ou compte site admin → peut prévisualiser un brouillon. */
 function canPreviewSiteEvents(): bool
 {
@@ -211,7 +244,7 @@ function siteEventPreviewId(): int
 }
 
 /**
- * Événement à afficher (bannière / thème) : preview admin, sinon primaire public.
+ * Événement à afficher (bannière / thème) : preview admin, sinon live, sinon prochain planifié.
  */
 function getDisplaySiteEvent(PDO $pdo): ?array
 {
@@ -220,11 +253,25 @@ function getDisplaySiteEvent(PDO $pdo): ?array
         $ev = fetchSiteEvent($pdo, $previewId);
         if ($ev) {
             $ev['_preview'] = true;
+            $ev['_phase'] = siteEventIsLive($ev) ? 'live' : 'preview';
             return $ev;
         }
     }
 
-    return getPrimarySiteEvent($pdo);
+    $live = getPrimarySiteEvent($pdo);
+    if ($live) {
+        $live['_phase'] = 'live';
+        return $live;
+    }
+
+    $upcoming = getNextUpcomingSiteEvent($pdo);
+    if ($upcoming) {
+        $upcoming['_phase'] = 'upcoming';
+        $upcoming['_upcoming'] = true;
+        return $upcoming;
+    }
+
+    return null;
 }
 
 /** Événement principal public pour bannière / thème. */
@@ -297,11 +344,11 @@ function eventHasStreakShield(PDO $pdo): bool
     return false;
 }
 
-/** Classe CSS thème (sans préfixe). */
+/** Classe CSS thème (sans préfixe). Uniquement si l’événement est live (ou preview). */
 function primaryEventThemeSlug(PDO $pdo): string
 {
     $ev = getDisplaySiteEvent($pdo);
-    if (!$ev) {
+    if (!$ev || !empty($ev['_upcoming'])) {
         return '';
     }
     $theme = preg_replace('/[^a-z0-9_-]/', '', strtolower((string) ($ev['theme'] ?? 'default'))) ?: 'default';
@@ -312,23 +359,117 @@ function primaryEventThemeSlug(PDO $pdo): string
     return $theme;
 }
 
+/**
+ * Heure / date locales pour annonces d’événement (ex. 20h · 31/08).
+ *
+ * @return array{time:string,date:string,when:string}
+ */
+function formatSiteEventSchedule(string $datetimeUtc): array
+{
+    $dt = parseUtcDatetime($datetimeUtc);
+    if (!$dt) {
+        return ['time' => '', 'date' => '', 'when' => $datetimeUtc];
+    }
+    $local = $dt->setTimezone(appTimezone());
+    $lang = function_exists('currentLang') ? currentLang() : 'fr';
+    if ($lang === 'en') {
+        $time = $local->format('g:i A');
+    } else {
+        $time = $local->format('G') . 'h' . ($local->format('i') === '00' ? '' : $local->format('i'));
+    }
+    $date = $local->format('d/m');
+
+    return [
+        'time' => $time,
+        'date' => $date,
+        'when' => formatMatchWhen($datetimeUtc),
+    ];
+}
+
+function siteEventTypeIcon(string $type): string
+{
+    $catalog = siteEventTypeCatalog();
+
+    return (string) ($catalog[$type]['icon'] ?? 'fa-bolt');
+}
+
 function renderSiteEventBanner(?PDO $pdo = null): void
 {
     try {
         $pdo = $pdo ?? getPDO();
-        $ev = getDisplaySiteEvent($pdo);
     } catch (Throwable $e) {
         return;
     }
-    if (!$ev) {
-        return;
+
+    $banners = [];
+    $previewId = siteEventPreviewId();
+
+    if ($previewId > 0) {
+        $ev = fetchSiteEvent($pdo, $previewId);
+        if ($ev) {
+            $ev['_preview'] = true;
+            $ev['_phase'] = siteEventIsLive($ev) ? 'live' : (strcmp(gmdate('Y-m-d H:i:s'), (string) ($ev['starts_at'] ?? '')) < 0 ? 'upcoming' : 'preview');
+            if (($ev['_phase'] ?? '') === 'upcoming') {
+                $ev['_upcoming'] = true;
+            }
+            $banners[] = $ev;
+        }
+    } else {
+        $live = getPrimarySiteEvent($pdo);
+        if ($live) {
+            $live['_phase'] = 'live';
+            $banners[] = $live;
+        }
+        $upcoming = getNextUpcomingSiteEvent($pdo);
+        if ($upcoming) {
+            $liveId = $live ? (int) ($live['id'] ?? 0) : 0;
+            if ((int) ($upcoming['id'] ?? 0) !== $liveId) {
+                $upcoming['_phase'] = 'upcoming';
+                $upcoming['_upcoming'] = true;
+                $banners[] = $upcoming;
+            }
+        }
     }
+
+    foreach ($banners as $ev) {
+        renderOneSiteEventBanner($ev);
+    }
+}
+
+/**
+ * @param array<string,mixed> $ev
+ */
+function renderOneSiteEventBanner(array $ev): void
+{
     $title = trim((string) ($ev['title'] ?? ''));
     $message = trim((string) ($ev['message'] ?? ''));
-    if ($title === '' && $message === '') {
+    $type = (string) ($ev['type'] ?? 'points_multiplier');
+    $phase = (string) ($ev['_phase'] ?? (siteEventIsLive($ev) ? 'live' : 'upcoming'));
+    $isPreview = !empty($ev['_preview']);
+    $isUpcoming = $phase === 'upcoming' || !empty($ev['_upcoming']);
+
+    if ($isUpcoming) {
+        if ($title === '') {
+            return;
+        }
+        $sched = formatSiteEventSchedule((string) ($ev['starts_at'] ?? ''));
+        $message = t('event.starts_at', [
+            'title' => $title,
+            'time'  => $sched['time'],
+            'date'  => $sched['date'],
+        ]);
+    } elseif ($title === '' && $message === '') {
         return;
     }
-    $isPreview = !empty($ev['_preview']);
+
+    $typeClass = 'site-event-banner--' . preg_replace('/[^a-z0-9_]/', '', $type);
+    $icon = siteEventTypeIcon($type);
+    $meta = '';
+    if ($isUpcoming) {
+        $meta = t('event.upcoming');
+    } elseif ($phase === 'live' || siteEventIsLive($ev)) {
+        $meta = t('event.until', ['when' => formatMatchWhen((string) ($ev['ends_at'] ?? ''))]);
+    }
     ?>
     <?php if ($isPreview): ?>
     <div class="site-event-preview-bar" role="status">
@@ -336,9 +477,9 @@ function renderSiteEventBanner(?PDO $pdo = null): void
         <a href="<?= e(url('admin/events.php?edit=' . (int) ($ev['id'] ?? 0))) ?>">Retour admin</a>
     </div>
     <?php endif; ?>
-    <div class="site-event-banner" role="status">
+    <div class="site-event-banner <?= e($typeClass) ?><?= $isUpcoming ? ' is-upcoming' : ' is-live' ?>" role="status">
         <div class="site-event-banner-inner">
-            <span class="site-event-banner-icon" aria-hidden="true"><i class="fa-solid fa-bolt"></i></span>
+            <span class="site-event-banner-icon" aria-hidden="true"><i class="fa-solid <?= e($icon) ?>"></i></span>
             <div class="site-event-banner-body">
                 <?php if ($title !== ''): ?>
                     <strong class="site-event-banner-title"><?= e($title) ?></strong>
@@ -346,18 +487,22 @@ function renderSiteEventBanner(?PDO $pdo = null): void
                 <?php if ($message !== ''): ?>
                     <span class="site-event-banner-msg"><?= e($message) ?></span>
                 <?php endif; ?>
+                <?php if ($meta !== ''): ?>
+                    <span class="site-event-banner-meta"><?= e($meta) ?></span>
+                <?php endif; ?>
             </div>
         </div>
     </div>
     <?php
 }
 
-/** Pluie d’étoiles légère une fois par chargement de page, si un événement est affiché. */
+/** Pluie d’étoiles légère une fois par chargement de page, si un événement live est affiché. */
 function renderSiteEventStarRain(?PDO $pdo = null): void
 {
     try {
         $pdo = $pdo ?? getPDO();
-        if (!getDisplaySiteEvent($pdo)) {
+        $ev = getDisplaySiteEvent($pdo);
+        if (!$ev || !empty($ev['_upcoming'])) {
             return;
         }
     } catch (Throwable $e) {

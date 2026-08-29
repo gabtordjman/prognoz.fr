@@ -128,6 +128,11 @@ function i18nCriticalFallbacks(string $lang): array
         'dash.profile_saved'   => ['fr' => 'Profil enregistré.', 'en' => 'Profile saved.'],
         'event.active'         => ['fr' => 'Événement', 'en' => 'Event'],
         'event.until'          => ['fr' => 'Jusqu’à {when}', 'en' => 'Until {when}'],
+        'event.upcoming'       => ['fr' => 'À venir', 'en' => 'Coming up'],
+        'event.starts_at'      => [
+            'fr' => 'L’événement « {title} » commencera à {time} le {date}.',
+            'en' => 'The event “{title}” starts at {time} on {date}.',
+        ],
         'profile.self_sub'     => ['fr' => 'C’est toi', 'en' => 'That’s you'],
         'season.badge_bronze_streak' => ['fr' => 'Bronze · série {n}', 'en' => 'Bronze · streak {n}'],
         'season.badge_gold_streak'   => ['fr' => 'Or · série {n}', 'en' => 'Gold · streak {n}'],

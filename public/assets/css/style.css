@@ -5374,38 +5374,98 @@ a.dash-stat:hover .dash-stat-val {
     line-height: 1.35;
 }
 
+.site-event-banner.is-upcoming {
+    background: linear-gradient(135deg, #f3f0e8 0%, #e8e4d8 100%);
+    border-bottom-style: dashed;
+}
+
+.site-event-banner--points_multiplier {
+    background: linear-gradient(135deg, #faf3dc 0%, #f0e4c0 100%);
+    border-bottom-color: rgba(154, 116, 32, 0.4);
+}
+
+.site-event-banner--happy_hour {
+    background: linear-gradient(135deg, #faf0e6 0%, #f2dcc8 100%);
+    border-bottom-color: rgba(196, 92, 38, 0.35);
+}
+
+.site-event-banner--featured_sport {
+    background: linear-gradient(135deg, #eef5f0 0%, #dceadf 100%);
+    border-bottom-color: rgba(45, 107, 72, 0.35);
+}
+
+.site-event-banner--streak_shield {
+    background: linear-gradient(135deg, #eef2f6 0%, #dde5ee 100%);
+    border-bottom-color: rgba(61, 90, 128, 0.35);
+}
+
 .site-event-banner-inner {
     max-width: var(--page-max);
     margin: 0 auto;
-    padding: 0.65rem var(--page-gutter);
+    padding: 0.7rem var(--page-gutter);
     display: flex;
     align-items: flex-start;
-    gap: 0.65rem;
+    gap: 0.7rem;
 }
 
 .site-event-banner-icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(106, 80, 24, 0.12);
     color: #6a5018;
-    font-size: 1.05rem;
-    line-height: 1.4;
+    font-size: 0.95rem;
+    line-height: 1;
     flex-shrink: 0;
+}
+
+.site-event-banner--happy_hour .site-event-banner-icon {
+    background: rgba(196, 92, 38, 0.14);
+    color: #a04818;
+}
+
+.site-event-banner--featured_sport .site-event-banner-icon {
+    background: rgba(45, 107, 72, 0.14);
+    color: #1e5035;
+}
+
+.site-event-banner--streak_shield .site-event-banner-icon {
+    background: rgba(61, 90, 128, 0.14);
+    color: #2c4060;
 }
 
 .site-event-banner-body {
     display: flex;
     flex-direction: column;
-    gap: 0.12rem;
+    gap: 0.15rem;
     min-width: 0;
 }
 
 .site-event-banner-title {
     font-weight: 700;
     color: #1a140e;
-    font-size: 0.95rem;
+    font-size: 0.98rem;
 }
 
 .site-event-banner-msg {
     color: #5a5040;
     font-size: 0.86rem;
+}
+
+.site-event-banner-meta {
+    margin-top: 0.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #6a5018;
+    letter-spacing: 0.02em;
+}
+
+.site-event-banner.is-upcoming .site-event-banner-meta {
+    color: #7a6040;
 }
 
 /* Teintes légères — on ne retile PAS le fond (évite l’effet « rayures »). */
