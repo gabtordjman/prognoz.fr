@@ -83,8 +83,15 @@
         }).then(function (r) { return r.json(); }).then(applyPayload).catch(function () { /* ignore */ });
     }
 
+    function positionPanel() {
+        var rect = btn.getBoundingClientRect();
+        var top = Math.round(rect.bottom + 10);
+        panel.style.setProperty('--announce-panel-top', top + 'px');
+    }
+
     function openPanel() {
         renderList();
+        positionPanel();
         panel.hidden = false;
         // Force reflow so the open animation plays
         void panel.offsetWidth;
@@ -131,6 +138,18 @@
             closePanel();
         }
     });
+
+    window.addEventListener('resize', function () {
+        if (panel.classList.contains('is-open')) {
+            positionPanel();
+        }
+    });
+
+    window.addEventListener('scroll', function () {
+        if (panel.classList.contains('is-open')) {
+            positionPanel();
+        }
+    }, { passive: true });
 
     setDot(data.unread_count);
 

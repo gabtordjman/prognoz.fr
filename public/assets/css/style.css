@@ -465,6 +465,27 @@ button.pill-points-btn:active {
     color: var(--muted);
 }
 
+@media (max-width: 720px) {
+    .announce-panel {
+        position: fixed;
+        left: 0.75rem;
+        right: 0.75rem;
+        width: auto;
+        top: var(--announce-panel-top, 4.75rem);
+        transform-origin: top center;
+        z-index: 200;
+    }
+
+    .announce-panel-caret {
+        left: 50%;
+        margin-left: -5.5px;
+    }
+
+    .announce-panel-inner {
+        max-height: min(62vh, 26rem);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .announce-panel-inner,
     .announce-panel-caret {

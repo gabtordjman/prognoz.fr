@@ -8,7 +8,7 @@ if (!defined('APP_BOOT')) {
 }
 
 define('APP_NAME', 'Prognoz');
-define('APP_VERSION', '1.2.2');
+define('APP_VERSION', '1.2.3');
 define('APP_BETA', envBool('APP_BETA', false));
 define('APP_MAINTENANCE', envBool('APP_MAINTENANCE', false));
 define('APP_CONTACT_EMAIL', env('APP_CONTACT_EMAIL', 'contact@example.com'));
@@ -103,13 +103,16 @@ define('ODDS_SPORT_PRIORITY', [
         'tennis_atp_china_open',
     ],
     'Basketball' => [
-        'basketball_wnba',
+        // Hommes d’abord (saison / volume Odds API)
         'basketball_nba',
         'basketball_euroleague',
         'basketball_ncaab',
-        'basketball_wncaab',
         'basketball_nbl',
+        'basketball_nba_preseason',
         'basketball_nba_summer_league',
+        // Femmes ensuite
+        'basketball_wnba',
+        'basketball_wncaab',
     ],
     'Soccer' => [
         // Grands championnats + coupes européennes

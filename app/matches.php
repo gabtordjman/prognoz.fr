@@ -17,6 +17,24 @@ function isSoccerSport(string $sportKey): bool
     return strncmp($sportKey, 'soccer_', 7) === 0;
 }
 
+/** Ligues basket hommes couvertes par The Odds API (priorité sync / affichage). */
+function mensBasketballSportKeys(): array
+{
+    return [
+        'basketball_nba',
+        'basketball_euroleague',
+        'basketball_ncaab',
+        'basketball_nbl',
+        'basketball_nba_preseason',
+        'basketball_nba_summer_league',
+    ];
+}
+
+function isMensBasketballSport(string $sportKey): bool
+{
+    return in_array($sportKey, mensBasketballSportKeys(), true);
+}
+
 function soccerSportHasScorerOdds(string $sportKey): bool
 {
     return in_array($sportKey, ODDS_SCORER_SPORTS, true);
@@ -2867,18 +2885,26 @@ function maybePruneStaleMatchData(PDO $pdo): ?array
 function matchDisplayPriority(array $m): int
 {
     $score = 0;
+    $sport = (string) ($m['sport'] ?? '');
     if (!empty($m['prob_1']) && !empty($m['prob_2'])) {
         $score += 20;
     }
-    if (isSoccerSport($m['sport']) && !empty($m['prob_n'])) {
+    if (isSoccerSport($sport) && !empty($m['prob_n'])) {
         $score += 5;
     }
-    if (soccerSportHasScorerOdds($m['sport'])) {
+    if (soccerSportHasScorerOdds($sport)) {
         $score += 4;
     }
-    if (sportOddsAvailable($m['sport']) === false) {
+    if (sportOddsAvailable($sport) === false) {
         $score -= 15;
     }
+    // Basket masculin prioritaire à l’affichage (NBA / Euroleague / NCAAB…).
+    if (isMensBasketballSport($sport)) {
+        $score += 12;
+    } elseif (strncmp($sport, 'basketball_', 11) === 0) {
+        $score += 2;
+    }
+
     return $score;
 }
 
@@ -2898,32 +2924,49 @@ function getUpcomingMatchesByCategory(PDO $pdo, ?int $perCategory = null): array
     $perCategory = $perCategory ?? (int) MATCHS_PAR_CATEGORIE;
     $horizon     = (int) MATCHS_HORIZON_JOURS;
     $closeMins   = (int) MATCH_CLOSE_AFTER_MINUTES;
+    $now         = matchSqlNow();
+    // Marge : tri priorité après coup, sans se faire manger par le foot dans un LIMIT global.
+    $fetchLimit  = max($perCategory * 4, 40);
 
-    $now = matchSqlNow();
-    $stmt = $pdo->query(
-        "SELECT m.*
-         FROM matches m
-         WHERE m.statut = 'a_venir'
-           AND m.external_id IS NOT NULL
-           AND m.date_match > DATE_SUB({$now}, INTERVAL {$closeMins} MINUTE)
-           AND m.date_match <= DATE_ADD({$now}, INTERVAL {$horizon} DAY)
-         ORDER BY m.date_match ASC
-         LIMIT 200"
-    );
-    $all = $stmt->fetchAll();
-
-    $buckets = ['tennis' => [], 'basketball' => [], 'soccer' => [], 'other' => []];
-    foreach ($all as $m) {
-        $buckets[sportCategory($m['sport'])][] = $m;
-    }
-    foreach ($buckets as &$bucket) {
-        sortMatchesForDisplay($bucket);
-    }
-    unset($bucket);
+    $sportLike = [
+        'tennis'     => "m.sport LIKE 'tennis_%'",
+        'basketball' => "m.sport LIKE 'basketball_%'",
+        'soccer'     => "m.sport LIKE 'soccer_%'",
+    ];
 
     $byCategory = [];
     foreach (sportCategories() as $cat) {
-        $byCategory[$cat] = array_slice($buckets[$cat], 0, $perCategory);
+        $like = $sportLike[$cat] ?? null;
+        if ($like === null) {
+            $byCategory[$cat] = [];
+            continue;
+        }
+        $stmt = $pdo->query(
+            "SELECT m.*
+             FROM matches m
+             WHERE m.statut = 'a_venir'
+               AND m.external_id IS NOT NULL
+               AND {$like}
+               AND m.date_match > DATE_SUB({$now}, INTERVAL {$closeMins} MINUTE)
+               AND m.date_match <= DATE_ADD({$now}, INTERVAL {$horizon} DAY)
+             ORDER BY m.date_match ASC
+             LIMIT {$fetchLimit}"
+        );
+        $bucket = $stmt->fetchAll();
+        sortMatchesForDisplay($bucket);
+        if ($cat === 'basketball') {
+            $men = [];
+            $rest = [];
+            foreach ($bucket as $m) {
+                if (isMensBasketballSport((string) ($m['sport'] ?? ''))) {
+                    $men[] = $m;
+                } else {
+                    $rest[] = $m;
+                }
+            }
+            $bucket = array_merge($men, $rest);
+        }
+        $byCategory[$cat] = array_slice($bucket, 0, $perCategory);
     }
 
     return $byCategory;

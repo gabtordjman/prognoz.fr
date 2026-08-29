@@ -492,14 +492,15 @@ function oddsFetchActiveSportsByGroup(bool $forceRefresh = false): array
     return $sports;
 }
 
-/** Clés outrights / vainqueurs saison — pas des matchs ponctuels. */
+/** Clés outrights / all-star — pas des matchs réguliers à importer. */
 function oddsIsSeasonMarketKey(string $sportKey): bool
 {
     $k = strtolower($sportKey);
     if (str_contains($k, 'winner') || str_contains($k, 'championship_winner')) {
         return true;
     }
-    if (str_contains($k, '_preseason') || str_contains($k, '_all_stars')) {
+    // All-Star / exhibition : pas de calendrier utile. Preseason NBA = vrais matchs.
+    if (str_contains($k, '_all_stars')) {
         return true;
     }
 
@@ -647,7 +648,7 @@ function oddsLimitSportsBalanced(array $sports, int $max): array
     // Soft caps : laisser de la place au foot (beaucoup de ligues) + basket.
     $soft = [
         'Tennis'     => 12,
-        'Basketball' => 8,
+        'Basketball' => 12,
         'Soccer'     => 20,
     ];
 
