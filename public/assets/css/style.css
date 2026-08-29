@@ -1306,123 +1306,162 @@ button.pill-points-btn:active {
     box-shadow: none;
 }
 
-.score-grid {
+.score-entry {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 0.35rem 0.55rem;
+    align-items: end;
+}
+
+.score-entry-side {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
     gap: 0.35rem;
 }
 
-.score-picker {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.55rem 0.7rem;
-    align-items: start;
-}
-
-.score-col-label {
-    font-size: 0.66rem;
+.score-entry-team {
+    font-size: 0.68rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
     color: var(--muted);
-    margin: 0 0 0.4rem;
-    line-height: 1.25;
+    line-height: 1.2;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.score-col--draw .score-col-label {
-    text-align: center;
-}
-
-.score-col-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    max-height: 16.5rem;
-    overflow-y: auto;
-    padding-right: 0.15rem;
-    scrollbar-gutter: stable;
-}
-
-.score-picker .score-btn {
-    width: 100%;
-    font-size: 0.78rem;
-    padding: 0.42rem 0.2rem;
+.score-entry-control {
+    display: grid;
+    grid-template-columns: 2.2rem minmax(2.4rem, 1fr) 2.2rem;
+    align-items: stretch;
+    min-height: 3.15rem;
+    border: 1px solid var(--line);
     border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.55);
+    overflow: hidden;
+    transition:
+        background var(--dur-fast) ease,
+        border-color var(--dur-fast) ease,
+        color var(--dur-fast) ease;
 }
 
-.score-custom {
-    margin-top: 0.65rem;
-    padding-top: 0.55rem;
-    border-top: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+.score-entry.selected .score-entry-control {
+    background: var(--green);
+    border-color: var(--green-dark);
+    color: #fff;
 }
 
-.score-custom-label {
-    display: block;
-    font-size: 0.66rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--muted);
-    margin: 0 0 0.35rem;
-}
-
-.score-custom-row {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    flex-wrap: wrap;
-}
-
-.score-custom-home,
-.score-custom-away {
-    width: 3.2rem;
-    min-height: 2.2rem;
-    text-align: center;
-    font-size: 0.9rem;
-    font-weight: 600;
-    border: 1px solid var(--border, #c8c8c8);
-    border-radius: var(--radius-sm);
-    background: var(--surface, #fff);
+.score-step {
+    appearance: none;
+    border: 0;
+    background: transparent;
     color: inherit;
-    padding: 0.25rem 0.2rem;
-}
-
-.score-custom.selected .score-custom-home,
-.score-custom.selected .score-custom-away {
-    border-color: var(--accent, #1a7a4c);
-    box-shadow: 0 0 0 1px var(--accent, #1a7a4c);
-}
-
-.score-custom-sep {
+    font-family: var(--font-mono);
+    font-size: 1.15rem;
     font-weight: 700;
-    color: var(--muted);
-}
-
-.score-custom-apply {
-    min-height: 2.2rem;
-    padding: 0.35rem 0.75rem;
-    font-size: 0.78rem;
-    font-weight: 700;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border, #c8c8c8);
-    background: var(--surface-2, #f3f3f3);
+    line-height: 1;
     cursor: pointer;
+    padding: 0;
 }
 
-.score-custom-apply:hover:not(:disabled) {
-    border-color: var(--accent, #1a7a4c);
+.score-step:hover:not(:disabled) {
+    background: rgba(74, 148, 104, 0.14);
 }
 
-.score-custom.pick-locked .score-custom-apply,
-.score-custom-apply:disabled {
-    opacity: 0.55;
+.score-entry.selected .score-step:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.score-step:disabled {
+    opacity: 0.45;
     cursor: default;
 }
 
-.score-btn { font-size: 0.72rem; padding: 0.38rem 0.15rem; border-radius: var(--radius-sm); }
+.score-entry-input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    background: transparent;
+    color: inherit;
+    font-family: var(--font-mono);
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 0.2rem 0.1rem;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.score-entry-input::-webkit-outer-spin-button,
+.score-entry-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.score-entry.selected .score-entry-input {
+    border-left-color: rgba(255, 255, 255, 0.28);
+    border-right-color: rgba(255, 255, 255, 0.28);
+    color: #fff;
+}
+
+.score-entry-input:disabled {
+    opacity: 0.85;
+    cursor: default;
+}
+
+.score-entry-input::placeholder {
+    color: var(--muted);
+    opacity: 0.55;
+}
+
+.score-entry.selected .score-entry-input::placeholder {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.score-entry-sep {
+    align-self: center;
+    padding-bottom: 0.85rem;
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--muted);
+    line-height: 1;
+}
+
+.score-entry-clear {
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin-top: 0.1rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 0.12em;
+    cursor: pointer;
+}
+
+.score-entry-clear:hover:not(:disabled) {
+    color: var(--ink);
+}
+
+.score-entry-clear:disabled,
+.score-entry.pick-locked .score-entry-clear {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.score-entry.pick-locked .score-step,
+.score-entry.pick-locked .score-entry-input {
+    cursor: default;
+}
 
 .match-markets-toggle {
     display: flex;
@@ -3315,8 +3354,9 @@ button.pill-points-btn:active {
         grid-template-columns: 1fr;
     }
 
-    .score-picker { gap: 0.45rem 0.5rem; }
-    .score-picker .score-btn { font-size: 0.74rem; min-height: 2.45rem; padding: 0.45rem 0.2rem; }
+    .score-entry-control { min-height: 2.85rem; }
+    .score-entry-input { font-size: 1.1rem; }
+    .score-step { font-size: 1.05rem; }
     .grid-2 { grid-template-columns: 1fr; }
     .match-card { border-radius: var(--radius); }
 
@@ -3570,8 +3610,11 @@ button.pill-points-btn:active {
         --sport-cat-mobile-height: 2.85rem;
     }
 
-    .score-col-label { font-size: 0.6rem; letter-spacing: 0.02em; }
-    .score-picker .score-btn { font-size: 0.7rem; min-height: 2.3rem; }
+    .score-entry-team { font-size: 0.62rem; }
+    .score-entry-control {
+        grid-template-columns: 2rem minmax(2rem, 1fr) 2rem;
+        min-height: 2.65rem;
+    }
     .pick-row { gap: 0.3rem; }
 
     .sport-cat-nav {

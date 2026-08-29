@@ -173,18 +173,12 @@ function groupExactScores(array $scores): array
 }
 
 /**
- * Score exact valide : grille COMMON_SCORES ou saisie libre H-A (0…EXACT_SCORE_CUSTOM_MAX).
+ * Score exact valide : format H-A avec 0…EXACT_SCORE_CUSTOM_MAX buts par équipe.
  */
 function isValidExactScorePick(string $reponse): bool
 {
     $reponse = trim($reponse);
-    if ($reponse === '') {
-        return false;
-    }
-    if (in_array($reponse, COMMON_SCORES, true)) {
-        return true;
-    }
-    if (!preg_match('/^(\d{1,2})-(\d{1,2})$/', $reponse, $m)) {
+    if ($reponse === '' || !preg_match('/^(\d{1,2})-(\d{1,2})$/', $reponse, $m)) {
         return false;
     }
     $h = (int) $m[1];
@@ -287,7 +281,7 @@ function ensureMatchMarkets(PDO $pdo, int $matchId, string $sportKey, string $fe
         $pdo->prepare(
             'INSERT INTO prediction_markets (match_id, type, points_si_correct, ferme_le) VALUES (?, "score_exact", ?, ?)'
         )->execute([$matchId, POINTS_SCORE_EXACT, $fermeLe]);
-        // Pas de seed BDD : COMMON_SCORES est servi en PHP (évite ~15 lignes / match foot).
+        // Pas de seed BDD : score exact en saisie libre côté UI.
     }
 
     if (!in_array('buteur', $existing, true)) {
@@ -3012,11 +3006,8 @@ function getMarketsForMatches(PDO $pdo, array $matchIds): array
     foreach ($rows as $m) {
         $mid = (int) $m['match_id'];
         if (($m['type'] ?? '') === 'score_exact') {
-            // Liste fixe en PHP — ne dépend plus de market_options.
-            $m['options'] = array_map(
-                static fn (string $score): array => ['libelle' => $score],
-                COMMON_SCORES
-            );
+            // Saisie libre côté UI — plus de liste d’options à hydrater.
+            $m['options'] = [];
         } else {
             $m['options'] = $optionsByMarket[(int) $m['id']] ?? [];
         }
