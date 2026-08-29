@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 184 84" role="img" aria-label="IBM">
+  <title>IBM</title>
+  <g fill="#0F62FE">
+  <rect x="0" y="0" width="24" height="7"/>
+  <rect x="0" y="11" width="24" height="7"/>
+  <rect x="0" y="22" width="24" height="7"/>
+  <rect x="0" y="33" width="24" height="7"/>
+  <rect x="0" y="44" width="24" height="7"/>
+  <rect x="0" y="55" width="24" height="7"/>
+  <rect x="0" y="66" width="24" height="7"/>
+  <rect x="0" y="77" width="24" height="7"/>
+  <rect x="40" y="0" width="48" height="7"/>
+  <rect x="40" y="11" width="16" height="7"/>
+  <rect x="80" y="11" width="16" height="7"/>
+  <rect x="40" y="22" width="16" height="7"/>
+  <rect x="80" y="22" width="16" height="7"/>
+  <rect x="40" y="33" width="48" height="7"/>
+  <rect x="40" y="44" width="48" height="7"/>
+  <rect x="40" y="55" width="16" height="7"/>
+  <rect x="80" y="55" width="16" height="7"/>
+  <rect x="40" y="66" width="16" height="7"/>
+  <rect x="80" y="66" width="16" height="7"/>
+  <rect x="40" y="77" width="48" height="7"/>
+  <rect x="112" y="0" width="16" height="7"/>
+  <rect x="168" y="0" width="16" height="7"/>
+  <rect x="112" y="11" width="24" height="7"/>
+  <rect x="160" y="11" width="24" height="7"/>
+  <rect x="112" y="22" width="16" height="7"/>
+  <rect x="136" y="22" width="8" height="7"/>
+  <rect x="152" y="22" width="8" height="7"/>
+  <rect x="168" y="22" width="16" height="7"/>
+  <rect x="112" y="33" width="16" height="7"/>
+  <rect x="144" y="33" width="8" height="7"/>
+  <rect x="168" y="33" width="16" height="7"/>
+  <rect x="112" y="44" width="16" height="7"/>
+  <rect x="168" y="44" width="16" height="7"/>
+  <rect x="112" y="55" width="16" height="7"/>
+  <rect x="168" y="55" width="16" height="7"/>
+  <rect x="112" y="66" width="16" height="7"/>
+  <rect x="168" y="66" width="16" height="7"/>
+  <rect x="112" y="77" width="16" height="7"/>
+  <rect x="168" y="77" width="16" height="7"/>
+  </g>
+</svg>

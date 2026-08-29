@@ -35,6 +35,7 @@ Fallbacks critiques récents : voir `i18nCriticalFallbacks()` dans `app/i18n.php
 
 - CSS principal : `public/assets/css/style.css`
 - Thème rétro : `retro.css` (navigateurs anciens / mode rétro)
+- Admin 5250 : `ibmi.css` + `ibmi.js` (poste IBM i `/admin/ibmi/`)
 - JS : `public/assets/js/` (cache-bust via `assetUrl()` = `?v=filemtime`)
 - Design : papier / feutre / bois / laiton — éviter les looks « dashboard violet »
 

@@ -1,2 +1,5 @@
 Options -Indexes
 DirectoryIndex disabled
+AddType font/woff .woff
+AddType font/woff2 .woff2
+

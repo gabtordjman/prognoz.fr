@@ -20,7 +20,8 @@ require __DIR__ . '/maintenance.php';
 enforceRetroUiGate();
 
 $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
-$isAdminArea = str_contains($scriptName, '/admin/');
+$isAdminArea = str_contains($scriptName, '/admin/')
+    || (PHP_SAPI === 'cli' && defined('APP_CLI_ADMIN'));
 
 if (
     !$isAdminArea
@@ -57,6 +58,8 @@ require __DIR__ . '/avatars.php';
 require __DIR__ . '/admin_auth.php';
 require __DIR__ . '/admin_layout.php';
 require __DIR__ . '/admin_reports.php';
+require __DIR__ . '/admin_actions.php';
+require __DIR__ . '/admin_queries.php';
 require __DIR__ . '/voided_score_batch.php';
 
 // Migrations légères au boot (idempotentes, no-op si déjà à jour).

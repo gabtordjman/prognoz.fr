@@ -1,103 +1,107 @@
 <?php
 /**
- * Administration Prognoz — terminal type Minitel / service vidéotex.
+ * Administration Prognoz — poste 5250 en SSH (même noyau que /admin/ibmi/).
  *
- *   ssh ...
- *   cd /var/www/prognoz
  *   php tools/ops_terminal.php
+ *
+ * Commandes : GO MAIN, WRKUSR, DSPUSR n, WRKSCR, GO OPS, F3, F5, F12, 90
  */
-define('APP_BOOT', true);
+define('APP_CLI_ADMIN', true);
 
 $root = dirname(__DIR__);
-require_once $root . '/app/env.php';
-loadEnvFile($root . '/.env');
-require_once $root . '/app/config.php';
-require_once $root . '/app/helpers.php';
-require_once $root . '/app/db.php';
-require_once $root . '/app/encryption.php';
-require_once $root . '/app/odds_api.php';
-require_once $root . '/app/scoring.php';
-require_once $root . '/app/seasons.php';
-require_once $root . '/app/matches.php';
-require_once $root . '/app/friends.php';
-require_once $root . '/app/user_predictions.php';
-require_once $root . '/app/admin_auth.php';
+require $root . '/app/bootstrap.php';
+require_once $root . '/app/ibmi_term.php';
+require_once $root . '/app/ibmi_layout.php';
+require_once $root . '/app/ibmi_router.php';
+require_once $root . '/app/ibmi_screens.php';
 
 if (PHP_SAPI !== 'cli') {
     fwrite(STDERR, "CLI only.\n");
     exit(1);
 }
 
-const T_W = 52;
+const T_W = 80;
+const T_GREEN = "\033[32m";
+const T_BOLD = "\033[1;32m";
+const T_CYAN = "\033[36m";
+const T_YEL = "\033[33m";
+const T_RED = "\033[31m";
+const T_DIM = "\033[2;32m";
+const T_RST = "\033[0m";
 
-function t_cls(): void
+/** @var array{ok:bool,type?:string,message:string}|null */
+$tFlash = null;
+$tAlt = false;
+
+function t_enter_alt(): void
 {
-    // ANSI clear + home (ignoré si terminal basique)
-    echo "\033[2J\033[H";
+    global $tAlt;
+    if ($tAlt) {
+        return;
+    }
+    echo "\033[?1049h\033[?25h";
+    $tAlt = true;
 }
 
-function t_out(string $msg = ''): void
+function t_leave(): void
 {
-    echo $msg . PHP_EOL;
+    global $tAlt;
+    if (!$tAlt) {
+        return;
+    }
+    echo "\033[?25h\033[?1049l";
+    $tAlt = false;
 }
 
-function t_rule(string $ch = '='): void
+function t_field_cup(array $t, string $name): string
 {
-    t_out(str_repeat($ch, T_W));
-}
+    foreach ($t['fields'] as $f) {
+        if ((string) $f['name'] === $name) {
+            return "\033[" . ((int) $f['r'] + 1) . ';' . ((int) $f['c'] + 1) . 'H';
+        }
+    }
 
-function t_center(string $text): void
-{
-    $text = substr($text, 0, T_W);
-    $pad = max(0, (int) floor((T_W - strlen($text)) / 2));
-    t_out(str_repeat(' ', $pad) . $text);
-}
-
-function t_header(string $screen): void
-{
-    t_cls();
-    t_rule('=');
-    t_center('PROGNOZ');
-    t_center('SERVICE ADMINISTRATION');
-    t_rule('=');
-    t_out(' ' . $screen);
-    t_rule('-');
+    return "\033[26;6H";
 }
 
 function t_read(string $prompt): string
 {
-    echo $prompt;
+    echo "\033[25;2H\033[K\033[33m" . $prompt . T_RST . "\033[1;37m";
     $line = fgets(STDIN);
+    echo T_RST;
+
     return $line === false ? '' : trim($line);
 }
 
-function t_pause(): void
+function t_msg(string $msg, string $type = 'ok'): void
 {
-    t_out('');
-    t_read('  [ENTREE] pour revenir au menu... ');
+    $c = $type === 'error' ? T_RED : ($type === 'info' ? T_CYAN : T_YEL);
+    echo "\033[25;2H\033[K" . $c . $msg . T_RST;
 }
 
 function t_auth(): void
 {
+    t_enter_alt();
     if (!adminPanelConfigured()) {
-        t_header('ERREUR CONFIG');
-        t_out(' ADMIN_* absent du .env');
-        t_out(' => php tools/generate_admin_credentials.php');
-        t_out('');
+        $t = ibmiT();
+        ibmiTHeader($t, 'Sign On', 'SIGNON');
+        ibmiTPut($t, 8, 8, 'ADMIN_* missing from .env', 'r');
+        ibmiTPut($t, 10, 8, 'php tools/generate_admin_credentials.php', 'y');
+        echo ibmiTAnsi($t);
+        t_leave();
         exit(1);
     }
-
-    t_header('CONNEXION');
-    t_out('');
-    t_out(' Identifiez-vous pour accéder au service.');
-    t_out('');
-    $user = t_read(' Utilisateur : ');
-    echo ' Mot de passe : ';
-    // Masquage basique (Linux/mac). Sous Windows PowerShell l'écho reste visible.
+    $t = ibmiPaintSignon('');
+    echo ibmiTAnsi($t);
+    echo t_field_cup($t, 'username') . "\033[1;37m";
+    $user = fgets(STDIN);
+    $user = $user === false ? '' : trim($user);
+    echo t_field_cup($t, 'password');
     $hidden = false;
+    $stty = '';
     if (strncasecmp(PHP_OS, 'WIN', 3) !== 0 && function_exists('shell_exec')) {
-        $stty = @shell_exec('stty -g 2>/dev/null');
-        if (is_string($stty) && $stty !== '') {
+        $stty = (string) @shell_exec('stty -g 2>/dev/null');
+        if ($stty !== '') {
             @shell_exec('stty -echo');
             $hidden = true;
         }
@@ -106,239 +110,395 @@ function t_auth(): void
     $pass = $passLine === false ? '' : trim($passLine);
     if ($hidden) {
         @shell_exec('stty ' . escapeshellarg(trim($stty)));
-        t_out('');
     }
-    t_out('');
-
+    echo "\033[0m";
     if (!hash_equals(ADMIN_USERNAME, $user) || !password_verify($pass, ADMIN_PASSWORD_HASH)) {
-        t_out(' *** ACCES REFUSE ***');
-        t_out('');
+        echo ibmiTAnsi(ibmiPaintSignon('CPF1116 - Sign-on failed.'));
+        usleep(1200000);
+        t_leave();
         exit(1);
     }
 }
 
-function t_menu_home(): string
+function t_confirm(string $prompt): bool
 {
-    t_header('MENU PRINCIPAL');
-    t_out('');
-    t_out('  1  Etat du systeme');
-    t_out('  2  Matchs bloques (liste)');
-    t_out('  3  Saisir un score');
-    t_out('  4  Annuler un match');
-    t_out('  5  Points joueur (+/-)');
-    t_out('  6  Attribuer points locaux');
-    t_out('  7  Purger la base');
-    t_out('  8  Liberer verrou sync');
-    t_out('');
-    t_out('  0  Fin de connexion');
-    t_out('');
-    t_rule('-');
-    return t_read(' Votre choix : ');
+    $ok = strtolower(t_read($prompt . ' (Y/N) '));
+
+    return $ok === 'o' || $ok === 'oui' || $ok === 'y';
 }
 
-function t_status(PDO $pdo): void
+function t_run(PDO $pdo, string $action, array $p = []): void
 {
-    t_header('1 · ETAT DU SYSTEME');
-    $pending = countPendingPredictions($pdo);
-    $quota = oddsQuotaState();
-    $users = (int) $pdo->query('SELECT COUNT(*) FROM users WHERE actif = 1')->fetchColumn();
-    $upcoming = (int) $pdo->query(
-        "SELECT COUNT(*) FROM matches WHERE statut = 'a_venir' AND date_match > UTC_TIMESTAMP()"
-    )->fetchColumn();
-
-    t_out('');
-    t_out(sprintf('  Joueurs actifs      %d', $users));
-    t_out(sprintf('  Matchs a venir      %d', $upcoming));
-    t_out(sprintf('  Pronos en attente   %d', (int) $pending['pending']));
-    t_out(sprintf('  Matchs bloques      %d', (int) $pending['stuck']));
-    t_out(sprintf(
-        '  Quota API restant   %s',
-        $quota['remaining'] !== null ? (string) (int) $quota['remaining'] : '?'
-    ));
-    t_out('');
-    t_pause();
+    global $tFlash;
+    $tFlash = adminRunAction($pdo, $action, $p);
 }
 
-/** @return list<array<string,mixed>> */
-function t_list_stuck(PDO $pdo, bool $header = true): array
+function t_fkeys(string $line): ?string
 {
-    if ($header) {
-        t_header('2 · MATCHS BLOQUES');
-    }
-    $rows = listStuckMatchesForManualScore($pdo, 30);
-    t_out('');
-    if ($rows === []) {
-        t_out('  (aucun match bloque)');
-        t_out('');
-        return [];
-    }
-    foreach ($rows as $i => $m) {
-        t_out(sprintf(
-            '  %2d  #%d',
-            $i + 1,
-            (int) $m['id']
-        ));
-        t_out(sprintf(
-            '      %s - %s',
-            $m['equipe_home'],
-            $m['equipe_away']
-        ));
-        t_out(sprintf(
-            '      %s | pronos=%d',
-            $m['competition'] ?: $m['sport'],
-            (int) $m['pending_count']
-        ));
-        t_out('');
-    }
-    return $rows;
+    $u = strtoupper(trim($line));
+    $map = [
+        'F3' => 'F3', 'F5' => 'F5', 'F12' => 'F12', 'F4' => 'F4',
+        'F6' => 'F6', 'F7' => 'F7', 'F8' => 'F8', 'F9' => 'F9',
+        'F10' => 'F10', 'F11' => 'F11', 'P+' => 'PAGEDOWN', 'P-' => 'PAGEUP',
+        'PAGEDOWN' => 'PAGEDOWN', 'PAGEUP' => 'PAGEUP',
+    ];
+
+    return $map[$u] ?? null;
 }
 
-function t_score(PDO $pdo): void
+function t_parent(string $scr): string
 {
-    t_header('3 · SAISIE SCORE');
-    $rows = t_list_stuck($pdo, false);
-    if ($rows === []) {
-        t_pause();
-        return;
-    }
-    $pick = (int) t_read('  N° de ligne : ');
-    if ($pick < 1 || $pick > count($rows)) {
-        t_out('  Choix invalide.');
-        t_pause();
-        return;
-    }
-    $m = $rows[$pick - 1];
-    t_out('');
-    t_out('  ' . $m['equipe_home'] . ' - ' . $m['equipe_away']);
-    $home = (int) t_read('  Score domicile  : ');
-    $away = (int) t_read('  Score exterieur : ');
-    try {
-        applyManualMatchScore($pdo, (int) $m['id'], $home, $away);
-        t_out('');
-        t_out('  *** SCORE ENREGISTRE ***');
-    } catch (Throwable $e) {
-        t_out('');
-        t_out('  Erreur : ' . $e->getMessage());
-    }
-    t_pause();
+    return match ($scr) {
+        'DSPUSR' => 'WRKUSR',
+        'DSPMCH' => 'WRKSCR',
+        'MAIN' => 'MAIN',
+        default => 'MAIN',
+    };
 }
 
-function t_cancel(PDO $pdo): void
-{
-    t_header('4 · ANNULER MATCH');
-    $rows = t_list_stuck($pdo, false);
-    if ($rows === []) {
-        t_pause();
-        return;
-    }
-    $pick = (int) t_read('  N° de ligne : ');
-    if ($pick < 1 || $pick > count($rows)) {
-        t_out('  Choix invalide.');
-        t_pause();
-        return;
-    }
-    $m = $rows[$pick - 1];
-    t_out('');
-    t_out('  ' . $m['equipe_home'] . ' - ' . $m['equipe_away']);
-    $ok = strtolower(t_read('  Confirmer (O/N) : '));
-    if ($ok !== 'o' && $ok !== 'oui') {
-        t_out('  Abandon.');
-        t_pause();
-        return;
-    }
-    try {
-        $n = cancelMatch($pdo, (int) $m['id']);
-        t_out('');
-        t_out("  *** MATCH ANNULE ({$n} pronos a 0 pt) ***");
-    } catch (Throwable $e) {
-        t_out('  Erreur : ' . $e->getMessage());
-    }
-    t_pause();
+register_shutdown_function('t_leave');
+if (function_exists('pcntl_signal')) {
+    pcntl_signal(SIGINT, function () {
+        t_leave();
+        exit(130);
+    });
 }
 
-function t_points(PDO $pdo): void
-{
-    t_header('5 · POINTS JOUEUR');
-    t_out('');
-    $pseudo = t_read('  Pseudo     : ');
-    $delta = (int) t_read('  Points +/- : ');
-    $season = strtolower(t_read('  Saison aussi (O/N) : '));
-    $toSeason = !($season === 'n' || $season === 'non');
-    $u = findUserByPseudo($pdo, $pseudo);
-    if (!$u) {
-        t_out('  Pseudo introuvable.');
-        t_pause();
-        return;
-    }
-    try {
-        $r = grantUserPoints($pdo, (int) $u['id'], $delta, $toSeason);
-        $sign = $r['delta'] > 0 ? '+' . $r['delta'] : (string) $r['delta'];
-        t_out('');
-        t_out('  ' . $r['pseudo'] . ' : ' . $sign . ' -> total ' . $r['points_totaux']);
-    } catch (Throwable $e) {
-        t_out('  Erreur : ' . $e->getMessage());
-    }
-    t_pause();
-}
-
-// --- main ---
 t_auth();
 $pdo = getPDO();
+$scr = 'MAIN';
+$ctx = [
+    'page' => 1,
+    'q' => '',
+    'position' => '',
+    'panel' => 'file',
+    'id' => 0,
+    'community_id' => 0,
+    'include_deleted' => false,
+    'team_home' => '',
+    'team_away' => '',
+    'sport' => '',
+];
 
 while (true) {
-    $choice = t_menu_home();
-    switch ($choice) {
-        case '1':
-            t_status($pdo);
-            break;
-        case '2':
-            t_list_stuck($pdo, true);
-            t_pause();
-            break;
-        case '3':
-            t_score($pdo);
-            break;
-        case '4':
-            t_cancel($pdo);
-            break;
-        case '5':
-            t_points($pdo);
-            break;
-        case '6':
-            t_header('6 · POINTS LOCAUX');
-            $n = scorePendingFinishedMatches($pdo);
-            t_out('');
-            t_out("  Matchs traites : {$n}");
-            t_pause();
-            break;
-        case '7':
-            t_header('7 · PURGE BDD');
-            $p = pruneStaleMatchData($pdo);
-            t_out('');
-            t_out('  score_options : ' . $p['score_options']);
-            t_out('  buteurs       : ' . $p['buteur_options']);
-            t_out('  empty_markets : ' . ($p['empty_markets'] ?? 0));
-            t_out('  old_matches   : ' . ($p['old_matches'] ?? $p['orphan_matches'] ?? 0));
-            t_out('  kept_errors   : ' . ($p['kept_errors'] ?? 0));
-            t_pause();
-            break;
-        case '8':
-            t_header('8 · VERROU SYNC');
-            $lock = clearIdleSyncLock();
-            t_out('');
-            t_out($lock['busy'] ? '  Encore verrouille.' : '  Verrou libre.');
-            t_pause();
-            break;
-        case '0':
-            t_header('FIN DE CONNEXION');
-            t_out('');
-            t_center('Au revoir.');
-            t_out('');
-            t_rule('=');
-            exit(0);
-        default:
-            t_out('');
-            t_out('  Choix invalide.');
-            t_pause();
+    unset($ctx['msg'], $ctx['msgType']);
+    if (is_array($tFlash)) {
+        $ctx['msg'] = (string) ($tFlash['message'] ?? '');
+        $ctx['msgType'] = !empty($tFlash['ok']) ? (string) ($tFlash['type'] ?? 'info') : 'error';
+        $tFlash = null;
     }
+    try {
+        $term = ibmiBuildScreen($pdo, $scr, $ctx);
+    } catch (Throwable $e) {
+        $term = ibmiT();
+        ibmiTHeader($term, 'Exception', $scr);
+        ibmiTPut($term, 4, 2, ibmiTClip($e->getMessage(), 76), 'r');
+        ibmiTCmd($term);
+        ibmiTFkeys($term, ['F3=Exit', 'F12=Cancel']);
+    }
+    echo ibmiTAnsi($term);
+    echo t_field_cup($term, 'cmdline') . "\033[1;37m";
+    $raw = fgets(STDIN);
+    echo "\033[0m";
+    $line = $raw === false ? '' : trim($raw);
+    if ($line === '' && feof(STDIN)) {
+        break;
+    }
+
+    $fkey = t_fkeys($line);
+    if ($fkey === 'F3' || $fkey === 'F12') {
+        if ($scr === 'MAIN' && $fkey === 'F3') {
+            echo ibmiTAnsi(ibmiPaintSignoff());
+            usleep(400000);
+            t_leave();
+            exit(0);
+        }
+        $scr = t_parent($scr);
+        continue;
+    }
+    if ($fkey === 'F5') {
+        continue;
+    }
+    if ($fkey === 'PAGEDOWN') {
+        $ctx['page'] = (int) ($ctx['page'] ?? 1) + 1;
+        continue;
+    }
+    if ($fkey === 'PAGEUP') {
+        $ctx['page'] = max(1, (int) ($ctx['page'] ?? 1) - 1);
+        continue;
+    }
+
+    $parsed = ibmiParseCommand($line);
+    $isMenuDigit = (bool) preg_match('/^\d+$/', strtoupper(trim($line)));
+    if ($parsed && ($scr === 'MAIN' || !$isMenuDigit)) {
+        if ($parsed['scr'] === 'SIGNOFF') {
+            echo ibmiTAnsi(ibmiPaintSignoff());
+            usleep(400000);
+            t_leave();
+            exit(0);
+        }
+        $scr = $parsed['scr'];
+        if (isset($parsed['query']['id'])) {
+            $ctx['id'] = (int) $parsed['query']['id'];
+        }
+        if (isset($parsed['query']['q'])) {
+            $ctx['q'] = (string) $parsed['query']['q'];
+            $ctx['page'] = 1;
+        }
+        if (isset($parsed['query']['position'])) {
+            $ctx['position'] = (string) $parsed['query']['position'];
+            $ctx['page'] = 1;
+        }
+        continue;
+    }
+
+    $u = strtoupper($line);
+    $parts = preg_split('/\s+/', $line) ?: [];
+
+    if ($scr === 'WRKUSR') {
+        if (isset($parts[0], $parts[1]) && $parts[0] === 'Q') {
+            $ctx['q'] = $parts[1];
+            $ctx['page'] = 1;
+            continue;
+        }
+        $opt = $parts[0] ?? '';
+        $id = (int) ($parts[1] ?? 0);
+        if ($opt === '5' && $id > 0) {
+            $ctx['id'] = $id;
+            $scr = 'DSPUSR';
+            continue;
+        }
+        if ($opt === '2' && $id > 0) {
+            $delta = (int) ($parts[2] ?? t_read('  Delta : '));
+            t_run($pdo, 'grant_points', ['user_id' => $id, 'delta' => $delta, 'to_season' => 1]);
+            continue;
+        }
+        if ($opt === '4' && $id > 0 && t_confirm('  Basculer actif')) {
+            $st = $pdo->prepare('SELECT actif FROM users WHERE id = ?');
+            $st->execute([$id]);
+            $cur = $st->fetch();
+            t_run($pdo, 'set_active', ['user_id' => $id, 'actif' => empty($cur['actif']) ? 1 : 0]);
+            continue;
+        }
+        if ($opt === '7' && $id > 0) {
+            $st = $pdo->prepare('SELECT mail_opt_out FROM users WHERE id = ?');
+            $st->execute([$id]);
+            $cur = $st->fetch() ?: [];
+            t_run($pdo, 'set_mail_opt_out', ['user_id' => $id, 'mail_opt_out' => empty($cur['mail_opt_out']) ? 1 : 0]);
+            continue;
+        }
+        if ($opt === '8' && $id > 0) {
+            $pwd = $parts[2] ?? t_read('  Nouveau MDP : ');
+            t_run($pdo, 'reset_password', ['user_id' => $id, 'new_password' => $pwd]);
+            continue;
+        }
+        if ($opt === '9' && $id > 0 && t_confirm('  Retirer photo')) {
+            t_run($pdo, 'remove_avatar', ['user_id' => $id]);
+            continue;
+        }
+    }
+
+    if ($scr === 'DSPUSR') {
+        $opt = $parts[0] ?? '';
+        $id = (int) $ctx['id'];
+        if ($opt === '2') {
+            $delta = (int) ($parts[1] ?? t_read('  Delta : '));
+            t_run($pdo, 'grant_points', ['user_id' => $id, 'delta' => $delta, 'to_season' => 1]);
+            continue;
+        }
+        if ($opt === '4' && t_confirm('  Basculer actif')) {
+            $st = $pdo->prepare('SELECT actif FROM users WHERE id = ?');
+            $st->execute([$id]);
+            $cur = $st->fetch();
+            t_run($pdo, 'set_active', ['user_id' => $id, 'actif' => empty($cur['actif']) ? 1 : 0]);
+            continue;
+        }
+        if ($opt === '7') {
+            $st = $pdo->prepare('SELECT mail_opt_out FROM users WHERE id = ?');
+            $st->execute([$id]);
+            $cur = $st->fetch() ?: [];
+            t_run($pdo, 'set_mail_opt_out', ['user_id' => $id, 'mail_opt_out' => empty($cur['mail_opt_out']) ? 1 : 0]);
+            continue;
+        }
+        if ($opt === '8') {
+            $pwd = $parts[1] ?? t_read('  Nouveau MDP : ');
+            t_run($pdo, 'reset_password', ['user_id' => $id, 'new_password' => $pwd]);
+            continue;
+        }
+        if ($opt === '9' && t_confirm('  Retirer photo')) {
+            t_run($pdo, 'remove_avatar', ['user_id' => $id]);
+            continue;
+        }
+    }
+
+    if ($scr === 'WRKSCR') {
+        if (preg_match('/^PANEL\s+(FILE|SAISIE|REPORTES|POINTS)$/i', $line, $m)) {
+            $ctx['panel'] = strtolower($m[1]);
+            continue;
+        }
+        if ($u === 'CATCHUP' && t_confirm('  Rattrapage API')) {
+            t_run($pdo, 'catchup_scores');
+            continue;
+        }
+        if ($u === 'LOCAL') {
+            t_run($pdo, 'score_local');
+            continue;
+        }
+        if (isset($parts[0]) && strtoupper($parts[0]) === 'S' && isset($parts[1], $parts[2], $parts[3])) {
+            t_run($pdo, 'manual_score', [
+                'match_id' => (int) $parts[1],
+                'score_home' => (int) $parts[2],
+                'score_away' => (int) $parts[3],
+            ]);
+            continue;
+        }
+        if (($parts[0] ?? '') === '4' && isset($parts[1])) {
+            $reason = $parts[2] ?? 'autre';
+            if (t_confirm('  Annuler match #' . $parts[1])) {
+                t_run($pdo, 'cancel_match', ['match_id' => (int) $parts[1], 'cancel_reason' => $reason]);
+            }
+            continue;
+        }
+        if (($parts[0] ?? '') === '5' && isset($parts[1])) {
+            $ctx['id'] = (int) $parts[1];
+            $scr = 'DSPMCH';
+            continue;
+        }
+        if (($parts[0] ?? '') === '6' && isset($parts[1])) {
+            t_run($pdo, 'postpone_match', ['match_id' => (int) $parts[1]]);
+            continue;
+        }
+        if (($parts[0] ?? '') === '7' && isset($parts[1])) {
+            t_run($pdo, 'postpone_reactivate', ['match_id' => (int) $parts[1]]);
+            continue;
+        }
+        if (($parts[0] ?? '') === '9' && isset($parts[1]) && t_confirm('  Effacer score')) {
+            t_run($pdo, 'clear_match_score', ['match_id' => (int) $parts[1]]);
+            continue;
+        }
+        if ($u === 'RECOVER' && t_confirm('  Recuperer reportes')) {
+            t_run($pdo, 'recover_postponed_scores');
+            continue;
+        }
+    }
+
+    if ($scr === 'WRKOPS') {
+        $cmd = strtoupper($parts[0] ?? '');
+        $ops = [
+            'QUOTA' => 'probe_quota',
+            'LOCAL' => 'score_local',
+            'MATCHES' => 'matches',
+            'ODDS' => 'odds',
+            'CRON' => 'cron',
+            'CATCHUP' => 'catchup_scores',
+            'LOCK' => 'clear_lock',
+            'PRUNE' => 'prune',
+        ];
+        if (isset($ops[$cmd])) {
+            $need = in_array($cmd, ['MATCHES', 'ODDS', 'CRON', 'CATCHUP', 'PRUNE'], true);
+            if ($need && !t_confirm('  ' . $cmd)) {
+                continue;
+            }
+            $p = $cmd === 'LOCAL' ? ['close_expired' => 1] : [];
+            t_run($pdo, $ops[$cmd], $p);
+            continue;
+        }
+    }
+
+    if ($scr === 'WRKMSG') {
+        if (strtoupper($parts[0] ?? '') === 'COM' && isset($parts[1])) {
+            $ctx['community_id'] = (int) $parts[1];
+            continue;
+        }
+        if (strtoupper($parts[0] ?? '') === 'Q') {
+            $ctx['q'] = $parts[1] ?? '';
+            continue;
+        }
+        $opt = $parts[0] ?? '';
+        $id = (int) ($parts[1] ?? 0);
+        if ($opt === '4' && $id) {
+            t_run($pdo, 'soft_delete', ['message_id' => $id]);
+            continue;
+        }
+        if ($opt === '2' && $id) {
+            t_run($pdo, 'restore', ['message_id' => $id]);
+            continue;
+        }
+        if ($opt === '9' && $id && t_confirm('  Effacer BDD')) {
+            t_run($pdo, 'hard_delete', ['message_id' => $id]);
+            continue;
+        }
+    }
+
+    if ($scr === 'WRKSEA') {
+        if ($u === 'CLOSE' && t_confirm('  Cloturer maintenant')) {
+            t_run($pdo, 'close_now');
+            continue;
+        }
+        if ($u === 'MONTH' && t_confirm('  Fin 1er du mois')) {
+            t_run($pdo, 'schedule_month');
+            continue;
+        }
+        if (strtoupper($parts[0] ?? '') === 'FIN' && isset($parts[1], $parts[2])) {
+            t_run($pdo, 'schedule_custom', ['fin' => $parts[1] . ' ' . $parts[2]]);
+            continue;
+        }
+    }
+
+    if ($scr === 'WRKEVT') {
+        $opt = $parts[0] ?? '';
+        $id = (int) ($parts[1] ?? 0);
+        if ($opt === '4' && $id && t_confirm('  Supprimer evenement')) {
+            t_run($pdo, 'event_delete', ['id' => $id]);
+            continue;
+        }
+        if ($opt === '6' && $id) {
+            t_run($pdo, 'event_toggle', ['id' => $id]);
+            continue;
+        }
+        if ($opt === '7' && $id) {
+            t_run($pdo, 'event_publish', ['id' => $id, 'notify_on_publish' => 1]);
+            continue;
+        }
+        if ($opt === '8' && $id) {
+            t_run($pdo, 'event_notify', ['id' => $id]);
+            continue;
+        }
+    }
+
+    if ($scr === 'WRKANN') {
+        $opt = $parts[0] ?? '';
+        $id = (int) ($parts[1] ?? 0);
+        if ($opt === '4' && $id && t_confirm('  Supprimer annonce')) {
+            t_run($pdo, 'ann_delete', ['id' => $id]);
+            continue;
+        }
+        if ($opt === '7' && $id) {
+            t_run($pdo, 'ann_publish', ['id' => $id]);
+            continue;
+        }
+        if (strtoupper($parts[0] ?? '') === 'NEW' && isset($parts[1])) {
+            $rest = substr($line, 4);
+            $bits = explode('|', $rest, 2);
+            t_run($pdo, 'ann_save', [
+                'title' => trim($bits[0]),
+                'body' => trim($bits[1] ?? $bits[0]),
+                'published' => 1,
+            ]);
+            continue;
+        }
+    }
+
+    if ($scr === 'WRKRPT') {
+        if ($u === 'DIAG') {
+            t_run($pdo, 'report_unavailable');
+            continue;
+        }
+        if ($u === 'MONTH' && t_confirm('  Envoyer rapport du mois')) {
+            t_run($pdo, 'report_month');
+            continue;
+        }
+    }
+
+    $tFlash = ['ok' => false, 'type' => 'error', 'message' => 'CPF0006 - Commande non reconnue.'];
 }
