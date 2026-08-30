@@ -525,9 +525,20 @@ function renderOneSiteEventBanner(array $ev): void
     <?php
 }
 
-/** Pluie d’étoiles légère une fois par chargement de page, si un événement live est affiché. */
+/** Pluie d’étoiles — uniquement sur l’accueil, si un événement live est affiché. */
+function isHomePageForEffects(): bool
+{
+    $script = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    $base = strtolower(basename($script));
+
+    return $base === 'index.php' || $base === 'index';
+}
+
 function renderSiteEventStarRain(?PDO $pdo = null): void
 {
+    if (!isHomePageForEffects()) {
+        return;
+    }
     try {
         $pdo = $pdo ?? getPDO();
         $ev = getDisplaySiteEvent($pdo);

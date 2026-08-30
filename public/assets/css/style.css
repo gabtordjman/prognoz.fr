@@ -2202,15 +2202,16 @@ button.pill-points-btn:active {
 
 .community-badge-generale {
     display: inline-block;
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #6b5418;
-    background: rgba(232, 208, 120, 0.45);
-    border: 1px solid rgba(154, 116, 32, 0.4);
-    padding: 0.15rem 0.45rem;
-    margin-left: 0.35rem;
+    color: #1a1612;
+    background: linear-gradient(160deg, #f0e090, #c4a035 55%, #9a7420);
+    border: 1px solid rgba(122, 90, 16, 0.55);
+    box-shadow: 0 1px 0 rgba(255, 246, 208, 0.35) inset;
+    padding: 0.2rem 0.5rem;
+    margin-left: 0.4rem;
     border-radius: var(--radius-sm);
     vertical-align: middle;
 }
@@ -5510,7 +5511,7 @@ html.event-theme-fest body::after {
     background: linear-gradient(135deg, rgba(154, 116, 32, 0.12) 0%, transparent 40%);
 }
 
-/* Pluie d’étoiles — une passe légère à l’ouverture de page */
+/* Pluie d’étoiles — accueil uniquement (événement live) */
 .event-star-rain {
     position: fixed;
     inset: 0;
@@ -5521,37 +5522,67 @@ html.event-theme-fest body::after {
 
 .event-star {
     position: absolute;
-    top: -1.2rem;
-    color: #c4a035;
+    top: -1.6rem;
+    color: #e8d078;
     line-height: 1;
-    text-shadow: 0 0 6px rgba(196, 160, 53, 0.35);
-    animation-name: event-star-fall;
-    animation-timing-function: linear;
-    animation-fill-mode: forwards;
+    text-shadow:
+        0 0 4px rgba(232, 208, 120, 0.55),
+        0 0 12px rgba(196, 160, 53, 0.35);
+    animation-name: event-star-fall, event-star-twinkle;
+    animation-timing-function: linear, ease-in-out;
+    animation-iteration-count: 1, infinite;
+    animation-fill-mode: forwards, none;
+    animation-duration: 4s, var(--twinkle, 2s);
     will-change: transform, opacity;
 }
 
-.event-star::before {
-    content: '★';
+.event-star--1 {
+    color: #f0e4a8;
+    text-shadow:
+        0 0 5px rgba(240, 228, 168, 0.65),
+        0 0 14px rgba(196, 160, 53, 0.4);
+}
+
+.event-star--2 {
+    color: #c4a035;
+    filter: drop-shadow(0 0 3px rgba(196, 160, 53, 0.45));
+}
+
+.event-star--3 {
+    color: #fff6d0;
+    text-shadow: 0 0 8px rgba(255, 246, 208, 0.7);
+}
+
+.event-star--4 {
+    color: rgba(232, 220, 180, 0.85);
+    text-shadow: 0 0 6px rgba(196, 160, 53, 0.5);
 }
 
 html.event-theme-night .event-star {
-    color: #d8c878;
-    text-shadow: 0 0 7px rgba(216, 200, 120, 0.4);
+    color: #e4d9a0;
+    text-shadow:
+        0 0 6px rgba(228, 217, 160, 0.55),
+        0 0 16px rgba(180, 160, 80, 0.35);
 }
 
 @keyframes event-star-fall {
     0% {
-        transform: translate3d(0, 0, 0) rotate(0deg);
+        transform: translate3d(0, 0, 0) rotate(0deg) scale(0.7);
         opacity: 0;
     }
-    12% {
+    8% {
         opacity: 1;
+        transform: translate3d(calc(var(--drift, 0px) * 0.08), 8vh, 0) rotate(12deg) scale(1);
     }
     100% {
-        transform: translate3d(var(--drift, 0px), 110vh, 0) rotate(120deg);
+        transform: translate3d(var(--drift, 0px), 112vh, 0) rotate(var(--spin, 120deg)) scale(0.85);
         opacity: 0;
     }
+}
+
+@keyframes event-star-twinkle {
+    0%, 100% { filter: brightness(0.85); }
+    50% { filter: brightness(1.35); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -5756,6 +5787,99 @@ html.event-theme-night .event-star {
 .fav-team-picks .pick-prob {
     display: none;
 }
+
+/* Tableau / perfs (accueil) — bandeau défilant */
+.perf-highlight {
+    margin: 0 0 1rem;
+    background:
+        linear-gradient(90deg, rgba(26, 50, 38, 0.96) 0%, rgba(35, 68, 50, 0.94) 45%, rgba(26, 50, 38, 0.96) 100%);
+    border: 1px solid rgba(196, 160, 53, 0.45);
+    border-radius: var(--radius, 8px);
+    box-shadow: 0 2px 8px rgba(10, 16, 12, 0.28);
+    color: var(--paper, #e4d9c4);
+    overflow: hidden;
+}
+
+.perf-highlight-rail {
+    display: flex;
+    align-items: stretch;
+    min-height: 2.65rem;
+}
+
+.perf-highlight-badge {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0 0.85rem;
+    background: linear-gradient(160deg, #e8d078, var(--brass, #9a7420));
+    color: #1a1612;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-right: 1px solid rgba(122, 90, 16, 0.35);
+    z-index: 2;
+}
+
+.perf-highlight-badge i {
+    font-size: 0.8rem;
+}
+
+.perf-highlight-viewport {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    mask-image: linear-gradient(90deg, transparent 0, #000 1.2rem, #000 calc(100% - 1.2rem), transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 1.2rem, #000 calc(100% - 1.2rem), transparent 100%);
+}
+
+.perf-highlight-track {
+    display: flex;
+    align-items: center;
+    gap: 2.25rem;
+    width: max-content;
+    padding: 0.65rem 1rem;
+    animation: perf-marquee var(--perf-duration, 28s) linear infinite;
+}
+
+.perf-highlight-item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.55rem;
+    white-space: nowrap;
+    font-size: 0.92rem;
+}
+
+.perf-highlight-pseudo {
+    font-weight: 700;
+    color: #fff;
+}
+
+.perf-highlight-stats {
+    font-weight: 600;
+    color: var(--brass-shine, #e8d078);
+}
+
+@keyframes perf-marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .perf-highlight-track {
+        animation: none;
+        flex-wrap: wrap;
+        width: auto;
+        gap: 0.75rem 1.25rem;
+    }
+
+    .perf-highlight-viewport {
+        mask-image: none;
+        -webkit-mask-image: none;
+    }
+}
+
 
 
 

@@ -39,6 +39,7 @@ $predictions = getUserPredictions($pdo, $user ? (int) $user['id'] : null, $allMa
 $flashes = getFlashes();
 $userFavTeams = $user ? userFavoriteTeams($user) : [];
 $userFavTeam = $userFavTeams[0] ?? null;
+$homeHighlights = fetchHomeHighlights($pdo);
 
 $marketsMeta = [];
 foreach ($matchs as $m) {
@@ -120,6 +121,8 @@ releaseSession();
     <?php foreach ($flashes as $f): ?>
         <div class="alert alert-<?= e($f['type']) ?>"><?= e($f['message']) ?></div>
     <?php endforeach; ?>
+
+    <?php renderHomeHighlightBanner($homeHighlights ?? []); ?>
 
     <?php if ($user): ?>
         <?php renderOnboardingChecklist($pdo, $user); ?>

@@ -47,6 +47,7 @@ require __DIR__ . '/layout.php';
 require __DIR__ . '/matches.php';
 require __DIR__ . '/events.php';
 require __DIR__ . '/favorite_team.php';
+require __DIR__ . '/highlights.php';
 require __DIR__ . '/announcements.php';
 require __DIR__ . '/notifications.php';
 require __DIR__ . '/communities.php';

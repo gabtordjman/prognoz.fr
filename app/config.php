@@ -35,6 +35,11 @@ define('FAV_TEAM_WIN_MULTIPLIER', 2);
 /** Nombre max de sélections nationales préférées (en plus du club). */
 define('FAV_TEAMS_MAX', 3);
 
+/** Seuil points (24 h) pour le bandeau « perf » sur l’accueil. */
+define('HIGHLIGHT_POINTS_24H', 50);
+/** Seuil série en cours pour le même bandeau. */
+define('HIGHLIGHT_STREAK_MIN', 5);
+
 /**
  * Multiplicateur de points selon la série 1x2 après le gain en cours.
  * Clés = série minimale atteinte (ordre décroissant à tester).

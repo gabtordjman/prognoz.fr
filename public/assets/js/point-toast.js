@@ -17,16 +17,8 @@
     var stack = document.getElementById('pointToastStack');
     if (!stack) return;
 
-    var apiBase = window.PRONO_API || '/api/';
     var dashboardUrl = window.PRONO_DASHBOARD_URL || '/account/dashboard';
-    var CONFETTI_MIN_PTS = 3;
-    var CONFETTI_KEY = 'prognoz_confetti_date';
-
-    function apiUrl(path) {
-        path = String(path || '').replace(/^\//, '');
-        path = path.replace(/\.php(?=\?|$)/i, '');
-        return apiBase + path;
-    }
+    var CONFETTI_MIN_PTS = 1;
 
     function escapeHtml(str) {
         var d = document.createElement('div');
@@ -41,51 +33,84 @@
         }, delay);
     }
 
-    function todayKey() {
-        var d = new Date();
-        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    }
-
     function launchConfetti() {
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            return;
+        }
         var canvas = document.createElement('canvas');
         canvas.className = 'confetti-canvas';
         canvas.setAttribute('aria-hidden', 'true');
         document.body.appendChild(canvas);
         var ctx = canvas.getContext('2d');
+        if (!ctx) {
+            canvas.remove();
+            return;
+        }
         var w = canvas.width = window.innerWidth;
         var h = canvas.height = window.innerHeight;
-        var colors = ['#2d6b48', '#4a9468', '#c4a035', '#e8dcc0', '#8a3020'];
+        var colors = ['#2d6b48', '#4a9468', '#6bb88a', '#c4a035', '#e8d078', '#f5e6b8', '#8a3020', '#e4d9c4'];
         var pieces = [];
-        var count = Math.min(80, Math.floor(w / 14));
-        for (var i = 0; i < count; i++) {
+        var count = Math.min(140, Math.max(64, Math.floor(w / 9)));
+        var cx = w * 0.5;
+        var i;
+
+        for (i = 0; i < count; i++) {
+            var angle = (Math.random() * Math.PI) - (Math.PI / 2);
+            var speed = 4 + Math.random() * 9;
+            var shapeRoll = Math.random();
             pieces.push({
-                x: Math.random() * w,
-                y: -Math.random() * h * 0.3,
-                r: 3 + Math.random() * 4,
-                vx: -2 + Math.random() * 4,
-                vy: 2 + Math.random() * 5,
+                x: cx + (Math.random() - 0.5) * w * 0.35,
+                y: -8 - Math.random() * 40,
+                w: 4 + Math.random() * 6,
+                h: 3 + Math.random() * 5,
+                vx: Math.cos(angle) * speed * (0.55 + Math.random() * 0.7),
+                vy: 2.5 + Math.random() * 5.5,
                 rot: Math.random() * 360,
-                vr: -6 + Math.random() * 12,
-                color: colors[Math.floor(Math.random() * colors.length)]
+                vr: -10 + Math.random() * 20,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                shape: shapeRoll < 0.45 ? 'rect' : (shapeRoll < 0.75 ? 'circle' : 'tri'),
+                alpha: 1
             });
         }
+
         var start = Date.now();
-        var duration = 2200;
+        var duration = 2800;
+
+        function drawPiece(p) {
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot * Math.PI / 180);
+            ctx.globalAlpha = Math.max(0, p.alpha);
+            ctx.fillStyle = p.color;
+            if (p.shape === 'circle') {
+                ctx.beginPath();
+                ctx.arc(0, 0, p.w * 0.55, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (p.shape === 'tri') {
+                ctx.beginPath();
+                ctx.moveTo(0, -p.h);
+                ctx.lineTo(p.w, p.h);
+                ctx.lineTo(-p.w, p.h);
+                ctx.closePath();
+                ctx.fill();
+            } else {
+                ctx.fillRect(-p.w, -p.h * 0.45, p.w * 2, p.h);
+            }
+            ctx.restore();
+        }
 
         function frame() {
             var elapsed = Date.now() - start;
+            var fade = elapsed > duration - 700 ? 1 - ((elapsed - (duration - 700)) / 700) : 1;
             ctx.clearRect(0, 0, w, h);
             pieces.forEach(function (p) {
                 p.x += p.vx;
                 p.y += p.vy;
-                p.vy += 0.08;
+                p.vy += 0.12;
+                p.vx *= 0.995;
                 p.rot += p.vr;
-                ctx.save();
-                ctx.translate(p.x, p.y);
-                ctx.rotate(p.rot * Math.PI / 180);
-                ctx.fillStyle = p.color;
-                ctx.fillRect(-p.r, -p.r * 0.5, p.r * 2, p.r);
-                ctx.restore();
+                p.alpha = fade;
+                drawPiece(p);
             });
             if (elapsed < duration) {
                 requestAnimationFrame(frame);
@@ -98,12 +123,6 @@
 
     function maybeConfetti(totalPoints) {
         if (totalPoints < CONFETTI_MIN_PTS) return;
-        try {
-            if (localStorage.getItem(CONFETTI_KEY) === todayKey()) return;
-            localStorage.setItem(CONFETTI_KEY, todayKey());
-        } catch (e) {
-            return;
-        }
         launchConfetti();
     }
 
