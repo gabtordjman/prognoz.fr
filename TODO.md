@@ -1,4 +1,5 @@
 [x] Integrer un système de streak (multiplicateur de points en fonction du nb de matchs reussis)
 [x] Ajouter un systèmes d'évènements courts permettant de gagner plus de points
 [x] Annonces admin (micro + pastille + popup discrète)
-[ ] Ajout d'option "Equipe Préférée". Notif "pari dispo" concernant un pari disponible avec l'équipe préférée. Bonus de x2 si l'utilisateur a gagné le pari avec son équipe préféré.
+[X] Ajout d'option "Equipe Préférée". Notif "pari dispo" concernant un pari disponible avec l'équipe préférée. Bonus de x2 si l'utilisateur a gagné le pari avec son équipe préféré.
+[ ] Ajout d'une boutique avec les points gagnés lors de la dernière saison, les points se verouillent et on peut les cumuler a la fin de chaque saison. Faire des cosmétiques : fond d'écran d'arrière plan de profil et couleur des pseudos animés. Réaliser un arrière plan et un nom rare, a obtenir au bout de points énormes, le truc ultime pour le plus fort. Réaliser plusieurs cosmétiques, une dizaine au moins. Faire des badges au 100pts, 500pts, concernant les points totaux. 
