@@ -16,6 +16,9 @@ Modèle : `.env.example`.
 | `CRON_SECRET` | Protège `/api/sync?cron=1&key=…` | Obligatoire en prod |
 | `APP_CONTACT_EMAIL` | Contact + destinataire admin sync | Recommandé |
 | `APP_BETA` | `1` = bandeau bêta, `0` = prod | `0` en prod |
+| `APP_MAINTENANCE` | `1` = page de maintenance pour tout le monde sauf tes IPs | `0` en prod ouverte |
+| `MAINTENANCE_ALLOW_IPS` | IPv4 / IPv6 / CIDR (IP réelle Cloudflare), séparées par des virgules | Ton IP seulement |
+| `MAINTENANCE_BYPASS_KEY` | Secours : `/?bypass=CLÉ` si ton IP change | Optionnel |
 
 ---
 
@@ -58,6 +61,20 @@ URL : `/admin/?s=VOTRE_SLUG`
 
 `SYNC_ADMIN_USER_IDS` — liste d’IDs utilisateurs autorisés à forcer certaines syncs.  
 Sinon, l’e-mail `APP_CONTACT_EMAIL` peut servir de critère selon le code en place.
+
+---
+
+## Maintenance (tests sans le public)
+
+1. Sur le **serveur** (`.env` n’est pas dans git) :
+   ```
+   APP_MAINTENANCE=1
+   MAINTENANCE_ALLOW_IPS=TON_IPV4,TON_PREFIXE_IPV6/64
+   MAINTENANCE_BYPASS_KEY=une_cle_longue
+   ```
+2. L’IP lue est celle de Cloudflare (`CF-Connecting-IP`), pas l’IP du proxy.
+3. CLI, cron `/api/sync?key=…` et `/admin/` restent accessibles.
+4. Pour rouvrir : `APP_MAINTENANCE=0` puis recharger une page.
 
 ---
 

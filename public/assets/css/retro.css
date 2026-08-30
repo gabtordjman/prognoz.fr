@@ -1228,3 +1228,20 @@ input[type="number"], input[type="search"], select, textarea {
         float: none; width: 100%; margin: 0 0 6px;
     }
 }
+
+.shop-wallet { margin: 0 0 12px; padding: 8px; border: 1px solid #333; }
+.shop-wallet-val { font-size: 14px; font-weight: bold; }
+.shop-tabs { margin: 0 0 10px; }
+.shop-tab { margin-right: 6px; }
+.shop-tab.is-active { font-weight: bold; text-decoration: underline; }
+.shop-grid { zoom: 1; }
+.shop-card { float: left; width: 46%; margin: 0 2% 12px 0; border: 1px solid #333; padding: 6px; }
+.shop-card-preview { min-height: 70px; background: #145a32; text-align: center; padding: 12px 4px; }
+.shop-card-photo { width: 100%; height: auto; }
+.shop-card-title { margin: 4px 0; font-size: 13px; }
+.cos-name--brass { color: #9a7420; }
+.cos-name--emerald { color: #145a32; }
+.cos-name--ice { color: #1a6a8a; }
+.cos-name--flame, .cos-name--aurora, .cos-name--neon, .cos-name--prism, .cos-name--legend { color: #9a7420; font-weight: bold; }
+.milestone-item { margin: 0 0 6px; }
+.profile-showcase { padding: 8px; border: 1px solid #9a7420; }

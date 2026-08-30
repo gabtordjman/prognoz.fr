@@ -19,12 +19,22 @@ function fetchPublicUserProfile(PDO $pdo, int $userId): ?array
     if ($userId <= 0) {
         return null;
     }
-    $stmt = $pdo->prepare(
-        'SELECT id, pseudo, points_totaux, serie_en_cours, avatar_url, created_at, bio, sport_favori
-         FROM users WHERE id = ? AND actif = 1'
-    );
-    $stmt->execute([$userId]);
-    $row = $stmt->fetch();
+    try {
+        $stmt = $pdo->prepare(
+            'SELECT id, pseudo, points_totaux, serie_en_cours, avatar_url, created_at, bio, sport_favori,
+                    shop_balance, equipped_bg, equipped_name
+             FROM users WHERE id = ? AND actif = 1'
+        );
+        $stmt->execute([$userId]);
+        $row = $stmt->fetch();
+    } catch (Throwable $e) {
+        $stmt = $pdo->prepare(
+            'SELECT id, pseudo, points_totaux, serie_en_cours, avatar_url, created_at, bio, sport_favori
+             FROM users WHERE id = ? AND actif = 1'
+        );
+        $stmt->execute([$userId]);
+        $row = $stmt->fetch();
+    }
 
     return $row ?: null;
 }
@@ -56,12 +66,17 @@ function friendshipStatusWith(PDO $pdo, int $viewerId, int $targetId): string
 }
 
 /** Avatar (+ pseudo optionnel) cliquable vers le profil. */
-function renderUserProfileLink(int $userId, string $pseudo, string $size = 'sm', bool $showPseudo = true, ?string $avatarUrl = null): void
+function renderUserProfileLink(int $userId, string $pseudo, string $size = 'sm', bool $showPseudo = true, ?string $avatarUrl = null, ?string $nameStyle = null): void
 {
     if ($userId <= 0) {
         renderUserAvatar($pseudo, $size, $avatarUrl);
         if ($showPseudo) {
-            echo ' <span class="user-link-pseudo">' . e($pseudo) . '</span>';
+            if (function_exists('renderCosmeticPseudo')) {
+                echo ' ';
+                renderCosmeticPseudo($pseudo, $nameStyle, 'user-link-pseudo');
+            } else {
+                echo ' <span class="user-link-pseudo">' . e($pseudo) . '</span>';
+            }
         }
         return;
     }
@@ -69,7 +84,11 @@ function renderUserProfileLink(int $userId, string $pseudo, string $size = 'sm',
     <a href="<?= e(userProfileUrl($userId)) ?>" class="user-link" title="Voir le profil de <?= e($pseudo) ?>">
         <?php renderUserAvatar($pseudo, $size, $avatarUrl); ?>
         <?php if ($showPseudo): ?>
-            <span class="user-link-pseudo"><?= e($pseudo) ?></span>
+            <?php if (function_exists('renderCosmeticPseudo')): ?>
+                <?php renderCosmeticPseudo($pseudo, $nameStyle, 'user-link-pseudo'); ?>
+            <?php else: ?>
+                <span class="user-link-pseudo"><?= e($pseudo) ?></span>
+            <?php endif; ?>
         <?php endif; ?>
     </a>
     <?php

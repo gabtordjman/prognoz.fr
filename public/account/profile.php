@@ -59,6 +59,8 @@ $stats = getUserPredictionStats($pdo, $profileId);
 $history = getUserPredictionHistory($pdo, $profileId, 12);
 $friendCount = countAcceptedFriends($pdo, $profileId);
 $seasonRewards = fetchUserSeasonRewards($pdo, $profileId, 5, $viewerId);
+$milestoneBadges = userMilestoneBadges((int) $profile['points_totaux']);
+$equippedName = shopEquippedName($profile);
 ?>
 <!DOCTYPE html>
 <html lang="<?= e(htmlLang()) ?>"<?= function_exists('htmlUiClassAttr') ? htmlUiClassAttr() : '' ?>>
@@ -74,14 +76,17 @@ $seasonRewards = fetchUserSeasonRewards($pdo, $profileId, 5, $viewerId);
 <div class="app-main app-main--espace">
     <?php layoutFlashes(); ?>
 
-    <header class="dash-head">
+    <header class="<?= e(profileHeaderClass($profile)) ?>">
+        <?php if (shopHasCustomBg($profile)): ?>
+        <div class="profile-showcase-shade" aria-hidden="true"></div>
+        <?php endif; ?>
         <div class="dash-id">
             <div class="dash-id-photo">
                 <?php renderUserAvatar($profile['pseudo'], 'lg', $profile['avatar_url'] ?? null); ?>
             </div>
             <div class="dash-id-copy">
                 <h2 class="page-title dash-id-title">
-                    <?= e($profile['pseudo']) ?>
+                    <?php renderCosmeticPseudo((string) $profile['pseudo'], $equippedName); ?>
                     <?php if (isSiteAdminUser($profileId)): ?>
                         <?= adminBadgeHtml() ?>
                     <?php endif; ?>
@@ -188,6 +193,22 @@ $seasonRewards = fetchUserSeasonRewards($pdo, $profileId, 5, $viewerId);
         <p class="empty-msg profile-empty"><?= e(t('profile.no_resolved')) ?></p>
         <?php endif; ?>
     </section>
+
+    <?php if (!empty($milestoneBadges)): ?>
+    <section class="panel panel-spaced">
+        <div class="panel-head"><?= e(t('shop.milestones')) ?></div>
+        <div class="panel-body">
+            <ul class="milestone-list">
+                <?php foreach ($milestoneBadges as $badge): ?>
+                <li class="milestone-item">
+                    <?php renderMilestoneBadge($badge); ?>
+                    <span class="milestone-meta"><?= e(milestoneBadgeDesc($badge)) ?></span>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    </section>
+    <?php endif; ?>
 
     <?php if (!empty($seasonRewards)): ?>
     <section class="panel panel-spaced">

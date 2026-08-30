@@ -200,6 +200,7 @@ function layoutTopbar(?array $user, string $active = ''): void
                         </a>
                         <a href="<?= e(url('account/friends.php')) ?>" class="nav-link<?= $active === 'friends' ? ' active' : '' ?>"><?= e(t('nav.friends')) ?></a>
                         <a href="<?= e(url('communities/index.php')) ?>" class="nav-link<?= $active === 'communities' ? ' active' : '' ?>"><?= e(t('nav.communities')) ?></a>
+                        <a href="<?= e(url('account/shop.php')) ?>" class="nav-link<?= $active === 'shop' ? ' active' : '' ?>"><?= e(t('nav.shop')) ?></a>
                     <?php else: ?>
                         <a href="<?= e(url('legal/comment-ca-marche.php')) ?>" class="nav-link"><?= e(t('nav.howto')) ?></a>
                     <?php endif; ?>
@@ -211,7 +212,11 @@ function layoutTopbar(?array $user, string $active = ''): void
                 <?php if ($user): ?>
                     <span class="topbar-user">
                         <?php renderUserAvatar($user['pseudo'], 'sm', $user['avatar_url'] ?? null); ?>
-                        <?= e($user['pseudo']) ?>
+                        <?php if (function_exists('renderCosmeticPseudo')): ?>
+                            <?php renderCosmeticPseudo((string) $user['pseudo'], $user['equipped_name'] ?? null); ?>
+                        <?php else: ?>
+                            <?= e($user['pseudo']) ?>
+                        <?php endif; ?>
                         <?php if (isSiteAdminUser((int) $user['id'])): ?>
                             <?= adminBadgeHtml() ?>
                         <?php endif; ?>
@@ -359,6 +364,7 @@ function layoutPointsHelp(): void
                 <li><strong><?= e(t('points.streak')) ?></strong> — <?= e(t('points.streak_desc')) ?></li>
                 <li><strong><?= e(t('points.events')) ?></strong> — <?= e(t('points.events_desc')) ?></li>
                 <li><strong><?= e(t('points.badges')) ?></strong> — <?= e(t('points.badges_desc')) ?></li>
+                <li><strong><?= e(t('points.shop')) ?></strong> — <?= e(t('points.shop_desc')) ?></li>
             </ul>
             <div class="points-help-badges" aria-hidden="true">
                 <span class="lb-pill lb-pill-gold"><?= e(t('points.1st')) ?></span>

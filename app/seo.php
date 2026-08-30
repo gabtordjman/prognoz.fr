@@ -100,6 +100,12 @@ function seoPage(string $key, array $overrides = []): array
             'path'        => 'account/settings',
             'robots'      => 'noindex,nofollow',
         ],
+        'shop' => [
+            'title'       => t('seo.shop.title'),
+            'description' => t('seo.shop.desc'),
+            'path'        => 'account/shop',
+            'robots'      => 'noindex,nofollow',
+        ],
     ];
 
     if (!isset($pages[$key])) {

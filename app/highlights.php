@@ -21,7 +21,7 @@ function homeHighlightLimit(): int
 
 /**
  * @param array<string,mixed> $row
- * @return array{id:int,pseudo:string,pts_24h:int,serie:int,avatar_url:?string}
+ * @return array{id:int,pseudo:string,pts_24h:int,serie:int,avatar_url:?string,equipped_name:string}
  */
 function normalizeHomeHighlightRow(array $row): array
 {
@@ -33,13 +33,14 @@ function normalizeHomeHighlightRow(array $row): array
         'avatar_url' => isset($row['avatar_url']) && $row['avatar_url'] !== '' && $row['avatar_url'] !== null
             ? (string) $row['avatar_url']
             : null,
+        'equipped_name' => (string) ($row['equipped_name'] ?? ''),
     ];
 }
 
 /**
  * Top perfs récentes (0–N).
  *
- * @return list<array{id:int,pseudo:string,pts_24h:int,serie:int,avatar_url:?string}>
+ * @return list<array{id:int,pseudo:string,pts_24h:int,serie:int,avatar_url:?string,equipped_name:string}>
  */
 function fetchHomeHighlights(PDO $pdo, ?int $limit = null): array
 {
@@ -85,8 +86,16 @@ function fetchHomeHighlights(PDO $pdo, ?int $limit = null): array
             $hasAvatar = false;
         }
         $avatarCol = $hasAvatar ? 'u.avatar_url' : 'NULL AS avatar_url';
+        $hasNameStyle = false;
+        try {
+            $hasNameStyle = (bool) $pdo->query("SHOW COLUMNS FROM users LIKE 'equipped_name'")->fetch();
+        } catch (PDOException $e) {
+            $hasNameStyle = false;
+        }
+        $nameCol = $hasNameStyle ? 'u.equipped_name' : "'' AS equipped_name";
 
         $sql = "SELECT u.id, u.pseudo, u.serie_en_cours AS serie, {$avatarCol},
+                       {$nameCol},
                        COALESCE(s.pts_24h, 0) AS pts_24h
                 FROM users u
                 LEFT JOIN (
@@ -177,6 +186,7 @@ function renderHomeHighlightBanner($list = null): void
         }
         $items[] = [
             'pseudo' => (string) $h['pseudo'],
+            'name_style' => (string) ($h['equipped_name'] ?? ''),
             'stats'  => $stats,
             'line'   => t('home.highlight_msg', [
                 'pseudo' => (string) $h['pseudo'],
@@ -202,7 +212,13 @@ function renderHomeHighlightBanner($list = null): void
                 <div class="perf-highlight-track" style="--perf-duration: <?= (int) $duration ?>s">
                     <?php foreach ($track as $it): ?>
                         <span class="perf-highlight-item">
-                            <strong class="perf-highlight-pseudo"><?= e($it['pseudo']) ?></strong>
+                            <strong class="perf-highlight-pseudo"><?php
+                                if (function_exists('renderCosmeticPseudo')) {
+                                    renderCosmeticPseudo((string) $it['pseudo'], (string) ($it['name_style'] ?? ''));
+                                } else {
+                                    echo e((string) $it['pseudo']);
+                                }
+                            ?></strong>
                             <span class="perf-highlight-stats"><?= e($it['stats']) ?></span>
                         </span>
                     <?php endforeach; ?>

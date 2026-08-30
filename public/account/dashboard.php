@@ -84,6 +84,8 @@ $friendCount = countAcceptedFriends($pdo, $userId);
 $activeSeason = getActiveSeason($pdo);
 $seasonPoints = $activeSeason ? getUserGeneralSeasonPoints($pdo, $userId, (int) $activeSeason['id']) : 0;
 $seasonRewards = fetchUserSeasonRewards($pdo, $userId, 5);
+$milestoneBadges = userMilestoneBadges((int) $user['points_totaux']);
+$shopPts = shopBalance($user);
 $favClubChoices = listFavoriteClubChoices($pdo);
 $favNationalChoices = listFavoriteNationalChoices();
 $currentFavClub = userFavoriteClub($user);
@@ -112,7 +114,10 @@ while (count($currentFavNationals) < (int) FAV_TEAMS_MAX) {
 <div class="app-main app-main--espace">
     <?php layoutFlashes(); ?>
 
-    <header class="dash-head">
+    <header class="<?= e(profileHeaderClass($user)) ?>">
+        <?php if (shopHasCustomBg($user)): ?>
+        <div class="profile-showcase-shade" aria-hidden="true"></div>
+        <?php endif; ?>
         <div class="dash-id">
             <div class="dash-id-photo">
                 <?php renderUserAvatar($user['pseudo'], 'lg', $user['avatar_url'] ?? null); ?>
@@ -145,7 +150,9 @@ while (count($currentFavNationals) < (int) FAV_TEAMS_MAX) {
                 <?php endif; ?>
             </div>
             <div class="dash-id-copy">
-                <h2 class="page-title dash-id-title"><?= e(t('dash.hello', ['name' => $user['pseudo']])) ?></h2>
+                <h2 class="page-title dash-id-title">
+                    <?php renderCosmeticHello((string) $user['pseudo'], shopEquippedName($user)); ?>
+                </h2>
                 <p class="page-sub dash-id-sub">
                     <?= e($pronosEnCours === 1
                         ? t('dash.sub_pending_one', ['n' => $pronosEnCours])
@@ -179,6 +186,9 @@ while (count($currentFavNationals) < (int) FAV_TEAMS_MAX) {
             <a href="<?= e(userProfileUrl($userId)) ?>" class="btn btn-ghost btn-sm">
                 <i class="fa-solid fa-id-card" aria-hidden="true"></i> <?= e(t('dash.profile')) ?>
             </a>
+            <a href="<?= e(url('account/shop.php')) ?>" class="btn btn-ghost btn-sm">
+                <i class="fa-solid fa-store" aria-hidden="true"></i> <?= e(t('nav.shop')) ?>
+            </a>
             <a href="<?= e(url('account/settings.php')) ?>" class="btn btn-ghost btn-sm">
                 <i class="fa-solid fa-gear" aria-hidden="true"></i> <?= e(t('dash.settings')) ?>
             </a>
@@ -199,6 +209,10 @@ while (count($currentFavNationals) < (int) FAV_TEAMS_MAX) {
                 <span class="dash-stat-val"><?= (int) $user['points_totaux'] ?></span>
                 <span class="dash-stat-lbl"><?= e(t('dash.points')) ?></span>
             </div>
+            <a class="dash-stat" href="<?= e(url('account/shop.php')) ?>" title="<?= e(t('shop.lock_hint')) ?>">
+                <span class="dash-stat-val"><?= (int) $shopPts ?></span>
+                <span class="dash-stat-lbl"><?= e(t('shop.wallet')) ?></span>
+            </a>
             <a class="dash-stat" href="<?= e(url('account/friends.php')) ?>">
                 <span class="dash-stat-val"><?= (int) $friendCount ?></span>
                 <span class="dash-stat-lbl"><?= e(t('dash.my_friends')) ?></span>
@@ -295,6 +309,22 @@ while (count($currentFavNationals) < (int) FAV_TEAMS_MAX) {
     <?php renderStreakBanner((int) $user['serie_en_cours']); ?>
     <?php if ((int) $user['serie_en_cours'] === 0): ?>
     <script>try { localStorage.setItem('prognoz_streak_last', '0'); } catch (e) { /* ignore */ }</script>
+    <?php endif; ?>
+
+    <?php if (!empty($milestoneBadges)): ?>
+    <section class="panel panel-spaced">
+        <div class="panel-head"><?= e(t('shop.milestones')) ?></div>
+        <div class="panel-body">
+            <ul class="milestone-list">
+                <?php foreach ($milestoneBadges as $badge): ?>
+                <li class="milestone-item">
+                    <?php renderMilestoneBadge($badge); ?>
+                    <span class="milestone-meta"><?= e(milestoneBadgeDesc($badge)) ?></span>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    </section>
     <?php endif; ?>
 
     <?php if (!empty($seasonRewards)): ?>

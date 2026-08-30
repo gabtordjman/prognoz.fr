@@ -43,6 +43,7 @@ require __DIR__ . '/seo.php';
 require __DIR__ . '/badges.php';
 require __DIR__ . '/push.php';
 require __DIR__ . '/seasons.php';
+require __DIR__ . '/shop.php';
 require __DIR__ . '/layout.php';
 require __DIR__ . '/matches.php';
 require __DIR__ . '/events.php';
@@ -73,6 +74,8 @@ try {
     ensureMailPrefsSchema($pdoBoot);
     ensureEncryptionSchema($pdoBoot);
     maintainSeasons($pdoBoot);
+    ensureShopSchema($pdoBoot);
+    maintainShopLocks($pdoBoot);
     ensurePushSubscriptionSchema($pdoBoot);
     ensureAvatarSchema($pdoBoot);
     ensureSiteEventsSchema($pdoBoot);

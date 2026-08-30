@@ -110,13 +110,87 @@ function prettyPublicPath(string $path): string
     return $path . $query;
 }
 
-/** IP client (proxy LWS / Cloudflare). */
+/**
+ * Plages Cloudflare (https://www.cloudflare.com/ips-v4 / ips-v6).
+ *
+ * @return list<string>
+ */
+function cloudflareIpRanges(): array
+{
+    return [
+        '173.245.48.0/20', '103.21.244.0/22', '103.22.200.0/22', '103.31.4.0/22',
+        '141.101.64.0/18', '108.162.192.0/18', '190.93.240.0/20', '188.114.96.0/20',
+        '197.234.240.0/22', '198.41.128.0/17', '162.158.0.0/15', '104.16.0.0/13',
+        '104.24.0.0/14', '172.64.0.0/13', '131.0.72.0/22',
+        '2400:cb00::/32', '2606:4700::/32', '2803:f800::/32', '2405:b500::/32',
+        '2405:8100::/32', '2a06:98c0::/29', '2c0f:f248::/32',
+    ];
+}
+
+function ipMatchesCidr(string $ip, string $cidr): bool
+{
+    $ip = trim($ip);
+    $cidr = trim($cidr);
+    if ($ip === '' || $cidr === '') {
+        return false;
+    }
+    if (!str_contains($cidr, '/')) {
+        return strcasecmp($ip, $cidr) === 0;
+    }
+    [$subnet, $bitsRaw] = explode('/', $cidr, 2);
+    $bits = (int) $bitsRaw;
+    $ipBin = @inet_pton($ip);
+    $subBin = @inet_pton($subnet);
+    if ($ipBin === false || $subBin === false || strlen($ipBin) !== strlen($subBin)) {
+        return false;
+    }
+    $maxBits = strlen($ipBin) * 8;
+    if ($bits < 0 || $bits > $maxBits) {
+        return false;
+    }
+    $fullBytes = intdiv($bits, 8);
+    $remain = $bits % 8;
+    if ($fullBytes > 0 && substr($ipBin, 0, $fullBytes) !== substr($subBin, 0, $fullBytes)) {
+        return false;
+    }
+    if ($remain === 0) {
+        return true;
+    }
+    $mask = (0xFF << (8 - $remain)) & 0xFF;
+
+    return (ord($ipBin[$fullBytes]) & $mask) === (ord($subBin[$fullBytes]) & $mask);
+}
+
+function ipInAllowlist(string $ip, array $allow): bool
+{
+    foreach ($allow as $entry) {
+        if (ipMatchesCidr($ip, (string) $entry)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function requestFromCloudflare(): bool
+{
+    $remote = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+
+    return $remote !== '' && ipInAllowlist($remote, cloudflareIpRanges());
+}
+
+/** IP client réelle (CF-Connecting-IP derrière Cloudflare, sinon socket). */
 function clientIp(): string
 {
+    $cf = trim((string) ($_SERVER['HTTP_CF_CONNECTING_IP'] ?? ''));
+    if ($cf !== '' && filter_var($cf, FILTER_VALIDATE_IP) && requestFromCloudflare()) {
+        return $cf;
+    }
+
     $xff = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
-    if ($xff !== '') {
+    if ($xff !== '' && requestFromCloudflare()) {
         $parts = array_map('trim', explode(',', $xff));
-        if ($parts[0] !== '') {
+        if ($parts[0] !== '' && filter_var($parts[0], FILTER_VALIDATE_IP)) {
             return $parts[0];
         }
     }

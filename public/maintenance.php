@@ -10,10 +10,10 @@ if (!appInMaintenanceMode()) {
 header('Retry-After: 3600');
 
 layoutStatusPage(
-    'Maintenance',
-    'On revient très vite',
-    'Mise à jour en cours — pronostics et communautés indisponibles quelques minutes.',
+    t('maintenance.tag'),
+    t('maintenance.title', ['name' => APP_NAME]),
+    t('maintenance.lead'),
     url('index.php'),
-    'Réessayer',
+    t('maintenance.retry'),
     503
 );

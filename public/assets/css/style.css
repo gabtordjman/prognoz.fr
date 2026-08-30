@@ -512,6 +512,13 @@ button.pill-points-btn:active {
 
 .btn:active { transform: translateY(1px); }
 
+.btn:disabled,
+.btn[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.78rem; }
 
 .btn-primary {
@@ -1207,7 +1214,7 @@ button.pill-points-btn:active {
     gap: 0.6rem;
     margin-bottom: 0.65rem;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 1.18rem;
     position: relative;
 }
 
@@ -1217,7 +1224,7 @@ button.pill-points-btn:active {
 .vs {
     color: var(--muted);
     font-family: var(--font-mono);
-    font-size: 0.7rem;
+    font-size: 0.78rem;
     font-style: normal;
     font-weight: 600;
     opacity: 0.75;
@@ -1342,7 +1349,7 @@ button.pill-points-btn:active {
 }
 
 .score-entry-team {
-    font-size: 0.68rem;
+    font-size: 0.84rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.03em;
@@ -3632,7 +3639,7 @@ button.pill-points-btn:active {
         --sport-cat-mobile-height: 2.85rem;
     }
 
-    .score-entry-team { font-size: 0.62rem; }
+    .score-entry-team { font-size: 0.76rem; }
     .score-entry-control {
         grid-template-columns: 2rem minmax(2rem, 1fr) 2rem;
         min-height: 2.65rem;
@@ -5877,6 +5884,400 @@ html.event-theme-night .event-star {
     .perf-highlight-viewport {
         mask-image: none;
         -webkit-mask-image: none;
+    }
+}
+
+/* --- Boutique / cosmétiques --- */
+.profile-showcase {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    padding: 1.15rem 1.25rem 1.2rem;
+    min-height: 7.2rem;
+    border: 1px solid rgba(232, 208, 120, 0.28);
+    box-shadow: var(--shadow-card);
+    background-color: #142018;
+    background-size: cover;
+    background-position: center;
+}
+
+.profile-showcase-shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(12, 18, 14, 0.22) 0%, rgba(12, 18, 14, 0.62) 100%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.profile-showcase .dash-id,
+.profile-showcase .dash-links,
+.profile-showcase .dash-id-copy {
+    position: relative;
+    z-index: 1;
+}
+
+.profile-showcase .dash-id-title,
+.profile-showcase .dash-id-sub,
+.profile-showcase .dash-id-bio,
+.profile-showcase .dash-fav-sport {
+    color: #f4ead4;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.profile-bg--felt {
+    background-image: var(--tex-felt);
+    background-size: 256px 256px, auto;
+}
+
+.profile-bg--brass { background-image: url('../img/shop/shop-bg-brass.jpg'); }
+.profile-bg--midnight { background-image: url('../img/shop/shop-bg-midnight.jpg'); }
+.profile-bg--forest { background-image: url('../img/shop/shop-bg-forest.jpg'); }
+.profile-bg--ember { background-image: url('../img/shop/shop-bg-ember.jpg'); }
+.profile-bg--ocean { background-image: url('../img/shop/shop-bg-ocean.jpg'); }
+.profile-bg--sunset { background-image: url('../img/shop/shop-bg-sunset.jpg'); }
+.profile-bg--marble { background-image: url('../img/shop/shop-bg-marble.jpg'); }
+.profile-bg--storm { background-image: url('../img/shop/shop-bg-storm.jpg'); }
+.profile-bg--velvet { background-image: url('../img/shop/shop-bg-velvet.jpg'); }
+.profile-bg--goldleaf { background-image: url('../img/shop/shop-bg-goldleaf.jpg'); }
+.profile-bg--legend { background-image: url('../img/shop/shop-bg-legend.jpg'); }
+
+.cos-name {
+    display: inline;
+    font: inherit;
+    letter-spacing: inherit;
+}
+
+.cos-name--ink { color: inherit; }
+
+.cos-name--brass,
+a.cos-name--brass,
+.chat-msg .author.cos-name--brass,
+.profile-showcase .dash-id-title .cos-name--brass {
+    color: #c9a44a;
+    text-shadow: 0 0 10px rgba(232, 208, 120, 0.28);
+}
+
+.cos-name--emerald,
+a.cos-name--emerald,
+.chat-msg .author.cos-name--emerald,
+.profile-showcase .dash-id-title .cos-name--emerald {
+    color: #4a9468;
+    text-shadow: 0 0 8px rgba(74, 148, 104, 0.28);
+}
+
+.cos-name--ice,
+a.cos-name--ice,
+.chat-msg .author.cos-name--ice,
+.profile-showcase .dash-id-title .cos-name--ice {
+    color: #3d8fb5;
+    text-shadow: 0 0 10px rgba(126, 200, 227, 0.35);
+}
+
+.cos-name--animated,
+a.cos-name--animated,
+.chat-msg .author.cos-name--animated,
+.profile-showcase .dash-id-title .cos-name--animated {
+    background-size: 220% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+}
+
+.cos-name--flame {
+    background-image: linear-gradient(90deg, #ff6b1a, #ffd36a, #ff3d00, #ff6b1a);
+}
+
+.cos-name--aurora {
+    background-image: linear-gradient(90deg, #3dd6c6, #7b6cff, #4a9468, #3dd6c6);
+}
+
+.cos-name--neon {
+    background-image: linear-gradient(90deg, #39ff88, #e8d078, #39ff88);
+    filter: drop-shadow(0 0 6px rgba(57, 255, 136, 0.45));
+}
+
+.cos-name--prism {
+    background-image: linear-gradient(90deg, #e14b4b, #e8d078, #4a9468, #3d8fb5, #7b6cff, #e14b4b);
+}
+
+.cos-name--legend {
+    background-image: linear-gradient(90deg, #f3e2a0, #fff6d0, #c4a035, #f3e2a0, #9a7420);
+    filter: drop-shadow(0 0 8px rgba(232, 208, 120, 0.45));
+}
+
+.cos-name--animated {
+    animation: cos-name-shift 4.2s linear infinite;
+}
+
+@keyframes cos-name-shift {
+    to { background-position: 220% center; }
+}
+
+.shop-wallet {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.85rem 1.4rem;
+    margin: 0 0 1.1rem;
+    padding: 1rem 1.15rem;
+    background: var(--paper);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-card);
+    color: var(--ink);
+}
+
+.shop-wallet-lbl {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.shop-wallet-val {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: clamp(1.6rem, 3vw, 2.1rem);
+    font-weight: 700;
+    color: var(--green-dark);
+    line-height: 1.1;
+}
+
+.shop-wallet-val small {
+    font-size: 0.55em;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.shop-wallet-meta {
+    max-width: 28rem;
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+.shop-wallet-meta p { margin: 0; }
+
+.shop-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0 0 1rem;
+}
+
+.shop-tab {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.38rem 0.85rem;
+    border-radius: 999px;
+    text-decoration: none;
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: rgba(232, 224, 206, 0.82);
+    background: rgba(15, 26, 20, 0.35);
+    border: 1px solid rgba(232, 208, 120, 0.22);
+}
+
+.shop-tab:hover { color: #fff; border-color: rgba(232, 208, 120, 0.45); }
+
+.shop-tab.is-active {
+    color: #2a220c;
+    background: linear-gradient(165deg, #f3e2a0 0%, #d4a824 55%, #e8c85a 100%);
+    border-color: rgba(140, 100, 20, 0.5);
+}
+
+.shop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.9rem;
+}
+
+.shop-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--paper);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    color: var(--ink);
+}
+
+.shop-card--legend {
+    border-color: rgba(154, 116, 32, 0.55);
+    box-shadow: 0 0 0 1px rgba(232, 208, 120, 0.25), var(--shadow-card);
+}
+
+.shop-card.is-equipped {
+    outline: 2px solid var(--green);
+    outline-offset: -2px;
+}
+
+.shop-card-preview {
+    position: relative;
+    min-height: 7.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #142018;
+    background-image: var(--tex-felt);
+    background-size: 256px 256px, auto;
+    background-position: center;
+    overflow: hidden;
+}
+
+.shop-card-preview.profile-bg:not(.profile-bg--felt) {
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.shop-card-photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.shop-card-sample {
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 800;
+}
+
+.shop-card-rarity {
+    position: absolute;
+    top: 0.45rem;
+    left: 0.45rem;
+    z-index: 1;
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: rgba(12, 18, 14, 0.62);
+    color: #f4ead4;
+}
+
+.shop-rarity--rare { color: #9ec9ff; }
+.shop-rarity--epic { color: #d2b0ff; }
+.shop-rarity--legend { color: #f3e2a0; }
+
+.shop-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.85rem 0.9rem 0.95rem;
+    flex: 1;
+}
+
+.shop-card-title {
+    margin: 0;
+    font-size: 1.02rem;
+    font-weight: 800;
+}
+
+.shop-card-desc {
+    margin: 0;
+    font-size: 0.84rem;
+    color: var(--muted);
+    line-height: 1.4;
+    flex: 1;
+}
+
+.shop-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: 0.35rem;
+}
+
+.shop-card-price {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--green-dark);
+}
+
+.shop-card-price--free { color: var(--muted); }
+
+.shop-card-state {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--green-dark);
+}
+
+.shop-card-form { margin: 0; }
+
+.milestone-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.milestone-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.milestone-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0.65rem 0.2rem 0.25rem;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.milestone-badge__img {
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #142018;
+}
+
+.milestone-badge--cent {
+    color: #2a3038;
+    border: 1px solid rgba(90, 100, 110, 0.45);
+    background: linear-gradient(165deg, #f4f6f8 0%, #c5ccd4 42%, #dde3ea 100%);
+}
+
+.milestone-badge--veteran {
+    color: #4a3408;
+    border: 1px solid rgba(140, 100, 20, 0.55);
+    background: linear-gradient(165deg, #f3e2a0 0%, #d4a824 42%, #e8c85a 100%);
+}
+
+.milestone-meta {
+    font-size: 0.86rem;
+    color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cos-name--animated {
+        animation: none;
+        background-position: 30% center;
     }
 }
 

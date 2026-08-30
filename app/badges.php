@@ -121,7 +121,12 @@ function renderLeaderboardRow(array $member, int $rank, int $currentUserId): voi
             <?php renderUserProfileLink((int) $member['id'], (string) $member['pseudo'], 'sm', false, $member['avatar_url'] ?? null); ?>
             <span class="leaderboard-name-text">
                 <a href="<?= e(userProfileUrl((int) $member['id'])) ?>" class="leaderboard-pseudo<?= $isSelf ? '' : ' leaderboard-pseudo--link' ?>">
-                    <?= e($member['pseudo']) ?><?php if ($isSelf): ?> <span class="leaderboard-you"><?= e(t('common.you')) ?></span><?php endif; ?>
+                    <?php if (function_exists('renderCosmeticPseudo')): ?>
+                        <?php renderCosmeticPseudo((string) $member['pseudo'], $member['equipped_name'] ?? null); ?>
+                    <?php else: ?>
+                        <?= e($member['pseudo']) ?>
+                    <?php endif; ?>
+                    <?php if ($isSelf): ?> <span class="leaderboard-you"><?= e(t('common.you')) ?></span><?php endif; ?>
                 </a>
             <?php if ($badges): ?>
             <span class="leaderboard-badges">

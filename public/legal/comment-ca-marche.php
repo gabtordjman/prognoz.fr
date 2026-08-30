@@ -36,6 +36,11 @@ $user = currentUser($pdo);
             <h2><?= e(t('howto.s4_title')) ?></h2>
             <p><?= e(t('howto.s4_text')) ?></p>
         </article>
+        <article class="howto-card">
+            <span class="howto-num">5</span>
+            <h2><?= e(t('howto.s5_title')) ?></h2>
+            <p><?= e(t('howto.s5_text')) ?></p>
+        </article>
     </div>
 
     <p class="howto-cta">

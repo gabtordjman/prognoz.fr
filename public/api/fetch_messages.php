@@ -28,7 +28,7 @@ if (!$stmt->fetch()) {
 
 if ($initial && $depuisId === 0) {
     $stmt = $pdo->prepare(
-        "SELECT cm.id, cm.contenu, cm.created_at, u.id AS user_id, u.pseudo, u.avatar_url
+        "SELECT cm.id, cm.contenu, cm.created_at, u.id AS user_id, u.pseudo, u.avatar_url, u.equipped_name
          FROM community_messages cm
          INNER JOIN users u ON u.id = cm.user_id
          WHERE cm.community_id = ? AND cm.supprime = 0
@@ -39,7 +39,7 @@ if ($initial && $depuisId === 0) {
     $messages = array_reverse(array_map('decryptMessageRow', $stmt->fetchAll()));
 } else {
     $stmt = $pdo->prepare(
-        "SELECT cm.id, cm.contenu, cm.created_at, u.id AS user_id, u.pseudo, u.avatar_url
+        "SELECT cm.id, cm.contenu, cm.created_at, u.id AS user_id, u.pseudo, u.avatar_url, u.equipped_name
          FROM community_messages cm
          INNER JOIN users u ON u.id = cm.user_id
          WHERE cm.community_id = ? AND cm.id > ? AND cm.supprime = 0

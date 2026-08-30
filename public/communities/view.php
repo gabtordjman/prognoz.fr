@@ -253,7 +253,7 @@ $community = decryptCommunityRow($stmt->fetch() ?: []);
                             <li class="community-member-row">
                                 <div class="community-member-info">
                                     <?php renderUserProfileLink((int) $m['id'], (string) $m['pseudo'], 'sm', false, $m['avatar_url'] ?? null); ?>
-                                    <a href="<?= e(userProfileUrl((int) $m['id'])) ?>" class="community-member-name"><?= e($m['pseudo']) ?></a>
+                                    <a href="<?= e(userProfileUrl((int) $m['id'])) ?>" class="community-member-name"><?php renderCosmeticPseudo((string) $m['pseudo'], $m['equipped_name'] ?? null); ?></a>
                                     <?php if (isSiteAdminUser((int) $m['id'])): ?>
                                         <?= adminBadgeHtml() ?>
                                     <?php endif; ?>

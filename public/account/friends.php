@@ -80,7 +80,7 @@ $sent = listSentFriendRequests($pdo, $userId);
                 <div class="friend-row-main">
                     <?php renderUserProfileLink((int) $p['id'], (string) $p['pseudo'], 'md', false, $p['avatar_url'] ?? null); ?>
                     <div class="friend-row-text">
-                        <a href="<?= e(userProfileUrl((int) $p['id'])) ?>" class="friend-name-link"><strong><?= e($p['pseudo']) ?></strong></a>
+                        <a href="<?= e(userProfileUrl((int) $p['id'])) ?>" class="friend-name-link"><strong><?php renderCosmeticPseudo((string) $p['pseudo'], $p['equipped_name'] ?? null); ?></strong></a>
                         <span class="friend-meta"><span class="friend-pts"><?= (int) ($p['points_saison'] ?? 0) ?> <?= e(t('common.pts')) ?></span> <?= e(t('friends.season')) ?></span>
                     </div>
                 </div>
@@ -116,7 +116,7 @@ $sent = listSentFriendRequests($pdo, $userId);
                 <div class="friend-row-main">
                     <?php renderUserProfileLink((int) $f['id'], (string) $f['pseudo'], 'md', false, $f['avatar_url'] ?? null); ?>
                     <div class="friend-row-text">
-                        <a href="<?= e(userProfileUrl((int) $f['id'])) ?>" class="friend-name-link"><strong><?= e($f['pseudo']) ?></strong></a>
+                        <a href="<?= e(userProfileUrl((int) $f['id'])) ?>" class="friend-name-link"><strong><?php renderCosmeticPseudo((string) $f['pseudo'], $f['equipped_name'] ?? null); ?></strong></a>
                         <span class="friend-meta">
                             <span class="friend-pts"><?= (int) ($f['points_saison'] ?? 0) ?> <?= e(t('common.pts')) ?></span> <?= e(t('friends.season')) ?>
                             <?php if ((int) $f['serie_en_cours'] >= 2): ?>
@@ -144,7 +144,7 @@ $sent = listSentFriendRequests($pdo, $userId);
                     <div class="friend-row-main">
                         <?php renderUserAvatar($s['pseudo'], 'md', $s['avatar_url'] ?? null); ?>
                         <div class="friend-row-text">
-                            <strong><?= e($s['pseudo']) ?></strong>
+                            <strong><?php renderCosmeticPseudo((string) $s['pseudo'], $s['equipped_name'] ?? null); ?></strong>
                             <span class="friend-meta"><?= e(t('friends.invite_sent')) ?></span>
                         </div>
                     </div>

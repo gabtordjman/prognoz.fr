@@ -89,6 +89,7 @@ try {
             'user_id'       => $userId,
             'avatar_url'    => $avatarUrl,
             'is_site_admin' => isSiteAdminUser($userId),
+            'equipped_name' => shopEquippedName(currentUser($pdo) ?? []),
             'created_at'    => gmdate('Y-m-d H:i:s'),
         ],
     ], JSON_UNESCAPED_UNICODE);

@@ -135,7 +135,7 @@ function friendSeasonPointsMap(PDO $pdo, array $userIds): array
 function listAcceptedFriends(PDO $pdo, int $userId): array
 {
     $stmt = $pdo->prepare(
-        'SELECT f.id AS friendship_id, u.id, u.pseudo, u.points_totaux, u.serie_en_cours, u.avatar_url
+        'SELECT f.id AS friendship_id, u.id, u.pseudo, u.points_totaux, u.serie_en_cours, u.avatar_url, u.equipped_name
          FROM friendships f
          INNER JOIN users u ON u.id = IF(f.user_id = ?, f.ami_id, f.user_id)
          WHERE (f.user_id = ? OR f.ami_id = ?) AND f.statut = "accepte" AND u.actif = 1
@@ -156,7 +156,7 @@ function listAcceptedFriends(PDO $pdo, int $userId): array
 function listPendingFriendRequests(PDO $pdo, int $userId): array
 {
     $stmt = $pdo->prepare(
-        'SELECT f.id AS friendship_id, u.id, u.pseudo, u.points_totaux, u.avatar_url, f.created_at
+        'SELECT f.id AS friendship_id, u.id, u.pseudo, u.points_totaux, u.avatar_url, u.equipped_name, f.created_at
          FROM friendships f
          INNER JOIN users u ON u.id = f.user_id
          WHERE f.ami_id = ? AND f.statut = "en_attente" AND u.actif = 1
@@ -177,7 +177,7 @@ function listPendingFriendRequests(PDO $pdo, int $userId): array
 function listSentFriendRequests(PDO $pdo, int $userId): array
 {
     $stmt = $pdo->prepare(
-        'SELECT f.id AS friendship_id, u.id, u.pseudo, u.avatar_url, f.created_at
+        'SELECT f.id AS friendship_id, u.id, u.pseudo, u.avatar_url, u.equipped_name, f.created_at
          FROM friendships f
          INNER JOIN users u ON u.id = f.ami_id
          WHERE f.user_id = ? AND f.statut = "en_attente" AND u.actif = 1

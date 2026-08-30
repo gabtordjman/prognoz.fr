@@ -17,6 +17,9 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     avatar_url VARCHAR(255) NULL,
     points_totaux INT NOT NULL DEFAULT 0 COMMENT 'Cumul all-time, affiché sur le profil (indépendant des saisons)',
+    shop_balance INT NOT NULL DEFAULT 0 COMMENT 'Points boutique (saisons verrouillées, cumulables)',
+    equipped_bg VARCHAR(64) NOT NULL DEFAULT 'bg_default',
+    equipped_name VARCHAR(64) NOT NULL DEFAULT 'name_default',
     serie_en_cours INT NOT NULL DEFAULT 0 COMMENT 'Nombre de pronostics corrects d''affilée, pour le bonus de série',
     actif TINYINT(1) NOT NULL DEFAULT 1,
     privacy_accepted_at DATETIME NULL,
@@ -175,7 +178,8 @@ CREATE TABLE seasons (
     id INT AUTO_INCREMENT PRIMARY KEY,
     debut DATETIME NOT NULL,
     fin DATETIME NOT NULL,
-    cloturee TINYINT(1) NOT NULL DEFAULT 0
+    cloturee TINYINT(1) NOT NULL DEFAULT 0,
+    shop_locked TINYINT(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB;
 
 -- Classement d'un utilisateur, par saison ET par communauté
@@ -204,6 +208,25 @@ CREATE TABLE season_rewards (
     CONSTRAINT fk_reward_season FOREIGN KEY (season_id) REFERENCES seasons(id) ON DELETE CASCADE,
     CONSTRAINT fk_reward_community FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE CASCADE,
     CONSTRAINT fk_reward_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Boutique : inventaire + journal des versements / achats
+CREATE TABLE user_cosmetics (
+    user_id INT NOT NULL,
+    cosmetic_id VARCHAR(64) NOT NULL,
+    purchased_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, cosmetic_id),
+    KEY idx_user_cosmetics_user (user_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE shop_ledger (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    amount INT NOT NULL,
+    reason VARCHAR(32) NOT NULL,
+    ref VARCHAR(64) NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_shop_ledger_user (user_id, created_at)
 ) ENGINE=InnoDB;
 
 -- ------------------------------------------------------------

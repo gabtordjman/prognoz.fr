@@ -72,7 +72,8 @@ function ensureSeasonSchema(PDO $pdo): void
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 debut DATETIME NOT NULL,
                 fin DATETIME NOT NULL,
-                cloturee TINYINT(1) NOT NULL DEFAULT 0
+                cloturee TINYINT(1) NOT NULL DEFAULT 0,
+                shop_locked TINYINT(1) NOT NULL DEFAULT 0
             ) ENGINE=InnoDB'
         );
         $pdo->exec(
@@ -153,7 +154,7 @@ function fetchCommunitySeasonLeaderboard(PDO $pdo, int $communityId, ?int $seaso
 {
     $seasonId = $seasonId ?? (int) (getActiveSeason($pdo)['id'] ?? ensureActiveSeason($pdo));
     $stmt = $pdo->prepare(
-        'SELECT u.id, u.pseudo, u.serie_en_cours, u.avatar_url, COALESCE(ss.points, 0) AS points
+        'SELECT u.id, u.pseudo, u.serie_en_cours, u.avatar_url, u.equipped_name, COALESCE(ss.points, 0) AS points
          FROM community_members cm
          INNER JOIN users u ON u.id = cm.user_id
          LEFT JOIN season_scores ss
@@ -296,6 +297,9 @@ function closeSeason(PDO $pdo, int $seasonId): bool
     }
 
     awardSeasonPodium($pdo, $seasonId);
+    if (function_exists('lockSeasonShopPoints')) {
+        lockSeasonShopPoints($pdo, $seasonId);
+    }
     notifySeasonClosedPush($pdo, $seasonId);
 
     $pdo->prepare('UPDATE seasons SET cloturee = 1 WHERE id = ?')->execute([$seasonId]);

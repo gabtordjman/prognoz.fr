@@ -32,6 +32,25 @@
         return d.innerHTML;
     }
 
+    function cosmeticNameClass(id) {
+        var map = {
+            name_brass: 'brass',
+            name_emerald: 'emerald',
+            name_ice: 'ice',
+            name_flame: 'flame',
+            name_aurora: 'aurora',
+            name_neon: 'neon',
+            name_prism: 'prism',
+            name_legend: 'legend'
+        };
+        var css = map[String(id || '')];
+        if (!css) return '';
+        var extra = (css === 'flame' || css === 'aurora' || css === 'neon' || css === 'prism' || css === 'legend')
+            ? ' cos-name--animated'
+            : '';
+        return ' cos-name cos-name--' + css + extra;
+    }
+
     function userInitials(pseudo) {
         var s = String(pseudo || '').trim();
         if (!s) return '?';
@@ -107,11 +126,12 @@
         var adminBadge = msg.is_site_admin
             ? ' <span class="badge-admin" title="Admin">ADMIN</span>'
             : '';
+        var nameClass = cosmeticNameClass(msg.equipped_name);
         var authorHtml = estMoi
             ? '<span class="author">Vous</span>' + adminBadge
             : (msg.user_id
-                ? '<a class="author author-link" href="' + escapeHtml(profileHref(msg.user_id)) + '">' + escapeHtml(msg.pseudo) + '</a>' + adminBadge
-                : '<span class="author">' + escapeHtml(msg.pseudo) + '</span>' + adminBadge);
+                ? '<a class="author author-link' + nameClass + '" href="' + escapeHtml(profileHref(msg.user_id)) + '">' + escapeHtml(msg.pseudo) + '</a>' + adminBadge
+                : '<span class="author' + nameClass + '">' + escapeHtml(msg.pseudo) + '</span>' + adminBadge);
         var avHtml = avatarHtml(displayPseudo, resolveAvatarUrl(msg, displayPseudo));
         var avatarBlock = estMoi || !msg.user_id
             ? avHtml
