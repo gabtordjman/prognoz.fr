@@ -32,6 +32,8 @@ define('POINTS_SCORE_EXACT', 3);
 define('POINTS_FAV_TEAM', 2);
 /** Bonus ×2 uniquement sur le marché fav_team gagné. */
 define('FAV_TEAM_WIN_MULTIPLIER', 2);
+/** Nombre max de sélections nationales préférées (en plus du club). */
+define('FAV_TEAMS_MAX', 3);
 
 /**
  * Multiplicateur de points selon la série 1x2 après le gain en cours.
@@ -129,6 +131,10 @@ define('ODDS_SPORT_PRIORITY', [
         'soccer_uefa_champs_league',
         'soccer_uefa_europa_league',
         'soccer_uefa_europa_conference_league',
+        // Sélections nationales
+        'soccer_fifa_world_cup',
+        'soccer_uefa_european_championship',
+        'soccer_uefa_nations_league',
         'soccer_belgium_first_div',
         'soccer_netherlands_eredivisie',
         'soccer_portugal_primeira_liga',

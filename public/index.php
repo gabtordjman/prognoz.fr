@@ -37,7 +37,8 @@ foreach ($matchsByCategoryDisplay as $catMatchs) {
 
 $predictions = getUserPredictions($pdo, $user ? (int) $user['id'] : null, $allMarketIds);
 $flashes = getFlashes();
-$userFavTeam = $user ? userFavoriteTeam($user) : null;
+$userFavTeams = $user ? userFavoriteTeams($user) : [];
+$userFavTeam = $userFavTeams[0] ?? null;
 
 $marketsMeta = [];
 foreach ($matchs as $m) {
@@ -205,7 +206,10 @@ releaseSession();
                             && soccerSportHasScorerOdds($m['sport'])
                             && !empty($marketButeur['options']);
                         $buteurOptions = $hasButeurMarket ? ($marketButeur['options'] ?? []) : [];
-                        $hasFavMarket = $user && $marketFav && matchIncludesFavoriteTeam($m, $userFavTeam);
+                        $favInMatch = ($user && $marketFav)
+                            ? matchFavoriteTeamsInMatch($m, $userFavTeams)
+                            : [];
+                        $hasFavMarket = $favInMatch !== [];
                         $hasExtraMarkets = $hasScoreMarket || $hasButeurMarket || $hasFavMarket;
                         $extraHints = array_values(array_filter([
                             $hasFavMarket ? t('home.fav_team') : null,
@@ -298,22 +302,71 @@ releaseSession();
                             $midFav = (int) $marketFav['id'];
                             $choixFav = $predictions[$midFav]['reponse'] ?? null;
                             $favPts = marketPoints('fav_team');
+                            $parsedFavPick = is_string($choixFav) ? parseFavTeamPick($choixFav) : null;
+                            $favClash = count($favInMatch) >= 2;
+                            $supportedTeam = $parsedFavPick['team']
+                                ?? (!$favClash ? ($favInMatch[0] ?? null) : null);
+                            // Compat anciens picks W/L sans équipe
+                            if ($supportedTeam === null && $parsedFavPick && ($parsedFavPick['team'] ?? null) === null && !$favClash) {
+                                $supportedTeam = $favInMatch[0] ?? null;
+                            }
+                            $pickW = $supportedTeam ? encodeFavTeamPick('W', $supportedTeam) : '';
+                            $pickL = $supportedTeam ? encodeFavTeamPick('L', $supportedTeam) : '';
+                            $selW = false;
+                            $selL = false;
+                            if ($parsedFavPick) {
+                                $sameTeam = ($parsedFavPick['team'] ?? null) === null
+                                    || ($supportedTeam !== null
+                                        && normalizeTeamName((string) $parsedFavPick['team']) === normalizeTeamName($supportedTeam));
+                                if ($sameTeam && $parsedFavPick['outcome'] === 'W') {
+                                    $selW = true;
+                                }
+                                if ($sameTeam && $parsedFavPick['outcome'] === 'L') {
+                                    $selL = true;
+                                }
+                            }
                         ?>
-                        <div class="market-block market-block-extra market-block-fav">
+                        <div class="market-block market-block-extra market-block-fav"
+                             data-fav-clash="<?= $favClash ? '1' : '0' ?>"
+                             data-fav-home="<?= e((string) ($m['equipe_home'] ?? '')) ?>"
+                             data-fav-away="<?= e((string) ($m['equipe_away'] ?? '')) ?>">
                             <div class="market-label">
                                 <?= e(t('home.fav_team')) ?>
                                 <span class="pts-tag pts-2">+<?= (int) $favPts ?></span>
                             </div>
-                            <p class="fav-team-hint"><?= e(t('home.fav_team_of', ['team' => (string) $userFavTeam])) ?></p>
-                            <div class="pick-row pick-row-2 fav-team-picks" data-market="<?= $midFav ?>">
+                            <?php if ($favClash): ?>
+                            <div class="fav-support-row" data-fav-support-for="<?= $midFav ?>">
+                                <span class="fav-support-label"><?= e(t('home.fav_support')) ?></span>
+                                <?php foreach ($favInMatch as $ft):
+                                    $isSup = $supportedTeam !== null
+                                        && normalizeTeamName($supportedTeam) === normalizeTeamName($ft);
+                                ?>
                                 <button type="button"
-                                        class="pick-btn pick-btn--no-prob<?= $choixFav === 'W' ? ' selected' : '' ?>"
-                                        data-pick="W">
+                                        class="fav-support-btn<?= $isSup ? ' selected' : '' ?>"
+                                        data-support-team="<?= e($ft) ?>"
+                                        aria-pressed="<?= $isSup ? 'true' : 'false' ?>">
+                                    <?= e($ft) ?>
+                                </button>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php else: ?>
+                            <p class="fav-team-hint"><?= e(t('home.fav_team_of', ['team' => (string) ($favInMatch[0] ?? '')])) ?></p>
+                            <?php endif; ?>
+                            <div class="pick-row pick-row-2 fav-team-picks"
+                                 data-market="<?= $midFav ?>"
+                                 data-fav-supported="<?= e((string) ($supportedTeam ?? '')) ?>">
+                                <button type="button"
+                                        class="pick-btn pick-btn--no-prob<?= $selW ? ' selected' : '' ?>"
+                                        data-pick="<?= e($pickW) ?>"
+                                        data-fav-outcome="W"
+                                        <?= $pickW === '' ? 'disabled' : '' ?>>
                                     <span class="pick-val"><?= e(t('home.fav_win')) ?></span>
                                 </button>
                                 <button type="button"
-                                        class="pick-btn pick-btn--no-prob<?= $choixFav === 'L' ? ' selected' : '' ?>"
-                                        data-pick="L">
+                                        class="pick-btn pick-btn--no-prob<?= $selL ? ' selected' : '' ?>"
+                                        data-pick="<?= e($pickL) ?>"
+                                        data-fav-outcome="L"
+                                        <?= $pickL === '' ? 'disabled' : '' ?>>
                                     <span class="pick-val"><?= e(t('home.fav_lose')) ?></span>
                                 </button>
                             </div>

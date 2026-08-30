@@ -136,6 +136,16 @@ function formatPickLabel(array $row, string $reponse): string
         return $reponse;
     }
     if ($type === 'fav_team') {
+        $parsed = function_exists('parseFavTeamPick') ? parseFavTeamPick($reponse) : null;
+        if ($parsed) {
+            $team = (string) ($parsed['team'] ?? '');
+            if ($team !== '') {
+                return $parsed['outcome'] === 'L'
+                    ? t('market.fav_lose_of', ['team' => $team])
+                    : t('market.fav_win_of', ['team' => $team]);
+            }
+            return $parsed['outcome'] === 'L' ? t('market.fav_lose') : t('market.fav_win');
+        }
         return $reponse === 'L' ? t('market.fav_lose') : t('market.fav_win');
     }
     if ($reponse === '1') {
@@ -3570,13 +3580,38 @@ function submitPrediction(PDO $pdo, int $userId, int $marketId, string $reponse)
             throw new InvalidArgumentException('Score invalide.');
         }
     } elseif ($type === 'fav_team') {
-        if (!in_array($reponse, ['W', 'L'], true)) {
+        $parsed = parseFavTeamPick($reponse);
+        if ($parsed === null) {
             throw new InvalidArgumentException(t('fav.pick_invalid'));
         }
-        $fav = fetchUserFavoriteTeam($pdo, $userId);
-        if (!matchIncludesFavoriteTeam($market, $fav)) {
+        $userTeams = fetchUserFavoriteTeams($pdo, $userId);
+        $team = $parsed['team'];
+        if ($team === null || $team === '') {
+            // Compat anciens picks W/L
+            $inMatch = matchFavoriteTeamsInMatch($market, $userTeams);
+            if (count($inMatch) !== 1) {
+                throw new InvalidArgumentException(t('fav.support_required'));
+            }
+            $team = $inMatch[0];
+            $reponse = encodeFavTeamPick($parsed['outcome'], $team);
+        }
+        $canonical = resolveFavoriteTeamCanonical($pdo, $team);
+        if ($canonical === null) {
+            // Accepter le nom match même si hors liste curated (déjà en BDD match)
+            $canonical = trim($team);
+        }
+        $side = favoriteTeamSide($market, $canonical);
+        if ($side === null) {
             throw new InvalidArgumentException(t('fav.not_in_match'));
         }
+        $allowedNorm = [];
+        foreach ($userTeams as $ut) {
+            $allowedNorm[normalizeTeamName($ut)] = true;
+        }
+        if (!isset($allowedNorm[normalizeTeamName($canonical)])) {
+            throw new InvalidArgumentException(t('fav.not_in_match'));
+        }
+        $reponse = encodeFavTeamPick($parsed['outcome'], $canonical);
     } elseif ($type === 'buteur') {
         $opt = $pdo->prepare('SELECT COUNT(*) FROM market_options WHERE market_id = ? AND libelle = ?');
         $opt->execute([$marketId, $reponse]);

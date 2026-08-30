@@ -187,8 +187,9 @@ function scoreMarket(PDO $pdo, array $match, array $market): void
         }
         $mult = defined('FAV_TEAM_WIN_MULTIPLIER') ? (float) FAV_TEAM_WIN_MULTIPLIER : 2.0;
         foreach ($predictions as $pred) {
-            $fav = fetchUserFavoriteTeam($pdo, (int) $pred['user_id']);
-            $correct = favTeamPickIsCorrect($match, $fav, (string) $pred['reponse']);
+            $favs = fetchUserFavoriteTeams($pdo, (int) $pred['user_id']);
+            $fav = $favs[0] ?? null;
+            $correct = favTeamPickIsCorrect($match, $fav, (string) $pred['reponse'], $favs);
             $award = 0;
             if ($correct) {
                 $award = (int) max(0, (int) round($points * $mult * $eventMult));

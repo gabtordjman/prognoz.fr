@@ -5644,6 +5644,61 @@ html.event-theme-night .event-star {
     margin: 0;
 }
 
+.dash-profile-field--team,
+.dash-profile-field--nationals {
+    grid-column: 1 / -1;
+}
+
+.dash-fav-teams {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.dash-fav-team-slot .field-label--sub {
+    font-size: 0.78rem;
+    margin-bottom: 0.2rem;
+    opacity: 0.85;
+}
+
+@media (min-width: 640px) {
+    .dash-fav-teams {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.65rem;
+    }
+}
+
+.fav-support-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0 0 0.55rem;
+    align-items: center;
+}
+
+.fav-support-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-right: 0.15rem;
+}
+
+.fav-support-btn {
+    border: 1px solid rgba(154, 116, 32, 0.45);
+    background: rgba(228, 217, 196, 0.35);
+    color: var(--ink);
+    border-radius: 6px;
+    padding: 0.28rem 0.55rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.fav-support-btn.selected,
+.fav-support-btn[aria-pressed="true"] {
+    background: var(--brass);
+    border-color: var(--brass-dark, #7a5a10);
+    color: #fff;
+    font-weight: 600;
+}
+
 @media (min-width: 640px) {
     .dash-profile-form {
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -5653,6 +5708,8 @@ html.event-theme-night .event-star {
     }
 
     .dash-profile-field--bio,
+    .dash-profile-field--team,
+    .dash-profile-field--nationals,
     .dash-profile-field:first-child {
         grid-column: 1 / -1;
     }

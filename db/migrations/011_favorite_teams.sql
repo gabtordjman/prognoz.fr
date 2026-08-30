@@ -1,0 +1,2 @@
+-- Club préféré (users.equipe_favorie) + jusqu’à 3 sélections nationales (users.equipes_favorites).
+-- Also applied at boot via ensureFavoriteTeamSchema() + migrateFavoriteClubAndNationals().

@@ -91,6 +91,25 @@ function ensureUserProfileExtrasSchema(PDO $pdo): void
     } catch (PDOException $e) {
         // ignore
     }
+    try {
+        $col = $pdo->query('SHOW COLUMNS FROM users LIKE "equipes_favorites"')->fetch();
+        if (!$col) {
+            $pdo->exec(
+                'ALTER TABLE users ADD COLUMN equipes_favorites JSON NULL DEFAULT NULL AFTER equipe_favorie'
+            );
+        }
+    } catch (PDOException $e) {
+        try {
+            $col = $pdo->query('SHOW COLUMNS FROM users LIKE "equipes_favorites"')->fetch();
+            if (!$col) {
+                $pdo->exec(
+                    'ALTER TABLE users ADD COLUMN equipes_favorites TEXT NULL DEFAULT NULL AFTER equipe_favorie'
+                );
+            }
+        } catch (PDOException $e2) {
+            // ignore
+        }
+    }
 }
 
 /**
@@ -787,7 +806,8 @@ function updateUserProfileExtras(
     int $userId,
     ?string $bio,
     ?string $sportFavori,
-    ?string $equipeFavorie = null
+    $equipeFavorie = null,
+    $equipesNationales = null
 ): void {
     ensureUserProfileExtrasSchema($pdo);
     if (function_exists('ensureFavoriteTeamSchema')) {
@@ -808,17 +828,38 @@ function updateUserProfileExtras(
         $sportFavori = null;
     }
 
-    $equipeFavorie = $equipeFavorie !== null ? trim($equipeFavorie) : '';
-    if ($equipeFavorie === '') {
-        $equipeFavorie = null;
-    } else {
-        $canonical = resolveFavoriteTeamCanonical($pdo, $equipeFavorie);
-        if ($canonical === null) {
-            throw new InvalidArgumentException(t('dash.fav_team_invalid'));
+    // Club (1) — string, ou 1er élément si ancien appel array mixte
+    $clubRaw = null;
+    $natsRaw = [];
+    if (is_array($equipeFavorie) && $equipesNationales === null) {
+        // Ancien format : tout dans un array — on tente de splitter
+        foreach ($equipeFavorie as $item) {
+            $item = trim((string) $item);
+            if ($item === '') {
+                continue;
+            }
+            if (function_exists('isNationalTeamName') && isNationalTeamName($item)) {
+                $natsRaw[] = $item;
+            } elseif ($clubRaw === null) {
+                $clubRaw = $item;
+            }
         }
-        $equipeFavorie = $canonical;
+    } else {
+        $clubRaw = is_string($equipeFavorie) ? $equipeFavorie : null;
+        if (is_array($equipesNationales)) {
+            $natsRaw = $equipesNationales;
+        }
     }
 
-    $pdo->prepare('UPDATE users SET bio = ?, sport_favori = ?, equipe_favorie = ? WHERE id = ?')
-        ->execute([$bio, $sportFavori, $equipeFavorie, $userId]);
+    $club = function_exists('normalizeFavoriteClubInput')
+        ? normalizeFavoriteClubInput($pdo, $clubRaw)
+        : null;
+    $nats = function_exists('normalizeFavoriteNationalsInput')
+        ? normalizeFavoriteNationalsInput($natsRaw)
+        : [];
+    $json = $nats === [] ? null : json_encode(array_values($nats), JSON_UNESCAPED_UNICODE);
+
+    $pdo->prepare(
+        'UPDATE users SET bio = ?, sport_favori = ?, equipe_favorie = ?, equipes_favorites = ? WHERE id = ?'
+    )->execute([$bio, $sportFavori, $club, $json, $userId]);
 }

@@ -48,6 +48,12 @@
         if (meta.type === 'score_exact') return i18n('js.score_prefix') + ' ' + reponse;
         if (meta.type === 'buteur') return reponse;
         if (meta.type === 'fav_team') {
+            var m = String(reponse || '').match(/^([WL]):(.+)$/);
+            if (m) {
+                return m[1] === 'L'
+                    ? i18n('js.fav_lose_team', { team: m[2] })
+                    : i18n('js.fav_win_team', { team: m[2] });
+            }
             return reponse === 'L' ? i18n('js.fav_lose') : i18n('js.fav_win');
         }
         if (reponse === '1') return meta.home;
@@ -388,12 +394,23 @@
         options = options || {};
         var locked = options.locked || isValidatedMarket(marketId);
         var row = document.querySelector('.pick-row[data-market="' + marketId + '"]');
+        if (row && row.classList.contains('fav-team-picks') && (pick === 'W' || pick === 'L')) {
+            var supported = row.dataset.favSupported || '';
+            if (supported) {
+                pick = pick + ':' + supported;
+            }
+        }
         if (row) {
             row.classList.toggle('pick-row-locked', locked);
+            var favMatch = String(pick || '').match(/^([WL]):(.+)$/);
+            if (favMatch) {
+                applyFavSupport(row, favMatch[2], locked);
+            }
             row.querySelectorAll('.pick-btn').forEach(function (b) {
                 b.classList.toggle('selected', !!pick && b.dataset.pick === pick);
                 b.classList.toggle('pick-locked', locked);
-                b.disabled = locked;
+                var noPick = !b.dataset.pick;
+                b.disabled = locked || (noPick && !!b.dataset.favOutcome);
             });
         }
         document.querySelectorAll('.score-entry[data-market="' + marketId + '"]').forEach(function (wrap) {
@@ -433,6 +450,52 @@
             sel.disabled = locked;
             sel.classList.toggle('pick-locked', locked);
         }
+    }
+
+    function applyFavSupport(pickRow, team, locked) {
+        if (!pickRow || !team) return;
+        pickRow.dataset.favSupported = team;
+        pickRow.querySelectorAll('.pick-btn[data-fav-outcome]').forEach(function (b) {
+            var outcome = b.dataset.favOutcome;
+            if (!outcome) return;
+            b.dataset.pick = outcome + ':' + team;
+            b.disabled = !!locked;
+        });
+        var block = closestEl(pickRow, '.market-block-fav');
+        if (!block) return;
+        block.querySelectorAll('.fav-support-btn').forEach(function (btn) {
+            var on = btn.dataset.supportTeam === team;
+            btn.classList.toggle('selected', on);
+            btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+            btn.disabled = !!locked;
+        });
+    }
+
+    function initFavSupportPickers() {
+        document.querySelectorAll('.fav-support-row[data-fav-support-for]').forEach(function (row) {
+            var marketId = parseInt(row.dataset.favSupportFor, 10);
+            row.querySelectorAll('.fav-support-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    if (isValidatedMarket(marketId)) {
+                        showFlash(i18n('js.already_validated'), false);
+                        return;
+                    }
+                    var team = btn.dataset.supportTeam || '';
+                    if (!team) return;
+                    var pickRow = document.querySelector('.pick-row[data-market="' + marketId + '"]');
+                    applyFavSupport(pickRow, team, false);
+                    // Clear draft if previous pick was for the other team
+                    var picks = loadDraftPicks();
+                    var cur = picks[String(marketId)];
+                    if (cur && cur.reponse) {
+                        var m = String(cur.reponse).match(/^([WL]):(.+)$/);
+                        if (m && m[2] !== team) {
+                            handlePick(marketId, null, true);
+                        }
+                    }
+                });
+            });
+        });
     }
 
     function pruneDraftPicks() {
@@ -638,10 +701,15 @@
                     showFlash(i18n('js.already_validated'), false);
                     return;
                 }
+                var pick = btn.dataset.pick || '';
+                if (btn.dataset.favOutcome && !pick) {
+                    showFlash(i18n('js.fav_support_required'), false);
+                    return;
+                }
                 if (btn.classList.contains('selected')) {
-                    handlePick(marketId, btn.dataset.pick, true);
+                    handlePick(marketId, pick, true);
                 } else {
-                    handlePick(marketId, btn.dataset.pick, false);
+                    handlePick(marketId, pick, false);
                 }
             });
         });
@@ -813,6 +881,7 @@
 
     initMobileTicket();
     initMatchMarketToggles();
+    initFavSupportPickers();
     restoreUI();
     syncExtraMarketPanels();
 })();

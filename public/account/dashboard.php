@@ -29,7 +29,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $userId,
                 (string) ($_POST['bio'] ?? ''),
                 (string) ($_POST['sport_favori'] ?? ''),
-                (string) ($_POST['equipe_favorie'] ?? '')
+                (string) ($_POST['equipe_favorie'] ?? ''),
+                [
+                    (string) ($_POST['equipe_nationale_1'] ?? ''),
+                    (string) ($_POST['equipe_nationale_2'] ?? ''),
+                    (string) ($_POST['equipe_nationale_3'] ?? ''),
+                ]
             );
             clearCurrentUserCache();
             flash('success', t('dash.profile_saved'));
@@ -79,10 +84,20 @@ $friendCount = countAcceptedFriends($pdo, $userId);
 $activeSeason = getActiveSeason($pdo);
 $seasonPoints = $activeSeason ? getUserGeneralSeasonPoints($pdo, $userId, (int) $activeSeason['id']) : 0;
 $seasonRewards = fetchUserSeasonRewards($pdo, $userId, 5);
-$favTeamChoices = listFavoriteTeamChoices($pdo);
-$currentFavTeam = userFavoriteTeam($user);
-if ($currentFavTeam !== null && !in_array($currentFavTeam, $favTeamChoices, true)) {
-    array_unshift($favTeamChoices, $currentFavTeam);
+$favClubChoices = listFavoriteClubChoices($pdo);
+$favNationalChoices = listFavoriteNationalChoices();
+$currentFavClub = userFavoriteClub($user);
+$currentFavNationals = userFavoriteNationals($user);
+if ($currentFavClub !== null && !in_array($currentFavClub, $favClubChoices, true)) {
+    array_unshift($favClubChoices, $currentFavClub);
+}
+foreach ($currentFavNationals as $nat) {
+    if (!in_array($nat, $favNationalChoices, true)) {
+        array_unshift($favNationalChoices, $nat);
+    }
+}
+while (count($currentFavNationals) < (int) FAV_TEAMS_MAX) {
+    $currentFavNationals[] = '';
 }
 ?>
 <!DOCTYPE html>
@@ -238,14 +253,35 @@ if ($currentFavTeam !== null && !in_array($currentFavTeam, $favTeamChoices, true
                     </select>
                 </div>
                 <div class="dash-profile-field dash-profile-field--team">
-                    <label class="field-label" for="dashFavTeam"><?= e(t('dash.fav_team')) ?></label>
-                    <select class="field-input" id="dashFavTeam" name="equipe_favorie">
+                    <label class="field-label" for="dashFavClub"><?= e(t('dash.fav_club')) ?></label>
+                    <select class="field-input" id="dashFavClub" name="equipe_favorie">
                         <option value=""><?= e(t('dash.fav_team_none')) ?></option>
-                        <?php foreach ($favTeamChoices as $teamName): ?>
-                            <option value="<?= e($teamName) ?>" <?= $currentFavTeam === $teamName ? 'selected' : '' ?>><?= e($teamName) ?></option>
+                        <?php foreach ($favClubChoices as $teamName): ?>
+                            <option value="<?= e($teamName) ?>" <?= $currentFavClub === $teamName ? 'selected' : '' ?>><?= e($teamName) ?></option>
                         <?php endforeach; ?>
                     </select>
-                    <p class="dash-profile-hint"><?= e(t('dash.fav_team_hint')) ?></p>
+                    <p class="dash-profile-hint"><?= e(t('dash.fav_club_hint')) ?></p>
+                </div>
+                <div class="dash-profile-field dash-profile-field--nationals">
+                    <span class="field-label"><?= e(t('dash.fav_nationals')) ?></span>
+                    <div class="dash-fav-teams">
+                        <?php for ($fi = 0; $fi < (int) FAV_TEAMS_MAX; $fi++):
+                            $slotVal = (string) ($currentFavNationals[$fi] ?? '');
+                            $slotId = 'dashFavNat' . ($fi + 1);
+                            $slotName = 'equipe_nationale_' . ($fi + 1);
+                        ?>
+                        <div class="dash-fav-team-slot">
+                            <label class="field-label field-label--sub" for="<?= e($slotId) ?>"><?= e(t('dash.fav_national_n', ['n' => $fi + 1])) ?></label>
+                            <select class="field-input" id="<?= e($slotId) ?>" name="<?= e($slotName) ?>">
+                                <option value=""><?= e(t('dash.fav_team_none')) ?></option>
+                                <?php foreach ($favNationalChoices as $teamName): ?>
+                                    <option value="<?= e($teamName) ?>" <?= $slotVal === $teamName ? 'selected' : '' ?>><?= e($teamName) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <?php endfor; ?>
+                    </div>
+                    <p class="dash-profile-hint"><?= e(t('dash.fav_nationals_hint')) ?></p>
                 </div>
                 <div class="dash-profile-actions">
                     <button type="submit" class="btn btn-primary btn-sm"><?= e(t('dash.save_profile')) ?></button>
