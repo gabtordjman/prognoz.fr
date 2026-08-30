@@ -5,6 +5,7 @@
 | Catégorie | Sous-menu | À faire |
 |-----------|-----------|---------|
 | Accueil | Vue d’ensemble | Chiffres + listes des matchs à traiter |
+| Accueil | Rétention | Visites, réguliers, retour après match |
 | Accueil | Rapports e-mail | Données indisponibles + rapport du mois |
 | Accueil | Annonces | Micro / news joueurs |
 | Matchs & résultats | Résultats & scores manuels | Saisir score, TAB, corriger void, annuler |

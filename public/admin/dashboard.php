@@ -76,6 +76,8 @@ adminLayoutStart('Vue d’ensemble', 'dashboard');
             Raccourcis :
             <a href="<?= e(url('admin/scores.php')) ?>">Résultats &amp; scores manuels</a>
             ·
+            <a href="<?= e(url('admin/retention.php')) ?>">Rétention</a>
+            ·
             <a href="<?= e(url('admin/reports.php')) ?>">Rapports e-mail</a>
             (alertes → <?= e(adminNotifyEmail()) ?>).
         </p>

@@ -816,3 +816,124 @@ function sendMonthlySiteReportMail(PDO $pdo): bool
 
     return sendAppMail(adminNotifyEmail(), $subject, implode("\n", $text), $mailHtml);
 }
+
+/**
+ * Snapshot rétention / boucle de feedback (admin).
+ * S’appuie sur last_seen_at + predictions (pas de table d’analytics dédiée).
+ *
+ * @return array{
+ *   seen_24h:int,seen_7d:int,pickers_7d:int,picks_today:int,picks_7d:int,
+ *   regulars_count:int,returned_after_match:int,had_finished_pick:int,
+ *   return_rate_pct:?float,regulars:list<array<string,mixed>>,
+ *   recent_active:list<array<string,mixed>>
+ * }
+ */
+function collectRetentionSnapshot(PDO $pdo): array
+{
+    if (function_exists('ensureUserLastSeenSchema')) {
+        ensureUserLastSeenSchema($pdo);
+    }
+
+    $seen24 = (int) $pdo->query(
+        "SELECT COUNT(*) FROM users
+         WHERE actif = 1
+           AND last_seen_at IS NOT NULL
+           AND last_seen_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 DAY)"
+    )->fetchColumn();
+
+    $seen7 = (int) $pdo->query(
+        "SELECT COUNT(*) FROM users
+         WHERE actif = 1
+           AND last_seen_at IS NOT NULL
+           AND last_seen_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 7 DAY)"
+    )->fetchColumn();
+
+    $pickers7 = (int) $pdo->query(
+        "SELECT COUNT(DISTINCT user_id) FROM predictions
+         WHERE created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 7 DAY)"
+    )->fetchColumn();
+
+    $picksToday = (int) $pdo->query(
+        "SELECT COUNT(*) FROM predictions
+         WHERE created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 DAY)"
+    )->fetchColumn();
+
+    $picks7 = (int) $pdo->query(
+        "SELECT COUNT(*) FROM predictions
+         WHERE created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 7 DAY)"
+    )->fetchColumn();
+
+    $regulars = $pdo->query(
+        "SELECT u.id, u.pseudo, u.last_seen_at, u.points_totaux, u.serie_en_cours,
+                COUNT(p.id) AS picks_14d,
+                COUNT(DISTINCT DATE(p.created_at)) AS days_with_picks
+         FROM users u
+         INNER JOIN predictions p
+           ON p.user_id = u.id
+          AND p.created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 14 DAY)
+         WHERE u.actif = 1
+           AND u.last_seen_at IS NOT NULL
+           AND u.last_seen_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 DAY)
+         GROUP BY u.id, u.pseudo, u.last_seen_at, u.points_totaux, u.serie_en_cours
+         HAVING COUNT(DISTINCT DATE(p.created_at)) >= 2
+         ORDER BY days_with_picks DESC, picks_14d DESC, u.last_seen_at DESC
+         LIMIT 25"
+    )->fetchAll() ?: [];
+
+    $hadFinished = (int) $pdo->query(
+        "SELECT COUNT(DISTINCT p.user_id)
+         FROM predictions p
+         INNER JOIN prediction_markets pm ON pm.id = p.market_id
+         INNER JOIN matches m ON m.id = pm.match_id
+         INNER JOIN users u ON u.id = p.user_id AND u.actif = 1
+         WHERE m.statut = 'termine'
+           AND m.date_match >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 14 DAY)
+           AND m.date_match < UTC_TIMESTAMP()"
+    )->fetchColumn();
+
+    $returned = (int) $pdo->query(
+        "SELECT COUNT(DISTINCT p.user_id)
+         FROM predictions p
+         INNER JOIN prediction_markets pm ON pm.id = p.market_id
+         INNER JOIN matches m ON m.id = pm.match_id
+         INNER JOIN users u ON u.id = p.user_id AND u.actif = 1
+         WHERE m.statut = 'termine'
+           AND m.date_match >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 14 DAY)
+           AND m.date_match < UTC_TIMESTAMP()
+           AND u.last_seen_at IS NOT NULL
+           AND u.last_seen_at >= DATE_ADD(m.date_match, INTERVAL 2 HOUR)"
+    )->fetchColumn();
+
+    $returnPct = $hadFinished > 0
+        ? round(100.0 * $returned / $hadFinished, 1)
+        : null;
+
+    $recentActive = $pdo->query(
+        "SELECT u.id, u.pseudo, u.last_seen_at, u.points_totaux, u.serie_en_cours,
+                (
+                    SELECT COUNT(*) FROM predictions p
+                    WHERE p.user_id = u.id
+                      AND p.created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 7 DAY)
+                ) AS picks_7d
+         FROM users u
+         WHERE u.actif = 1
+           AND u.last_seen_at IS NOT NULL
+           AND u.last_seen_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 7 DAY)
+         ORDER BY u.last_seen_at DESC
+         LIMIT 30"
+    )->fetchAll() ?: [];
+
+    return [
+        'seen_24h'             => $seen24,
+        'seen_7d'              => $seen7,
+        'pickers_7d'           => $pickers7,
+        'picks_today'          => $picksToday,
+        'picks_7d'             => $picks7,
+        'regulars_count'       => count($regulars),
+        'returned_after_match' => $returned,
+        'had_finished_pick'    => $hadFinished,
+        'return_rate_pct'      => $returnPct,
+        'regulars'             => $regulars,
+        'recent_active'        => $recentActive,
+    ];
+}
