@@ -201,6 +201,8 @@ shopOverridePageBackground(shopEquippedBg($profile));
         <?php endif; ?>
     </section>
 
+    <?php renderKitDollCard($profile, $isSelf); ?>
+
     <?php if (!empty($milestoneBadges)): ?>
     <section class="panel panel-spaced">
         <div class="panel-head"><?= e(t('shop.milestones')) ?></div>

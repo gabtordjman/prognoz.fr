@@ -190,6 +190,7 @@ while (count($currentFavNationals) < (int) FAV_TEAMS_MAX) {
             <a href="<?= e(url('account/settings.php')) ?>" class="btn btn-ghost btn-sm">
                 <i class="fa-solid fa-gear" aria-hidden="true"></i> <?= e(t('dash.settings')) ?>
             </a>
+            <?php renderKitButtonAndDialog($user); ?>
         </nav>
     </header>
 
@@ -446,5 +447,6 @@ while (count($currentFavNationals) < (int) FAV_TEAMS_MAX) {
 })();
 </script>
 <script src="<?= e(url('assets/js/match-effects.js')) ?>"></script>
+<script src="<?= e(url('assets/js/kit.js')) ?>"></script>
 </body>
 </html>

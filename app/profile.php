@@ -22,7 +22,7 @@ function fetchPublicUserProfile(PDO $pdo, int $userId): ?array
     try {
         $stmt = $pdo->prepare(
             'SELECT id, pseudo, surnom, points_totaux, serie_en_cours, avatar_url, created_at, bio, sport_favori,
-                    shop_balance, equipped_bg, equipped_name
+                    shop_balance, equipped_bg, equipped_name, kit_jersey, kit_shorts, kit_prop
              FROM users WHERE id = ? AND actif = 1'
         );
         $stmt->execute([$userId]);

@@ -44,6 +44,7 @@ require __DIR__ . '/badges.php';
 require __DIR__ . '/push.php';
 require __DIR__ . '/seasons.php';
 require __DIR__ . '/shop.php';
+require __DIR__ . '/kit.php';
 require __DIR__ . '/layout.php';
 require __DIR__ . '/matches.php';
 require __DIR__ . '/events.php';
@@ -75,6 +76,7 @@ try {
     ensureEncryptionSchema($pdoBoot);
     maintainSeasons($pdoBoot);
     ensureShopSchema($pdoBoot);
+    ensureKitSchema($pdoBoot);
     maintainShopLocks($pdoBoot);
     ensurePushSubscriptionSchema($pdoBoot);
     ensureAvatarSchema($pdoBoot);
