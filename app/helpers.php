@@ -332,6 +332,46 @@ function formatMatchWhen(string $datetime): string
     return $day . ' ' . $local->format('d/m · H:i');
 }
 
+/** Nom affiché : surnom (espaces OK) ou, à défaut, le pseudo de connexion. */
+function userDisplayName(array $user): string
+{
+    $nick = trim((string) ($user['surnom'] ?? ''));
+    if ($nick !== '') {
+        return $nick;
+    }
+
+    return trim((string) ($user['pseudo'] ?? ''));
+}
+
+function normalizeSurnom(?string $raw): string
+{
+    $s = trim((string) $raw);
+    $s = preg_replace('/\s+/u', ' ', $s) ?? '';
+    $s = preg_replace('/[\x00-\x1F\x7F]/u', '', $s) ?? '';
+
+    return trim($s);
+}
+
+function updateUserSurnom(PDO $pdo, int $userId, ?string $raw): void
+{
+    if (function_exists('ensureUserProfileExtrasSchema')) {
+        ensureUserProfileExtrasSchema($pdo);
+    }
+    $surnom = normalizeSurnom($raw);
+    if ($surnom !== '') {
+        $len = mb_strlen($surnom);
+        if ($len < 2 || $len > 40) {
+            throw new InvalidArgumentException(t('auth.err.surnom_length'));
+        }
+        if (!preg_match('/^[\p{L}\p{N}][\p{L}\p{N} .\'\-]*$/u', $surnom)) {
+            throw new InvalidArgumentException(t('auth.err.surnom_chars'));
+        }
+    } else {
+        $surnom = null;
+    }
+    $pdo->prepare('UPDATE users SET surnom = ? WHERE id = ?')->execute([$surnom, $userId]);
+}
+
 /** Initiales affichées dans l'avatar (1–2 caractères). */
 function userInitials(string $pseudo): string
 {

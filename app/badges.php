@@ -122,7 +122,7 @@ function renderLeaderboardRow(array $member, int $rank, int $currentUserId): voi
             <span class="leaderboard-name-text">
                 <a href="<?= e(userProfileUrl((int) $member['id'])) ?>" class="leaderboard-pseudo<?= $isSelf ? '' : ' leaderboard-pseudo--link' ?>">
                     <?php if (function_exists('renderCosmeticPseudo')): ?>
-                        <?php renderCosmeticPseudo((string) $member['pseudo'], $member['equipped_name'] ?? null); ?>
+                        <?php renderCosmeticPseudo(userDisplayName($member), $member['equipped_name'] ?? null); ?>
                     <?php else: ?>
                         <?= e($member['pseudo']) ?>
                     <?php endif; ?>

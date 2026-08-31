@@ -200,7 +200,7 @@ function layoutTopbar(?array $user, string $active = ''): void
                         </a>
                         <a href="<?= e(url('account/friends.php')) ?>" class="nav-link<?= $active === 'friends' ? ' active' : '' ?>"><?= e(t('nav.friends')) ?></a>
                         <a href="<?= e(url('communities/index.php')) ?>" class="nav-link<?= $active === 'communities' ? ' active' : '' ?>"><?= e(t('nav.communities')) ?></a>
-                        <a href="<?= e(url('account/shop.php')) ?>" class="nav-link<?= $active === 'shop' ? ' active' : '' ?>"><?= e(t('nav.shop')) ?></a>
+                        <a href="<?= e(url('account/shop.php#look')) ?>" class="nav-link<?= $active === 'shop' ? ' active' : '' ?>"><?= e(t('nav.shop')) ?></a>
                     <?php else: ?>
                         <a href="<?= e(url('legal/comment-ca-marche.php')) ?>" class="nav-link"><?= e(t('nav.howto')) ?></a>
                     <?php endif; ?>
@@ -213,7 +213,7 @@ function layoutTopbar(?array $user, string $active = ''): void
                     <span class="topbar-user">
                         <?php renderUserAvatar($user['pseudo'], 'sm', $user['avatar_url'] ?? null); ?>
                         <?php if (function_exists('renderCosmeticPseudo')): ?>
-                            <?php renderCosmeticPseudo((string) $user['pseudo'], $user['equipped_name'] ?? null); ?>
+                            <?php renderCosmeticPseudo(userDisplayName($user), $user['equipped_name'] ?? null); ?>
                         <?php else: ?>
                             <?= e($user['pseudo']) ?>
                         <?php endif; ?>

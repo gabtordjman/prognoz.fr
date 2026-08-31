@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 148" role="img" aria-label="Prognoz">
+  <defs>
+    <radialGradient id="ball" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#2a2a2a"/>
+      <stop offset="100%" stop-color="#0a0a0a"/>
+    </radialGradient>
+  </defs>
+  <g opacity="0.34">
+    <circle cx="64" cy="58" r="42" fill="url(#ball)" stroke="#c4a035" stroke-width="2.4"/>
+    <circle cx="64" cy="58" r="20" fill="#f5f0e6"/>
+    <text x="64" y="66" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="28" font-weight="700" fill="#1a1612">8</text>
+    <text x="64" y="122" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" font-weight="700" letter-spacing="0.28em" fill="#e8d078">PROGNOZ</text>
+  </g>
+</svg>

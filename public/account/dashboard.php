@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             removeUserAvatar($pdo, $userId);
             flash('success', t('avatar.ok_remove'));
         } elseif ($action === 'save_profile_extras') {
+            updateUserSurnom($pdo, $userId, (string) ($_POST['surnom'] ?? ''));
             updateUserProfileExtras(
                 $pdo,
                 $userId,
@@ -114,10 +115,7 @@ while (count($currentFavNationals) < (int) FAV_TEAMS_MAX) {
 <div class="app-main app-main--espace">
     <?php layoutFlashes(); ?>
 
-    <header class="<?= e(profileHeaderClass($user)) ?>">
-        <?php if (shopHasCustomBg($user)): ?>
-        <div class="profile-showcase-shade" aria-hidden="true"></div>
-        <?php endif; ?>
+    <header class="dash-head">
         <div class="dash-id">
             <div class="dash-id-photo">
                 <?php renderUserAvatar($user['pseudo'], 'lg', $user['avatar_url'] ?? null); ?>
@@ -151,7 +149,7 @@ while (count($currentFavNationals) < (int) FAV_TEAMS_MAX) {
             </div>
             <div class="dash-id-copy">
                 <h2 class="page-title dash-id-title">
-                    <?php renderCosmeticHello((string) $user['pseudo'], shopEquippedName($user)); ?>
+                    <?php renderCosmeticHello(userDisplayName($user), shopEquippedName($user)); ?>
                 </h2>
                 <p class="page-sub dash-id-sub">
                     <?= e($pronosEnCours === 1
@@ -186,7 +184,7 @@ while (count($currentFavNationals) < (int) FAV_TEAMS_MAX) {
             <a href="<?= e(userProfileUrl($userId)) ?>" class="btn btn-ghost btn-sm">
                 <i class="fa-solid fa-id-card" aria-hidden="true"></i> <?= e(t('dash.profile')) ?>
             </a>
-            <a href="<?= e(url('account/shop.php')) ?>" class="btn btn-ghost btn-sm">
+            <a href="<?= e(url('account/shop.php#look')) ?>" class="btn btn-ghost btn-sm">
                 <i class="fa-solid fa-store" aria-hidden="true"></i> <?= e(t('nav.shop')) ?>
             </a>
             <a href="<?= e(url('account/settings.php')) ?>" class="btn btn-ghost btn-sm">
@@ -252,6 +250,13 @@ while (count($currentFavNationals) < (int) FAV_TEAMS_MAX) {
             <form method="post" class="dash-profile-form">
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="save_profile_extras">
+                <div class="dash-profile-field dash-profile-field--surnom">
+                    <label class="field-label" for="dashSurnom"><?= e(t('dash.surnom')) ?></label>
+                    <input type="text" class="field-input" id="dashSurnom" name="surnom" maxlength="40"
+                           value="<?= e((string) ($user['surnom'] ?? '')) ?>"
+                           placeholder="<?= e(t('dash.surnom_ph')) ?>" autocomplete="nickname">
+                    <p class="dash-profile-hint"><?= e(t('dash.surnom_hint', ['handle' => $user['pseudo']])) ?></p>
+                </div>
                 <div class="dash-profile-field dash-profile-field--bio">
                     <label class="field-label" for="dashBio"><?= e(t('dash.bio')) ?></label>
                     <textarea class="field-input" id="dashBio" name="bio" rows="2" maxlength="200"

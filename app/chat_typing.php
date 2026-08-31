@@ -120,7 +120,7 @@ function chatTypingClear(int $communityId, int $userId): void
 /**
  * Liste des membres en train d’écrire (hors soi).
  *
- * @return list<array{user_id: int, pseudo: string}>
+ * @return list<array{user_id: int, pseudo: string, equipped_name: string}>
  */
 function chatTypingList(int $communityId, int $excludeUserId): array
 {
@@ -142,10 +142,13 @@ function chatTypingList(int $communityId, int $excludeUserId): array
     $pseudos = [];
     try {
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        $stmt = getPDO()->prepare("SELECT id, pseudo FROM users WHERE id IN ({$placeholders})");
+        $stmt = getPDO()->prepare("SELECT id, pseudo, surnom, equipped_name FROM users WHERE id IN ({$placeholders})");
         $stmt->execute($ids);
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $u) {
-            $pseudos[(int) $u['id']] = trim((string) $u['pseudo']);
+            $pseudos[(int) $u['id']] = [
+                'pseudo' => userDisplayName($u),
+                'equipped_name' => (string) ($u['equipped_name'] ?? ''),
+            ];
         }
     } catch (Throwable $e) {
         // fallback cache ci-dessous
@@ -153,13 +156,18 @@ function chatTypingList(int $communityId, int $excludeUserId): array
 
     $list = [];
     foreach ($ids as $id) {
-        $pseudo = $pseudos[$id] ?? trim((string) ($data[(string) $id]['pseudo'] ?? ''));
+        $row = $pseudos[$id] ?? null;
+        $pseudo = is_array($row)
+            ? (string) ($row['pseudo'] ?? '')
+            : trim((string) ($data[(string) $id]['pseudo'] ?? ''));
+        $nameStyle = is_array($row) ? (string) ($row['equipped_name'] ?? '') : '';
         if ($pseudo === '' || str_starts_with($pseudo, 'com.chat_typing') || $pseudo === 'com_typing') {
             continue;
         }
         $list[] = [
             'user_id' => $id,
             'pseudo'  => $pseudo,
+            'equipped_name' => $nameStyle,
         ];
     }
     return $list;

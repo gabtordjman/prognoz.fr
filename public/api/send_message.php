@@ -23,8 +23,9 @@ $communityId = (int) ($payload['community_id'] ?? 0);
 $contenu     = trim((string) ($payload['contenu'] ?? ''));
 $csrf        = $payload['csrf_token'] ?? '';
 $userId      = (int) $_SESSION['user_id'];
-$pseudo      = (string) ($_SESSION['pseudo'] ?? '');
-$avatarUrl   = avatarPublicUrl($_SESSION['avatar_url'] ?? null);
+$me          = currentUser(getPDO());
+$pseudo      = $me ? userDisplayName($me) : (string) ($_SESSION['pseudo'] ?? '');
+$avatarUrl   = avatarPublicUrl($_SESSION['avatar_url'] ?? ($me['avatar_url'] ?? null));
 
 if (empty($_SESSION['csrf_token']) || !hash_equals((string) $_SESSION['csrf_token'], (string) $csrf)) {
     http_response_code(403);

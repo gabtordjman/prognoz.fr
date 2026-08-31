@@ -253,7 +253,7 @@ $community = decryptCommunityRow($stmt->fetch() ?: []);
                             <li class="community-member-row">
                                 <div class="community-member-info">
                                     <?php renderUserProfileLink((int) $m['id'], (string) $m['pseudo'], 'sm', false, $m['avatar_url'] ?? null); ?>
-                                    <a href="<?= e(userProfileUrl((int) $m['id'])) ?>" class="community-member-name"><?php renderCosmeticPseudo((string) $m['pseudo'], $m['equipped_name'] ?? null); ?></a>
+                                    <a href="<?= e(userProfileUrl((int) $m['id'])) ?>" class="community-member-name"><?php renderCosmeticPseudo(userDisplayName($m), $m['equipped_name'] ?? null); ?></a>
                                     <?php if (isSiteAdminUser((int) $m['id'])): ?>
                                         <?= adminBadgeHtml() ?>
                                     <?php endif; ?>
@@ -302,7 +302,7 @@ $community = decryptCommunityRow($stmt->fetch() ?: []);
 <script>
     var COMMUNITY_ID = <?= (int) $communityId ?>;
     var CURRENT_USER_ID = <?= (int) $user['id'] ?>;
-    window.CURRENT_USER_PSEUDO = <?= json_encode($user['pseudo'], JSON_UNESCAPED_UNICODE) ?>;
+    window.CURRENT_USER_PSEUDO = <?= json_encode(userDisplayName($user), JSON_UNESCAPED_UNICODE) ?>;
     window.CURRENT_USER_AVATAR = <?= json_encode(avatarPublicUrl($user['avatar_url'] ?? null), JSON_UNESCAPED_UNICODE) ?>;
     window.PRONO_CSRF = <?= json_encode(csrfToken()) ?>;
     window.PRONO_API = <?= json_encode(url('api/')) ?>;

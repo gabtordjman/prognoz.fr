@@ -60,13 +60,16 @@ $history = getUserPredictionHistory($pdo, $profileId, 12);
 $friendCount = countAcceptedFriends($pdo, $profileId);
 $seasonRewards = fetchUserSeasonRewards($pdo, $profileId, 5, $viewerId);
 $milestoneBadges = userMilestoneBadges((int) $profile['points_totaux']);
+$profile = applyShopPreviewToUser($profile, $isSelf);
+$previewItems = $profile['_shop_preview_items'] ?? [];
 $equippedName = shopEquippedName($profile);
+shopOverridePageBackground(shopEquippedBg($profile));
 ?>
 <!DOCTYPE html>
 <html lang="<?= e(htmlLang()) ?>"<?= function_exists('htmlUiClassAttr') ? htmlUiClassAttr() : '' ?>>
 <head>
-    <?php layoutHead('Profil · ' . $profile['pseudo'], true, seoPage('profile', [
-        'title' => 'Profil · ' . $profile['pseudo'] . ' — Prognoz',
+    <?php layoutHead('Profil · ' . userDisplayName($profile), true, seoPage('profile', [
+        'title' => 'Profil · ' . userDisplayName($profile) . ' — Prognoz',
     ])); ?>
 </head>
 <body>
@@ -76,17 +79,21 @@ $equippedName = shopEquippedName($profile);
 <div class="app-main app-main--espace">
     <?php layoutFlashes(); ?>
 
-    <header class="<?= e(profileHeaderClass($profile)) ?>">
-        <?php if (shopHasCustomBg($profile)): ?>
-        <div class="profile-showcase-shade" aria-hidden="true"></div>
-        <?php endif; ?>
+    <?php if ($previewItems !== []): ?>
+    <p class="shop-preview-banner" role="status">
+        <?= e(t('shop.preview_banner', ['name' => implode(' · ', array_map('shopItemName', $previewItems))])) ?>
+        <a href="<?= e(url('account/shop.php')) ?>"><?= e(t('shop.preview_back')) ?></a>
+    </p>
+    <?php endif; ?>
+
+    <header class="dash-head">
         <div class="dash-id">
             <div class="dash-id-photo">
                 <?php renderUserAvatar($profile['pseudo'], 'lg', $profile['avatar_url'] ?? null); ?>
             </div>
             <div class="dash-id-copy">
                 <h2 class="page-title dash-id-title">
-                    <?php renderCosmeticPseudo((string) $profile['pseudo'], $equippedName); ?>
+                    <?php renderCosmeticPseudo(userDisplayName($profile), $equippedName); ?>
                     <?php if (isSiteAdminUser($profileId)): ?>
                         <?= adminBadgeHtml() ?>
                     <?php endif; ?>

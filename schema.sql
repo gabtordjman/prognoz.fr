@@ -13,6 +13,7 @@ USE pronosocial;
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     pseudo VARCHAR(30) NOT NULL UNIQUE,
+    surnom VARCHAR(40) NULL DEFAULT NULL COMMENT 'Nom affiche (espaces OK) ; le pseudo reste le login',
     email VARCHAR(190) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     avatar_url VARCHAR(255) NULL,

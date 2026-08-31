@@ -27,7 +27,7 @@ function normalizeHomeHighlightRow(array $row): array
 {
     return [
         'id'         => (int) ($row['id'] ?? 0),
-        'pseudo'     => (string) ($row['pseudo'] ?? ''),
+        'pseudo'     => function_exists('userDisplayName') ? userDisplayName($row) : (string) ($row['pseudo'] ?? ''),
         'pts_24h'    => (int) ($row['pts_24h'] ?? 0),
         'serie'      => (int) ($row['serie'] ?? 0),
         'avatar_url' => isset($row['avatar_url']) && $row['avatar_url'] !== '' && $row['avatar_url'] !== null
@@ -93,8 +93,15 @@ function fetchHomeHighlights(PDO $pdo, ?int $limit = null): array
             $hasNameStyle = false;
         }
         $nameCol = $hasNameStyle ? 'u.equipped_name' : "'' AS equipped_name";
+        $hasSurnom = false;
+        try {
+            $hasSurnom = (bool) $pdo->query("SHOW COLUMNS FROM users LIKE 'surnom'")->fetch();
+        } catch (PDOException $e) {
+            $hasSurnom = false;
+        }
+        $surnomCol = $hasSurnom ? 'u.surnom' : "NULL AS surnom";
 
-        $sql = "SELECT u.id, u.pseudo, u.serie_en_cours AS serie, {$avatarCol},
+        $sql = "SELECT u.id, u.pseudo, {$surnomCol}, u.serie_en_cours AS serie, {$avatarCol},
                        {$nameCol},
                        COALESCE(s.pts_24h, 0) AS pts_24h
                 FROM users u

@@ -62,6 +62,17 @@ function ensureUserProfileExtrasSchema(PDO $pdo): void
     $done = true;
 
     try {
+        $col = $pdo->query('SHOW COLUMNS FROM users LIKE "surnom"')->fetch();
+        if (!$col) {
+            $pdo->exec(
+                'ALTER TABLE users ADD COLUMN surnom VARCHAR(40) NULL DEFAULT NULL AFTER pseudo'
+            );
+        }
+    } catch (PDOException $e) {
+        // ignore
+    }
+
+    try {
         $col = $pdo->query('SHOW COLUMNS FROM users LIKE "bio"')->fetch();
         if (!$col) {
             $pdo->exec(

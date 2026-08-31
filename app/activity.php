@@ -9,7 +9,7 @@ if (!defined('APP_BOOT')) {
 
 /**
  * @return list<array{
- *   kind:string,pseudo:string,user_id:int,created_at:string,
+ *   kind:string,pseudo:string,equipped_name:string,user_id:int,created_at:string,
  *   home:string,away:string,pick:string,market_type:string,
  *   points:int,statut:string,match_statut:string
  * }>
@@ -20,7 +20,7 @@ function fetchCommunityActivityFeed(PDO $pdo, int $communityId, int $limit = 18)
 
     $stmt = $pdo->prepare(
         "SELECT p.id, p.user_id, p.reponse, p.statut, p.points_gagnes, p.created_at, p.resolved_at,
-                u.pseudo, pm.type AS market_type,
+                u.pseudo, u.surnom, u.equipped_name, pm.type AS market_type,
                 m.equipe_home, m.equipe_away, m.resultat_1x2, m.score_home, m.score_away, m.statut AS match_statut
          FROM predictions p
          INNER JOIN community_members cm ON cm.user_id = p.user_id AND cm.community_id = ?
@@ -51,7 +51,8 @@ function fetchCommunityActivityFeed(PDO $pdo, int $communityId, int $limit = 18)
 
         $feed[] = [
             'kind'         => $kind,
-            'pseudo'       => (string) $row['pseudo'],
+            'pseudo'       => userDisplayName($row),
+            'equipped_name'=> (string) ($row['equipped_name'] ?? ''),
             'user_id'      => (int) $row['user_id'],
             'created_at'   => (string) ($row['resolved_at'] ?: $row['created_at']),
             'home'         => (string) $row['equipe_home'],
@@ -85,6 +86,20 @@ function formatActivityLine(array $item): string
     };
 }
 
+function renderActivityLine(array $item): void
+{
+    $marker = "\u{E000}";
+    $line = formatActivityLine(array_merge($item, ['pseudo' => $marker]));
+    $parts = explode($marker, $line, 2);
+    echo e($parts[0] ?? '');
+    if (function_exists('renderCosmeticPseudo')) {
+        renderCosmeticPseudo((string) ($item['pseudo'] ?? ''), $item['equipped_name'] ?? null);
+    } else {
+        echo e((string) ($item['pseudo'] ?? ''));
+    }
+    echo e($parts[1] ?? '');
+}
+
 function renderCommunityActivityFeed(array $items): void
 {
     ?>
@@ -108,7 +123,7 @@ function renderCommunityActivityFeed(array $items): void
                         <li class="activity-item activity-item--<?= e($kind) ?>">
                             <span class="activity-icon" aria-hidden="true"><i class="fa-solid <?= e($icon) ?>"></i></span>
                             <div class="activity-body">
-                                <p class="activity-text"><?= e(formatActivityLine($item)) ?></p>
+                                <p class="activity-text"><?php renderActivityLine($item); ?></p>
                                 <?php if (!empty($item['created_at'])): ?>
                                 <time class="activity-time"><?= e(formatMatchWhen((string) $item['created_at'])) ?></time>
                                 <?php endif; ?>

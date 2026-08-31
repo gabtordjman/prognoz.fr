@@ -21,7 +21,7 @@ function fetchPublicUserProfile(PDO $pdo, int $userId): ?array
     }
     try {
         $stmt = $pdo->prepare(
-            'SELECT id, pseudo, points_totaux, serie_en_cours, avatar_url, created_at, bio, sport_favori,
+            'SELECT id, pseudo, surnom, points_totaux, serie_en_cours, avatar_url, created_at, bio, sport_favori,
                     shop_balance, equipped_bg, equipped_name
              FROM users WHERE id = ? AND actif = 1'
         );

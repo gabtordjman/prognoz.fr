@@ -6,13 +6,15 @@ if (!defined('APP_BOOT')) {
 
 const SHOP_BG_DEFAULT = 'bg_default';
 const SHOP_NAME_DEFAULT = 'name_default';
+const SHOP_BG_STAFF = 'bg_root';
+const SHOP_NAME_STAFF = 'name_root';
 
 /**
  * Catalogue boutique (contenu site, pas en BDD).
  *
  * @return array<string, array{
- *   id:string, type:'bg'|'name', rarity:'common'|'rare'|'epic'|'legend',
- *   price:int, image:?string, css:string, animated?:bool
+ *   id:string, type:'bg'|'name', rarity:'common'|'rare'|'epic'|'legend'|'staff',
+ *   price:int, image:?string, css:string, animated?:bool, exclusive?:bool
  * }>
  */
 function shopCatalog(): array
@@ -26,6 +28,10 @@ function shopCatalog(): array
         SHOP_BG_DEFAULT => [
             'id' => SHOP_BG_DEFAULT, 'type' => 'bg', 'rarity' => 'common', 'price' => 0,
             'image' => null, 'css' => 'felt',
+        ],
+        'bg_logo' => [
+            'id' => 'bg_logo', 'type' => 'bg', 'rarity' => 'common', 'price' => 15,
+            'image' => null, 'css' => 'logo',
         ],
         'bg_brass' => [
             'id' => 'bg_brass', 'type' => 'bg', 'rarity' => 'common', 'price' => 35,
@@ -59,9 +65,25 @@ function shopCatalog(): array
             'id' => 'bg_storm', 'type' => 'bg', 'rarity' => 'epic', 'price' => 150,
             'image' => 'assets/img/shop/shop-bg-storm.jpg', 'css' => 'storm',
         ],
+        'bg_locker' => [
+            'id' => 'bg_locker', 'type' => 'bg', 'rarity' => 'rare', 'price' => 88,
+            'image' => 'assets/img/shop/shop-bg-locker.jpg', 'css' => 'locker',
+        ],
+        'bg_library' => [
+            'id' => 'bg_library', 'type' => 'bg', 'rarity' => 'rare', 'price' => 105,
+            'image' => 'assets/img/shop/shop-bg-library.jpg', 'css' => 'library',
+        ],
+        'bg_rain' => [
+            'id' => 'bg_rain', 'type' => 'bg', 'rarity' => 'rare', 'price' => 115,
+            'image' => 'assets/img/shop/shop-bg-rain.jpg', 'css' => 'rain',
+        ],
         'bg_velvet' => [
             'id' => 'bg_velvet', 'type' => 'bg', 'rarity' => 'epic', 'price' => 180,
             'image' => 'assets/img/shop/shop-bg-velvet.jpg', 'css' => 'velvet',
+        ],
+        'bg_cellar' => [
+            'id' => 'bg_cellar', 'type' => 'bg', 'rarity' => 'epic', 'price' => 210,
+            'image' => 'assets/img/shop/shop-bg-cellar.jpg', 'css' => 'cellar',
         ],
         'bg_goldleaf' => [
             'id' => 'bg_goldleaf', 'type' => 'bg', 'rarity' => 'epic', 'price' => 320,
@@ -70,6 +92,11 @@ function shopCatalog(): array
         'bg_legend' => [
             'id' => 'bg_legend', 'type' => 'bg', 'rarity' => 'legend', 'price' => 1800,
             'image' => 'assets/img/shop/shop-bg-legend.jpg', 'css' => 'legend',
+        ],
+        SHOP_BG_STAFF => [
+            'id' => SHOP_BG_STAFF, 'type' => 'bg', 'rarity' => 'staff', 'price' => 0,
+            'image' => 'assets/img/shop/shop-bg-root.jpg', 'css' => 'root',
+            'exclusive' => true,
         ],
 
         SHOP_NAME_DEFAULT => [
@@ -88,9 +115,17 @@ function shopCatalog(): array
             'id' => 'name_ice', 'type' => 'name', 'rarity' => 'rare', 'price' => 55,
             'image' => null, 'css' => 'ice', 'animated' => false,
         ],
+        'name_rose' => [
+            'id' => 'name_rose', 'type' => 'name', 'rarity' => 'rare', 'price' => 70,
+            'image' => null, 'css' => 'rose', 'animated' => true,
+        ],
         'name_flame' => [
             'id' => 'name_flame', 'type' => 'name', 'rarity' => 'rare', 'price' => 85,
             'image' => null, 'css' => 'flame', 'animated' => true,
+        ],
+        'name_smoke' => [
+            'id' => 'name_smoke', 'type' => 'name', 'rarity' => 'rare', 'price' => 95,
+            'image' => null, 'css' => 'smoke', 'animated' => true,
         ],
         'name_aurora' => [
             'id' => 'name_aurora', 'type' => 'name', 'rarity' => 'rare', 'price' => 130,
@@ -100,6 +135,14 @@ function shopCatalog(): array
             'id' => 'name_neon', 'type' => 'name', 'rarity' => 'epic', 'price' => 160,
             'image' => null, 'css' => 'neon', 'animated' => true,
         ],
+        'name_thunder' => [
+            'id' => 'name_thunder', 'type' => 'name', 'rarity' => 'epic', 'price' => 190,
+            'image' => null, 'css' => 'thunder', 'animated' => true,
+        ],
+        'name_inkwell' => [
+            'id' => 'name_inkwell', 'type' => 'name', 'rarity' => 'epic', 'price' => 200,
+            'image' => null, 'css' => 'inkwell', 'animated' => true,
+        ],
         'name_prism' => [
             'id' => 'name_prism', 'type' => 'name', 'rarity' => 'epic', 'price' => 220,
             'image' => null, 'css' => 'prism', 'animated' => true,
@@ -107,6 +150,11 @@ function shopCatalog(): array
         'name_legend' => [
             'id' => 'name_legend', 'type' => 'name', 'rarity' => 'legend', 'price' => 2200,
             'image' => null, 'css' => 'legend', 'animated' => true,
+        ],
+        SHOP_NAME_STAFF => [
+            'id' => SHOP_NAME_STAFF, 'type' => 'name', 'rarity' => 'staff', 'price' => 0,
+            'image' => null, 'css' => 'root', 'animated' => true,
+            'exclusive' => true,
         ],
     ];
 
@@ -122,6 +170,34 @@ function shopCatalogByType(string $type): array
 function shopItem(string $id): ?array
 {
     return shopCatalog()[$id] ?? null;
+}
+
+function shopItemIsExclusive(array $item): bool
+{
+    return !empty($item['exclusive']);
+}
+
+function shopUserCanUseExclusive(int $userId): bool
+{
+    return $userId > 0 && function_exists('isSiteAdminUser') && isSiteAdminUser($userId);
+}
+
+/** Catalogue visible (les exclus admin n’apparaissent que pour le staff). */
+function shopCatalogVisible(?int $userId = null): array
+{
+    $public = [];
+    $staff = [];
+    foreach (shopCatalog() as $id => $item) {
+        if (shopItemIsExclusive($item)) {
+            if ($userId !== null && shopUserCanUseExclusive($userId)) {
+                $staff[$id] = $item;
+            }
+            continue;
+        }
+        $public[$id] = $item;
+    }
+
+    return array_values($staff + $public);
 }
 
 function shopItemName(array $item): string
@@ -213,6 +289,52 @@ function ensureShopSchema(PDO $pdo): void
         );
     } catch (Throwable $e) {
         // ignore
+    }
+
+    grantStaffShopTheme($pdo);
+}
+
+/** Accorde le thème Root au staff et l’équipe une fois sur le compte id 2. */
+function grantStaffShopTheme(PDO $pdo): void
+{
+    $ids = defined('SITE_ADMIN_USER_IDS') ? SITE_ADMIN_USER_IDS : [];
+    if (!in_array(2, $ids, true)) {
+        $ids[] = 2;
+    }
+    foreach ($ids as $uid) {
+        $uid = (int) $uid;
+        if ($uid < 1) {
+            continue;
+        }
+        foreach ([SHOP_BG_STAFF, SHOP_NAME_STAFF] as $cid) {
+            try {
+                $pdo->prepare('INSERT IGNORE INTO user_cosmetics (user_id, cosmetic_id) VALUES (?, ?)')
+                    ->execute([$uid, $cid]);
+            } catch (Throwable $e) {
+                // ignore
+            }
+        }
+    }
+
+    try {
+        $stmt = $pdo->prepare(
+            "SELECT 1 FROM shop_ledger WHERE user_id = 2 AND reason = 'staff' AND ref = ? LIMIT 1"
+        );
+        $stmt->execute([SHOP_BG_STAFF]);
+        if ($stmt->fetch()) {
+            return;
+        }
+        $exists = $pdo->prepare('SELECT id FROM users WHERE id = 2 LIMIT 1');
+        $exists->execute();
+        if (!$exists->fetchColumn()) {
+            return;
+        }
+        $pdo->prepare('UPDATE users SET equipped_bg = ?, equipped_name = ? WHERE id = 2')
+            ->execute([SHOP_BG_STAFF, SHOP_NAME_STAFF]);
+        $pdo->prepare('INSERT INTO shop_ledger (user_id, amount, reason, ref) VALUES (2, 0, ?, ?)')
+            ->execute(['staff', SHOP_BG_STAFF]);
+    } catch (Throwable $e) {
+        error_log('Prognoz grantStaffShopTheme: ' . $e->getMessage());
     }
 }
 
@@ -335,8 +457,11 @@ function shopOwnedIds(PDO $pdo, int $userId): array
     return array_map('strval', $stmt->fetchAll(PDO::FETCH_COLUMN));
 }
 
-function shopUserOwns(array $item, array $ownedIds): bool
+function shopUserOwns(array $item, array $ownedIds, ?int $userId = null): bool
 {
+    if (shopItemIsExclusive($item)) {
+        return $userId !== null && shopUserCanUseExclusive($userId);
+    }
     if ((int) ($item['price'] ?? 0) <= 0) {
         return true;
     }
@@ -350,6 +475,9 @@ function purchaseShopItem(PDO $pdo, int $userId, string $cosmeticId): string
     $item = shopItem($cosmeticId);
     if (!$item) {
         throw new InvalidArgumentException(t('shop.err.unknown'));
+    }
+    if (shopItemIsExclusive($item)) {
+        throw new InvalidArgumentException(t('shop.err.exclusive'));
     }
     if ((int) $item['price'] <= 0) {
         throw new InvalidArgumentException(t('shop.err.free'));
@@ -408,7 +536,10 @@ function equipShopItem(PDO $pdo, int $userId, string $cosmeticId): string
     if (!$item) {
         throw new InvalidArgumentException(t('shop.err.unknown'));
     }
-    if ((int) $item['price'] > 0) {
+    if (shopItemIsExclusive($item) && !shopUserCanUseExclusive($userId)) {
+        throw new InvalidArgumentException(t('shop.err.exclusive'));
+    }
+    if (!shopItemIsExclusive($item) && (int) $item['price'] > 0) {
         $owned = $pdo->prepare('SELECT 1 FROM user_cosmetics WHERE user_id = ? AND cosmetic_id = ?');
         $owned->execute([$userId, $cosmeticId]);
         if (!$owned->fetch()) {
@@ -420,6 +551,34 @@ function equipShopItem(PDO $pdo, int $userId, string $cosmeticId): string
     $pdo->prepare("UPDATE users SET {$col} = ? WHERE id = ?")->execute([$cosmeticId, $userId]);
 
     return t('shop.flash.equipped', ['name' => shopItemName($item)]);
+}
+
+/** Remet le fond ou le pseudo au classique (l’article reste en inventaire). */
+function unequipShopSlot(PDO $pdo, int $userId, string $slot): string
+{
+    ensureShopSchema($pdo);
+    if ($slot === 'bg') {
+        $col = 'equipped_bg';
+        $reset = SHOP_BG_DEFAULT;
+        $ok = 'shop.flash.unequipped_bg';
+    } elseif ($slot === 'name') {
+        $col = 'equipped_name';
+        $reset = SHOP_NAME_DEFAULT;
+        $ok = 'shop.flash.unequipped_name';
+    } else {
+        throw new InvalidArgumentException(t('shop.err.unknown'));
+    }
+
+    $stmt = $pdo->prepare("SELECT {$col} FROM users WHERE id = ?");
+    $stmt->execute([$userId]);
+    $current = (string) $stmt->fetchColumn();
+    if ($current === '' || $current === $reset) {
+        throw new InvalidArgumentException(t('shop.err.already_classic'));
+    }
+
+    $pdo->prepare("UPDATE users SET {$col} = ? WHERE id = ?")->execute([$reset, $userId]);
+
+    return t($ok);
 }
 
 function profileBgClass(?string $bgId): string
@@ -463,17 +622,85 @@ function shopHasCustomBg(array $user): bool
     return shopEquippedBg($user) !== SHOP_BG_DEFAULT;
 }
 
-/** Classes du bandeau profil / dashboard / boutique. */
-function profileHeaderClass(array $user, bool $forceShowcase = false): string
+/** Force le fond de page (ex. profil visité), y compris le feutre par défaut. */
+function shopOverridePageBackground(?string $bgId): void
 {
-    $bg = shopEquippedBg($user);
-    $showcase = $forceShowcase || $bg !== SHOP_BG_DEFAULT;
-    $class = 'dash-head';
-    if ($showcase) {
-        $class .= ' profile-showcase ' . profileBgClass($bg);
+    $GLOBALS['_shop_page_bg_override'] = $bgId === null ? null : (string) $bgId;
+}
+
+/** Slug CSS du fond de page, ou vide = feutre classique. */
+function shopResolvedPageBackgroundCss(): string
+{
+    if (array_key_exists('_shop_page_bg_override', $GLOBALS)) {
+        $bgId = $GLOBALS['_shop_page_bg_override'];
+    } else {
+        $bgId = null;
+        try {
+            $user = currentUser(getPDO());
+            if (is_array($user)) {
+                $bgId = shopEquippedBg($user);
+            }
+        } catch (Throwable $e) {
+            return '';
+        }
+    }
+    if (!is_string($bgId) || $bgId === '' || $bgId === SHOP_BG_DEFAULT) {
+        return '';
+    }
+    $item = shopItem($bgId);
+    if (!$item || ($item['type'] ?? '') !== 'bg') {
+        return '';
+    }
+    $css = (string) ($item['css'] ?? '');
+
+    return ($css !== '' && $css !== 'felt') ? $css : '';
+}
+
+function shopProfilePreviewUrl(int $userId, array $item): string
+{
+    $key = ($item['type'] ?? '') === 'name' ? 'preview_name' : 'preview_bg';
+
+    return userProfileUrl($userId) . '&' . $key . '=' . rawurlencode((string) $item['id']);
+}
+
+/**
+ * Aperçu temporaire sur son propre profil (?preview_bg= / ?preview_name=).
+ *
+ * @return array<string,mixed>
+ */
+function applyShopPreviewToUser(array $user, bool $allowed): array
+{
+    $user['_shop_preview_items'] = [];
+    if (!$allowed) {
+        return $user;
+    }
+    foreach (['bg' => 'preview_bg', 'name' => 'preview_name'] as $type => $key) {
+        $id = (string) ($_GET[$key] ?? '');
+        if ($id === '') {
+            continue;
+        }
+        $item = shopItem($id);
+        if (!$item || ($item['type'] ?? '') !== $type) {
+            continue;
+        }
+        if (shopItemIsExclusive($item) && !shopUserCanUseExclusive((int) ($user['id'] ?? 0))) {
+            continue;
+        }
+        if ($type === 'bg') {
+            $user['equipped_bg'] = $item['id'];
+        } else {
+            $user['equipped_name'] = $item['id'];
+        }
+        $user['_shop_preview_items'][] = $item;
     }
 
-    return $class;
+    return $user;
+}
+
+/** Bandeau profil / dashboard / boutique — le fond cosmétique est sur le feutre de page. */
+function profileHeaderClass(array $user, bool $forceShowcase = false): string
+{
+    return 'dash-head';
 }
 
 /**

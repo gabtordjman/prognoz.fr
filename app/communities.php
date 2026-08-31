@@ -31,7 +31,7 @@ function userCanManageCommunity(PDO $pdo, int $communityId, int $userId): bool
 function fetchCommunityMembers(PDO $pdo, int $communityId): array
 {
     $stmt = $pdo->prepare(
-        'SELECT u.id, u.pseudo, u.avatar_url, u.equipped_name, cm.role, cm.joined_at
+        'SELECT u.id, u.pseudo, u.surnom, u.avatar_url, u.equipped_name, cm.role, cm.joined_at
          FROM community_members cm
          INNER JOIN users u ON u.id = cm.user_id
          WHERE cm.community_id = ?

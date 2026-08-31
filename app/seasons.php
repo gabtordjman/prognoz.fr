@@ -154,7 +154,7 @@ function fetchCommunitySeasonLeaderboard(PDO $pdo, int $communityId, ?int $seaso
 {
     $seasonId = $seasonId ?? (int) (getActiveSeason($pdo)['id'] ?? ensureActiveSeason($pdo));
     $stmt = $pdo->prepare(
-        'SELECT u.id, u.pseudo, u.serie_en_cours, u.avatar_url, u.equipped_name, COALESCE(ss.points, 0) AS points
+        'SELECT u.id, u.pseudo, u.surnom, u.serie_en_cours, u.avatar_url, u.equipped_name, COALESCE(ss.points, 0) AS points
          FROM community_members cm
          INNER JOIN users u ON u.id = cm.user_id
          LEFT JOIN season_scores ss

@@ -37,18 +37,33 @@
             name_brass: 'brass',
             name_emerald: 'emerald',
             name_ice: 'ice',
+            name_rose: 'rose',
             name_flame: 'flame',
+            name_smoke: 'smoke',
             name_aurora: 'aurora',
             name_neon: 'neon',
+            name_thunder: 'thunder',
+            name_inkwell: 'inkwell',
             name_prism: 'prism',
-            name_legend: 'legend'
+            name_legend: 'legend',
+            name_root: 'root'
         };
         var css = map[String(id || '')];
         if (!css) return '';
-        var extra = (css === 'flame' || css === 'aurora' || css === 'neon' || css === 'prism' || css === 'legend')
+        var extra = (css === 'rose' || css === 'flame' || css === 'smoke' || css === 'aurora'
+            || css === 'neon' || css === 'thunder' || css === 'inkwell' || css === 'prism' || css === 'legend'
+            || css === 'root')
             ? ' cos-name--animated'
             : '';
         return ' cos-name cos-name--' + css + extra;
+    }
+
+    function cosmeticNameHtml(pseudo, equipped) {
+        var cls = cosmeticNameClass(equipped).trim();
+        if (!cls) {
+            return escapeHtml(pseudo);
+        }
+        return '<span class="' + cls + '">' + escapeHtml(pseudo) + '</span>';
     }
 
     function userInitials(pseudo) {
@@ -230,16 +245,16 @@
         }
         var text;
         if (list.length === 1) {
-            text = tpl(typingLabel('one'), { name: list[0].pseudo });
+            text = tpl(typingLabel('one'), { name: cosmeticNameHtml(list[0].pseudo, list[0].equipped_name) });
         } else if (list.length === 2) {
             text = tpl(typingLabel('two'), {
-                name1: list[0].pseudo,
-                name2: list[1].pseudo
+                name1: cosmeticNameHtml(list[0].pseudo, list[0].equipped_name),
+                name2: cosmeticNameHtml(list[1].pseudo, list[1].equipped_name)
             });
         } else {
             text = typingLabel('many');
         }
-        chatTyping.textContent = text;
+        chatTyping.innerHTML = text;
         chatTyping.hidden = false;
     }
 

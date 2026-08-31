@@ -27,6 +27,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_POST['password'] ?? ''
             );
             flash('success', t('settings.pseudo_ok'));
+        } elseif ($action === 'change_surnom') {
+            updateUserSurnom($pdo, $userId, (string) ($_POST['surnom'] ?? ''));
+            clearCurrentUserCache();
+            flash('success', t('settings.surnom_ok'));
         } elseif ($action === 'change_password') {
             changeUserPassword(
                 $pdo,
@@ -236,7 +240,13 @@ $plannedSeasonEnd = nextMonthStartDatetime(); // 2026-08-01… tant qu’on est 
     <?php layoutFlashes(); ?>
 
     <h2 class="page-title"><?= e(t('settings.h1')) ?></h2>
-    <p class="page-sub"><?= e($user['pseudo']) ?> · <?= e($user['email']) ?></p>
+    <p class="page-sub"><?php
+        $shown = userDisplayName($user);
+        echo e($shown);
+        if ($shown !== (string) $user['pseudo']) {
+            echo ' · @' . e((string) $user['pseudo']);
+        }
+    ?> · <?= e($user['email']) ?></p>
 
     <div class="panel panel-spaced">
         <div class="panel-head"><?= e(t('settings.notify_head')) ?></div>
@@ -502,6 +512,24 @@ $plannedSeasonEnd = nextMonthStartDatetime(); // 2026-08-01… tant qu’on est 
                     <button type="submit" class="btn btn-primary btn-sm"><?= e(t('settings.save_pseudo')) ?></button>
                 </form>
             <?php endif; ?>
+        </div>
+    </div>
+
+    <div class="panel panel-spaced">
+        <div class="panel-head"><?= e(t('settings.surnom_head')) ?></div>
+        <div class="panel-body">
+            <p class="settings-hint"><?= e(t('settings.surnom_hint')) ?></p>
+            <form method="post" class="settings-pseudo-form">
+                <?= csrfField() ?>
+                <input type="hidden" name="action" value="change_surnom">
+                <div class="field-group">
+                    <label class="field-label"><?= e(t('dash.surnom')) ?></label>
+                    <input type="text" name="surnom" class="field-input" maxlength="40"
+                           value="<?= e((string) ($user['surnom'] ?? '')) ?>"
+                           placeholder="<?= e(t('dash.surnom_ph')) ?>" autocomplete="nickname">
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm"><?= e(t('settings.save_surnom')) ?></button>
+            </form>
         </div>
     </div>
 

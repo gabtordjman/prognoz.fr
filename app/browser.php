@@ -78,6 +78,17 @@ function htmlUiClassAttr(): string
     } catch (Throwable $e) {
         // ignore
     }
+    try {
+        if (function_exists('shopResolvedPageBackgroundCss')) {
+            $pageBg = shopResolvedPageBackgroundCss();
+            if ($pageBg !== '') {
+                $classes[] = 'page-bg';
+                $classes[] = 'page-bg--' . $pageBg;
+            }
+        }
+    } catch (Throwable $e) {
+        // ignore
+    }
 
     return $classes === [] ? '' : ' class="' . e(implode(' ', $classes)) . '"';
 }

@@ -403,7 +403,7 @@ a.btn-primary {
     margin: 0 0 3px;
 }
 .match-teams, .match-title {
-    font-size: 13px;
+    font-size: 16px;
     font-weight: bold;
     color: #1a1612;
     margin: 0 0 4px;
@@ -1232,6 +1232,10 @@ input[type="number"], input[type="search"], select, textarea {
 .shop-wallet { margin: 0 0 12px; padding: 8px; border: 1px solid #333; }
 .shop-wallet-val { font-size: 14px; font-weight: bold; }
 .shop-tabs { margin: 0 0 10px; }
+.shop-look { margin: 0 0 12px; padding: 8px; border: 1px solid #333; }
+.shop-look-slots { zoom: 1; }
+.shop-look-slot { margin: 0 0 8px; }
+.shop-look-preview { width: 64px; height: 40px; border: 1px solid #333; }
 .shop-tab { margin-right: 6px; }
 .shop-tab.is-active { font-weight: bold; text-decoration: underline; }
 .shop-grid { zoom: 1; }
@@ -1242,6 +1246,9 @@ input[type="number"], input[type="search"], select, textarea {
 .cos-name--brass { color: #9a7420; }
 .cos-name--emerald { color: #145a32; }
 .cos-name--ice { color: #1a6a8a; }
-.cos-name--flame, .cos-name--aurora, .cos-name--neon, .cos-name--prism, .cos-name--legend { color: #9a7420; font-weight: bold; }
+.cos-name--flame, .cos-name--aurora, .cos-name--neon, .cos-name--prism, .cos-name--legend,
+.cos-name--rose, .cos-name--smoke, .cos-name--thunder, .cos-name--inkwell { color: #9a7420; font-weight: bold; }
+.shop-card-preview-lbl { font-size: 11px; }
+.shop-preview-banner { margin: 0 0 10px; padding: 6px; border: 1px solid #333; }
 .milestone-item { margin: 0 0 6px; }
-.profile-showcase { padding: 8px; border: 1px solid #9a7420; }
+.cos-name--root { color: #145a32; font-weight: bold; }
