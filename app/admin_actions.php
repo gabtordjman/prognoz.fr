@@ -5,7 +5,7 @@ if (!defined('APP_BOOT')) {
 }
 
 /**
- * Mutations admin partagées (panel felt, 5250 web, CLI).
+ * Mutations admin partagées (panel web, CLI).
  *
  * @return array{ok:bool,type:string,message:string,payload:array}
  */

@@ -35,6 +35,12 @@ define('FAV_TEAM_WIN_MULTIPLIER', 2);
 /** Nombre max de sélections nationales préférées (en plus du club). */
 define('FAV_TEAMS_MAX', 3);
 
+/** Pénalités sur prono raté (sans multiplicateur streak/event). 1x2 = 0 (reset série seulement). */
+define('PENALTY_1X2', 0);
+define('PENALTY_BUTEUR', 1);
+define('PENALTY_FAV_TEAM', 1);
+define('PENALTY_SCORE_EXACT', 2);
+
 /** Seuil points (24 h) pour le bandeau « perf » sur l’accueil. */
 define('HIGHLIGHT_POINTS_24H', 50);
 /** Seuil série en cours pour le même bandeau. */

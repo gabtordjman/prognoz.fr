@@ -79,7 +79,6 @@ function adminLayoutStart(string $title, string $active = 'dashboard'): void
                 </div>
             <?php endforeach; ?>
             <div class="ops-nav-group ops-nav-group--foot">
-                <a class="ops-nav-link" href="<?= e(url('admin/ibmi/index.php')) ?>">Poste 5250</a>
                 <a class="ops-nav-link" href="<?= e(url('index.php')) ?>" target="_blank" rel="noopener">Ouvrir le site</a>
                 <a class="ops-nav-link" href="<?= e(url('admin/logout.php')) ?>">Déconnexion</a>
             </div>

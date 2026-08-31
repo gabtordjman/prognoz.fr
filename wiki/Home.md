@@ -31,6 +31,18 @@ Pas de paris d’argent : uniquement des **points**, des **classements** et des 
 3. Quand le match est fini, le site récupère le score (API + cron) et calcule tes points.
 4. Une saison dure ~14 jours : classement, badges podium, reset.
 
+### Barème des points
+
+| Marché | Si gagné | Si raté |
+|--------|----------|---------|
+| Vainqueur (1x2) | +1 (+ série / événement) | 0 pt (série à zéro) |
+| Score exact | +3 | **−2** |
+| Buteur | +2 | **−1** |
+| Équipe préférée | +4 | **−1** |
+
+Les pertes ne sont jamais multipliées et ne descendent jamais sous **0** (total + saison).  
+Détail aussi dans l’aide « ? » points sur le site et *Comment ça marche*.
+
 ## En deux mots (technique)
 
 - PHP + MySQL, document root = `public/` uniquement.

@@ -602,6 +602,47 @@
         window.PRONO_VALIDATED = validated;
     }
 
+    /** Match encore ouvert avec au moins un marché visible non validé. */
+    function matchCardNeedsPick(card) {
+        if (!card || card.classList.contains('is-picks-closed')) {
+            return false;
+        }
+        var rows = card.querySelectorAll('[data-market]');
+        var i;
+        for (i = 0; i < rows.length; i++) {
+            var mid = parseInt(rows[i].getAttribute('data-market'), 10);
+            if (!mid) {
+                continue;
+            }
+            if (!isValidatedMarket(mid)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Remonte les cartes non faites en haut de chaque section sport. */
+    function reorderMatchCardsByPicks() {
+        document.querySelectorAll('[data-cat-section]').forEach(function (section) {
+            var cards = Array.prototype.slice.call(section.querySelectorAll('.match-card'));
+            if (cards.length < 2) {
+                return;
+            }
+            var open = [];
+            var done = [];
+            cards.forEach(function (card) {
+                if (matchCardNeedsPick(card)) {
+                    open.push(card);
+                } else {
+                    done.push(card);
+                }
+            });
+            open.concat(done).forEach(function (card) {
+                section.appendChild(card);
+            });
+        });
+    }
+
     function validateTicket() {
         var picks = loadDraftPicks();
         var list = [];
@@ -677,6 +718,7 @@
             renderTicket();
             var msg = data.saved > 1 ? i18n('js.saved_other', { n: data.saved }) : i18n('js.saved_one', { n: data.saved });
             showFlash(msg, true);
+            reorderMatchCardsByPicks();
         })
         .catch(function (err) {
             var msg = (err && err.name === 'AbortError')

@@ -5,18 +5,18 @@ if (!defined('APP_BOOT')) {
 }
 
 /**
- * Cabine d'essayage — habille un mannequin de joueur avec un maillot et
- * un short (personnalisation visuelle, indépendante de la boutique de
- * points). Rendu 100% SVG, style "voxel" flat.
- *
- * Les maillots reprennent les couleurs/motifs de vrais clubs, mais SANS
- * écusson ni logo sponsor/équipementier (marques déposées) — uniquement
- * la palette, dans le même style flat que le reste du mannequin.
+ * Cabine d'essayage — sticker joueur (felt / laiton), maillot + short + prop emoji.
+ * Palettes clubs sans écusson ni logo sponsor.
  */
 
-/** Teinte de peau / sous-vêtement neutre du mannequin par défaut (torse nu). */
-const KIT_SKIN_COLOR = '#d9a877';
-const KIT_UNDERWEAR_COLOR = '#8a7f6d';
+/** Couleur peau (bras / jambes). */
+const KIT_SKIN_COLOR = '#c4a07a';
+
+/** Maillot neutre (pas de torse nu). */
+const KIT_PLAIN_JERSEY_FILL = '#1e3d2f';
+
+/** Short par défaut — toujours un vrai short, jamais de sous-vêtement. */
+const KIT_DEFAULT_SHORTS = 'shorts_black';
 
 /**
  * Catalogue des maillots.
@@ -96,7 +96,7 @@ function kitJerseyCatalog(): array
     return $catalog;
 }
 
-/** Valeur SVG (fill=) à appliquer au maillot du mannequin. */
+/** Valeur SVG (fill=) à appliquer au maillot. */
 function kitJerseyFill(array $jersey): string
 {
     switch ($jersey['pattern']) {
@@ -112,9 +112,7 @@ function kitJerseyFill(array $jersey): string
 }
 
 /**
- * Équivalent CSS (background:) pour la pastille de sélection — un
- * <pattern>/<linearGradient> SVG n'est pas référençable depuis un
- * background CSS classique, d'où cette version dupliquée en pur CSS.
+ * Équivalent CSS (background:) pour la pastille de sélection.
  */
 function kitJerseyChip(array $jersey): string
 {
@@ -132,15 +130,12 @@ function kitJerseyChip(array $jersey): string
     }
 }
 
-/** Couleur du col du maillot (visible seulement avec un maillot équipé). */
 function kitJerseyTrimColor(array $jersey): string
 {
-    return $jersey['trimColor'] ?? '#f4ede0';
+    return $jersey['trimColor'] ?? '#e8d078';
 }
 
 /**
- * Catalogue des shorts.
- *
  * @return array<string, array{id:string, fill:string}>
  */
 function kitShortsCatalog(): array
@@ -161,8 +156,6 @@ function kitShortsCatalog(): array
 }
 
 /**
- * Catalogue des objets tenus en main (accessoire cosmétique).
- *
  * @return array<string, array{id:string}>
  */
 function kitPropCatalog(): array
@@ -191,20 +184,15 @@ function kitPropCatalog(): array
     return $catalog;
 }
 
-/**
- * Position/échelle (transform SVG) d'un objet sur le mannequin — tous en
- * main sauf le ballon, posé au sol à côté des pieds.
- */
 function kitPropTransform(string $propId): string
 {
     if ($propId === 'prop_ball') {
-        return 'translate(132, 248) scale(1.9)';
+        return 'translate(118, 238) scale(1.55)';
     }
 
-    return 'translate(127, 178) scale(1.8)';
+    return 'translate(128, 148) scale(1.45)';
 }
 
-/** Emoji associé à chaque objet — simple et lisible à toutes les tailles. */
 function kitPropEmoji(string $propId): string
 {
     $map = [
@@ -226,11 +214,6 @@ function kitPropEmoji(string $propId): string
     return $map[$propId] ?? '';
 }
 
-/**
- * Formes SVG (sans <svg> englobant) d'un objet en main, dans un repère
- * 24×24 — réutilisé tel quel pour la pastille de sélection (petit) et
- * pour l'objet posé sur le mannequin (agrandi, voir kitPropTransform).
- */
 function renderKitPropShapes(string $propId): void
 {
     $emoji = kitPropEmoji($propId);
@@ -247,6 +230,7 @@ function kitJersey(?string $id): ?array
     if ($id === null || $id === '') {
         return null;
     }
+
     return kitJerseyCatalog()[$id] ?? null;
 }
 
@@ -255,6 +239,7 @@ function kitShorts(?string $id): ?array
     if ($id === null || $id === '') {
         return null;
     }
+
     return kitShortsCatalog()[$id] ?? null;
 }
 
@@ -263,10 +248,16 @@ function kitProp(?string $id): ?array
     if ($id === null || $id === '') {
         return null;
     }
+
     return kitPropCatalog()[$id] ?? null;
 }
 
-/** Nom affiché d'un maillot ou d'un short (clé i18n `kit.item.<id>`). */
+/** Short valide, sinon défaut (jamais vide / sous-vêtement). */
+function resolveKitShortsId(?string $id): string
+{
+    return kitShorts($id) ? (string) $id : KIT_DEFAULT_SHORTS;
+}
+
 function kitItemName(string $id): string
 {
     return t('kit.item.' . $id);
@@ -296,40 +287,39 @@ function ensureKitSchema(PDO $pdo): void
     $addUserCol($pdo, 'kit_prop', 'kit_prop VARCHAR(32) NULL DEFAULT NULL AFTER kit_shorts');
 }
 
-/** Maillot actuellement porté par l'utilisateur, ou null (torse nu). */
 function userKitJersey(array $user): ?string
 {
     $id = (string) ($user['kit_jersey'] ?? '');
+
     return kitJersey($id) ? $id : null;
 }
 
-/** Short actuellement porté par l'utilisateur, ou null (par défaut). */
-function userKitShorts(array $user): ?string
+/** Toujours un id de short catalogue. */
+function userKitShorts(array $user): string
 {
-    $id = (string) ($user['kit_shorts'] ?? '');
-    return kitShorts($id) ? $id : null;
+    return resolveKitShortsId((string) ($user['kit_shorts'] ?? ''));
 }
 
-/** Objet en main actuellement équipé, ou null (mains vides). */
 function userKitProp(array $user): ?string
 {
     $id = (string) ($user['kit_prop'] ?? '');
+
     return kitProp($id) ? $id : null;
 }
 
-/** Enregistre la tenue du mannequin (accepte null/"" pour déshabiller). */
+/** Enregistre la tenue (short vide → défaut ; prop/maillot optionnels). */
 function saveUserKit(PDO $pdo, int $userId, ?string $jerseyId, ?string $shortsId, ?string $propId): void
 {
     ensureKitSchema($pdo);
 
     $jerseyId = ($jerseyId !== null && $jerseyId !== '') ? $jerseyId : null;
-    $shortsId = ($shortsId !== null && $shortsId !== '') ? $shortsId : null;
-    $propId   = ($propId !== null && $propId !== '') ? $propId : null;
+    $shortsId = resolveKitShortsId($shortsId);
+    $propId = ($propId !== null && $propId !== '') ? $propId : null;
 
     if ($jerseyId !== null && !kitJersey($jerseyId)) {
         throw new InvalidArgumentException(t('kit.err.unknown'));
     }
-    if ($shortsId !== null && !kitShorts($shortsId)) {
+    if (!kitShorts($shortsId)) {
         throw new InvalidArgumentException(t('kit.err.unknown'));
     }
     if ($propId !== null && !kitProp($propId)) {
@@ -341,27 +331,26 @@ function saveUserKit(PDO $pdo, int $userId, ?string $jerseyId, ?string $shortsId
 }
 
 /**
- * Rendu SVG du mannequin seul (défs + pièces) — partagé par la cabine
- * d'essayage (dialog éditable) et par l'affichage lecture-seule sur le
- * profil public (voir renderKitDollCard).
+ * Joueur SVG — proportions plus réalistes (silhouette footballeur),
+ * scène felt côté CSS. Remplit #kitTorsoGroup / #kitShortsGroup pour le JS.
  */
 function renderKitDollSvg(?string $jerseyId, ?string $shortsId, ?string $avatarUrl = null, string $pseudo = '', ?string $propId = null): void
 {
     $jersey = kitJersey($jerseyId);
-    $shorts = kitShorts($shortsId);
-    $torsoFill = $jersey !== null ? kitJerseyFill($jersey) : KIT_SKIN_COLOR;
-    $shortsFill = $shorts['fill'] ?? KIT_UNDERWEAR_COLOR;
+    $shorts = kitShorts(resolveKitShortsId($shortsId));
+    $torsoFill = $jersey !== null ? kitJerseyFill($jersey) : KIT_PLAIN_JERSEY_FILL;
+    $shortsFill = $shorts['fill'] ?? kitShortsCatalog()[KIT_DEFAULT_SHORTS]['fill'];
     $collarVisible = $jersey !== null;
     $collarColor = $jersey !== null ? kitJerseyTrimColor($jersey) : '';
     $avatarSrc = avatarPublicUrl($avatarUrl);
     ?>
-    <svg viewBox="0 0 200 300" class="kit-doll" role="img" aria-label="<?= e(t('kit.doll_alt')) ?>">
+    <svg viewBox="0 0 180 280" class="kit-doll" role="img" aria-label="<?= e(t('kit.doll_alt')) ?>">
         <defs>
             <?php foreach (kitJerseyCatalog() as $j): ?>
                 <?php if ($j['pattern'] === 'stripes'): ?>
-            <pattern id="kitStripes_<?= e($j['id']) ?>" width="14" height="28" patternUnits="userSpaceOnUse">
-                <rect width="14" height="28" fill="<?= e($j['c1']) ?>"></rect>
-                <rect width="7" height="28" fill="<?= e($j['c2']) ?>"></rect>
+            <pattern id="kitStripes_<?= e($j['id']) ?>" width="12" height="24" patternUnits="userSpaceOnUse">
+                <rect width="12" height="24" fill="<?= e($j['c1']) ?>"></rect>
+                <rect width="6" height="24" fill="<?= e($j['c2']) ?>"></rect>
             </pattern>
                 <?php elseif ($j['pattern'] === 'split_h'): ?>
             <linearGradient id="kitSplitH_<?= e($j['id']) ?>" x1="0" y1="0" x2="0" y2="1">
@@ -379,56 +368,104 @@ function renderKitDollSvg(?string $jerseyId, ?string $shortsId, ?string $avatarU
             </linearGradient>
                 <?php endif; ?>
             <?php endforeach; ?>
+            <linearGradient id="kitSkinGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#e0b892"></stop>
+                <stop offset="55%" stop-color="#c4a07a"></stop>
+                <stop offset="100%" stop-color="#a88460"></stop>
+            </linearGradient>
+            <linearGradient id="kitSockGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f4ede0"></stop>
+                <stop offset="100%" stop-color="#d8d0c0"></stop>
+            </linearGradient>
             <clipPath id="kitHeadClip">
-                <rect x="70" y="8" width="60" height="56" rx="10"></rect>
+                <ellipse cx="90" cy="42" rx="26" ry="30"></ellipse>
             </clipPath>
         </defs>
 
-        <!-- Perso "voxel" (façon personnage blocky) : chaque vêtement est un
-             rectangle posé exactement sur le rectangle du corps concerné,
-             donc toujours parfaitement ajusté, sans courbe à recaler. -->
+        <!-- Ombre -->
+        <ellipse class="kit-shadow" cx="90" cy="266" rx="48" ry="7"></ellipse>
 
-        <!-- Tête : photo de profil si dispo, sinon initiales colorées (même
-             logique que renderUserAvatar) pour rester identifiable partout -->
-        <?php if ($avatarSrc !== null): ?>
-        <image href="<?= e($avatarSrc) ?>" xlink:href="<?= e($avatarSrc) ?>" x="70" y="8" width="60" height="56"
-               preserveAspectRatio="xMidYMid slice" clip-path="url(#kitHeadClip)"></image>
-        <?php else: ?>
-        <rect x="70" y="8" width="60" height="56" rx="10" style="fill: <?= e(userAvatarColor($pseudo)) ?>;"></rect>
-        <text x="100" y="42" text-anchor="middle" class="kit-head-initials"><?= e(userInitials($pseudo)) ?></text>
-        <?php endif; ?>
+        <!-- Jambe G -->
+        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M68 168
+            C66 190 64 210 62 228
+            L76 230 C78 210 80 190 82 168 Z"></path>
+        <!-- Jambe D -->
+        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M98 168
+            C100 190 102 210 104 228
+            L118 230 C116 210 114 190 112 168 Z"></path>
 
-        <!-- Bras (peau, sous les manches du maillot) -->
-        <rect class="kit-skin" x="34" y="64" width="30" height="140" rx="8"></rect>
-        <rect class="kit-skin" x="136" y="64" width="30" height="140" rx="8"></rect>
-
-        <!-- Jambes (peau, prolongent exactement le bas du short) -->
-        <rect class="kit-skin" x="66" y="152" width="32" height="120" rx="8"></rect>
-        <rect class="kit-skin" x="102" y="152" width="32" height="120" rx="8"></rect>
+        <!-- Chaussettes -->
+        <path class="kit-sock" fill="url(#kitSockGrad)" d="M62 218 h16 v18 h-17 z"></path>
+        <path class="kit-sock" fill="url(#kitSockGrad)" d="M102 218 h16 v18 h-15 z"></path>
 
         <!-- Chaussures -->
-        <rect class="kit-boot" x="64" y="270" width="36" height="18" rx="6"></rect>
-        <rect class="kit-boot" x="100" y="270" width="36" height="18" rx="6"></rect>
+        <path class="kit-boot" d="M56 234 q2 -6 12 -6 h14 q8 0 12 8 v6 h-40 z"></path>
+        <path class="kit-boot" d="M98 234 q2 -6 12 -6 h14 q8 0 12 8 v6 h-40 z"></path>
+        <path class="kit-boot-sole" d="M54 246 h42 v4 q0 3 -3 3 h-36 q-3 0 -3 -3 z"></path>
+        <path class="kit-boot-sole" d="M96 246 h42 v4 q0 3 -3 3 h-36 q-3 0 -3 -3 z"></path>
 
-        <!-- Short (torse nu = sous-vêtement neutre) — même largeur que les jambes -->
+        <!-- Short (toujours) -->
         <g id="kitShortsGroup" style="fill: <?= e($shortsFill) ?>;">
-            <rect x="66" y="152" width="32" height="48" rx="8"></rect>
-            <rect x="102" y="152" width="32" height="48" rx="8"></rect>
+            <path d="M62 148
+                C58 148 56 152 56 158
+                L54 188 C54 194 58 198 64 198
+                L78 198 L84 178 L90 178 L96 198 L116 198
+                C122 198 126 194 126 188
+                L124 158 C124 152 122 148 118 148
+                Z"></path>
         </g>
+        <path class="kit-shorts-shade" d="M84 150 v28 L90 178 L96 150 Z"></path>
 
-        <!-- Maillot : torse + manches courtes, même largeur que les bras/torse -->
+        <!-- Bras G (légèrement écarté) -->
+        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M52 78
+            C40 95 32 120 30 148
+            C30 154 34 158 40 156
+            C48 130 52 105 58 88 Z"></path>
+        <ellipse class="kit-skin" fill="url(#kitSkinGrad)" cx="36" cy="158" rx="9" ry="7"></ellipse>
+
+        <!-- Bras D -->
+        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M128 78
+            C140 95 148 120 150 148
+            C150 154 146 158 140 156
+            C132 130 128 105 122 88 Z"></path>
+        <ellipse class="kit-skin" fill="url(#kitSkinGrad)" cx="144" cy="158" rx="9" ry="7"></ellipse>
+
+        <!-- Maillot : torse + manches -->
         <g id="kitTorsoGroup" style="fill: <?= e($torsoFill) ?>;">
-            <rect x="64" y="64" width="72" height="88" rx="8"></rect>
-            <rect x="34" y="64" width="30" height="46" rx="8"></rect>
-            <rect x="136" y="64" width="30" height="46" rx="8"></rect>
+            <path d="M58 72
+                C52 76 48 86 50 98
+                L48 146 C48 154 54 160 62 160
+                L118 160 C126 160 132 154 132 146
+                L130 98 C132 86 128 76 122 72
+                C112 66 100 64 90 64
+                C80 64 68 66 58 72 Z"></path>
+            <!-- Manche G -->
+            <path d="M58 72 C48 78 40 92 38 108 C44 104 52 96 58 88 Z"></path>
+            <!-- Manche D -->
+            <path d="M122 72 C132 78 140 92 142 108 C136 104 128 96 122 88 Z"></path>
         </g>
+        <path class="kit-jersey-shade" d="M90 68 L90 158 L118 158 C124 158 128 152 128 146 L126 100 C124 82 112 70 90 68 Z"></path>
 
-        <!-- Col (visible seulement avec un maillot, couleur propre à chaque maillot) -->
-        <rect id="kitCollarShape" class="kit-collar-shape"
+        <!-- Cou -->
+        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M80 58 C80 52 84 48 90 48 C96 48 100 52 100 58 L98 68 L82 68 Z"></path>
+
+        <!-- Col V -->
+        <path id="kitCollarShape" class="kit-collar-shape"
               style="<?= $collarVisible ? 'fill: ' . e($collarColor) . ';' : 'display: none;' ?>"
-              x="88" y="64" width="24" height="7" rx="3"></rect>
+              d="M78 68 L90 82 L102 68 L98 66 L90 76 L82 66 Z"></path>
 
-        <!-- Objet équipé (en main, sauf le ballon posé au sol près des pieds) -->
+        <!-- Tête -->
+        <?php if ($avatarSrc !== null): ?>
+        <image href="<?= e($avatarSrc) ?>" xlink:href="<?= e($avatarSrc) ?>" x="64" y="12" width="52" height="60"
+               preserveAspectRatio="xMidYMid slice" clip-path="url(#kitHeadClip)"></image>
+        <ellipse cx="90" cy="42" rx="26" ry="30" fill="none" class="kit-head-ring"></ellipse>
+        <?php else: ?>
+        <ellipse cx="90" cy="42" rx="26" ry="30" style="fill: <?= e(userAvatarColor($pseudo)) ?>;"></ellipse>
+        <text x="90" y="48" text-anchor="middle" class="kit-head-initials"><?= e(userInitials($pseudo)) ?></text>
+        <ellipse cx="90" cy="42" rx="26" ry="30" fill="none" class="kit-head-ring"></ellipse>
+        <?php endif; ?>
+
+        <!-- Prop -->
         <g id="kitPropStage">
             <?php foreach (kitPropCatalog() as $p): ?>
             <g class="kit-prop-look" data-kit-prop-id="<?= e($p['id']) ?>"
@@ -442,10 +479,6 @@ function renderKitDollSvg(?string $jerseyId, ?string $shortsId, ?string $avatarU
     <?php
 }
 
-/**
- * Carte lecture-seule (profil public) : montre la tenue du joueur, sans
- * édition. Un lien "Habiller mon joueur" apparaît si c'est son propre profil.
- */
 function renderKitDollCard(array $user, bool $isSelf): void
 {
     $jerseyId = userKitJersey($user);
@@ -468,12 +501,6 @@ function renderKitDollCard(array $user, bool $isSelf): void
     <?php
 }
 
-/**
- * Bouton "Habiller mon joueur" (à placer près de l'avatar) + la cabine
- * d'essayage (dialog plein écran, masquée par défaut). Le mannequin est
- * rendu déjà dans le bon état (pas de flash JS au chargement) ; le script
- * `kit.js` gère ensuite les clics et l'enregistrement.
- */
 function renderKitButtonAndDialog(array $user): void
 {
     $jerseyId = userKitJersey($user);
@@ -501,9 +528,10 @@ function renderKitButtonAndDialog(array $user): void
                         <h3 class="kit-picker-title"><?= e(t('kit.section_jersey')) ?></h3>
                         <div class="kit-swatches" id="kitJerseySwatches" role="group" aria-label="<?= e(t('kit.section_jersey')) ?>">
                             <button type="button" class="kit-swatch kit-swatch-none<?= $jerseyId === null ? ' is-active' : '' ?>"
-                                    data-kit-id="" data-kit-fill="<?= e(KIT_SKIN_COLOR) ?>" data-kit-trim="0"
+                                    data-kit-id="" data-kit-fill="<?= e(KIT_PLAIN_JERSEY_FILL) ?>" data-kit-trim="0"
                                     aria-pressed="<?= $jerseyId === null ? 'true' : 'false' ?>" title="<?= e(t('kit.item.none_jersey')) ?>">
-                                <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                                <span class="kit-swatch-chip" style="background: <?= e(KIT_PLAIN_JERSEY_FILL) ?>;"></span>
+                                <span class="sr-only"><?= e(t('kit.item.none_jersey')) ?></span>
                             </button>
                             <?php foreach (kitJerseyCatalog() as $j): ?>
                             <button type="button" class="kit-swatch<?= $jerseyId === $j['id'] ? ' is-active' : '' ?>"
@@ -520,11 +548,6 @@ function renderKitButtonAndDialog(array $user): void
                     <div class="kit-picker-group">
                         <h3 class="kit-picker-title"><?= e(t('kit.section_shorts')) ?></h3>
                         <div class="kit-swatches" id="kitShortsSwatches" role="group" aria-label="<?= e(t('kit.section_shorts')) ?>">
-                            <button type="button" class="kit-swatch kit-swatch-none<?= $shortsId === null ? ' is-active' : '' ?>"
-                                    data-kit-id="" data-kit-fill="<?= e(KIT_UNDERWEAR_COLOR) ?>"
-                                    aria-pressed="<?= $shortsId === null ? 'true' : 'false' ?>" title="<?= e(t('kit.item.none_shorts')) ?>">
-                                <i class="fa-solid fa-ban" aria-hidden="true"></i>
-                            </button>
                             <?php foreach (kitShortsCatalog() as $s): ?>
                             <button type="button" class="kit-swatch<?= $shortsId === $s['id'] ? ' is-active' : '' ?>"
                                     data-kit-id="<?= e($s['id']) ?>" data-kit-fill="<?= e($s['fill']) ?>"

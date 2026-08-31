@@ -79,7 +79,9 @@ function formatActivityLine(array $item): string
 
     return match ($kind) {
         'win'       => t('feed.win', ['name' => $name, 'n' => $pts, 'match' => $match]),
-        'miss'      => t('feed.miss', ['name' => $name, 'pick' => $pick, 'match' => $match]),
+        'miss'      => $pts < 0
+            ? t('feed.miss_pts', ['name' => $name, 'n' => abs($pts), 'pick' => $pick, 'match' => $match])
+            : t('feed.miss', ['name' => $name, 'pick' => $pick, 'match' => $match]),
         'void'      => t('feed.void', ['name' => $name, 'match' => $match]),
         'postponed' => t('feed.postponed', ['name' => $name, 'match' => $match]),
         default     => t('feed.pick', ['name' => $name, 'pick' => $pick, 'match' => $match]),

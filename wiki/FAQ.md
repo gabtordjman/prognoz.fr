@@ -16,6 +16,12 @@ Redéploie les deux. Vide le cache navigateur si besoin.
 
 ---
 
+## J’ai perdu des points alors que j’avais faux
+
+C’est voulu : score exact **−2**, buteur / équipe fav **−1**. Le vainqueur (1x2) ne retire rien (série à zéro seulement). Le total et la saison ne passent jamais sous 0. Voir l’aide points sur le site.
+
+---
+
 ## Un match est « reporté » alors qu’il s’est joué
 
 Souvent : score API arrivé trop tard, ou mauvais match API.  

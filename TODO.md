@@ -7,7 +7,8 @@
 
 [x] Augmenter la taille des noms des équipes
 
-[ ] Une fois que les paris sont faits, le site doit actualiser pour mettre en évidence en haut les paris non faits. Cela permet de les voir directement, et eviter de scroller.
+[x] Une fois que les paris sont faits, le site doit actualiser pour mettre en évidence en haut les paris non faits. Cela permet de les voir directement, et eviter de scroller.
 
-[ ] Faire un système de perte de points. les utilisateurs parient sur tout et n'importe quoi et espèrent que ça passe. les scores deviennent très élevés rapidement avec le multiplicateur. instaurer cette fonctionnalité deviendrai mieux.
+[x] Faire un système de perte de points. les utilisateurs parient sur tout et n'importe quoi et espèrent que ça passe. les scores deviennent très élevés rapidement avec le multiplicateur. instaurer cette fonctionnalité deviendrai mieux.
 En fonction des points possibles detre récupérés en fonction du match, score exact où équipe préferé. instaurer ce barème. Surtout au niveau du score exact, car c'est fait au pif. Faire en sorte que cette fonctionnalité n'est pas pénalisante au point de tout perdre.
+Barème : 1x2 = 0 (reset série) · buteur −1 · fav −1 · score exact −2 · plancher à 0.

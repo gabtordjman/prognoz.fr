@@ -14,16 +14,19 @@ Le serveur web ne doit servir que le dossier **`public/`**. Le reste (`app/`, `.
 
 ## Contenu
 
-- Compte, photo, bio, sport favori
-- Matchs (The Odds API) : 1/N/2, score exact, buteur
-- Ticket de pronos + points / séries / saisons
+**Cœur**
+- Matchs (The Odds API) : 1/N/2, score exact, buteur, équipe préférée
+- Ticket de pronos + points / séries / saisons / pénalités soft
 - Communautés, amis, chat chiffré
-- Événements site (×points, thème, bannière)
-- Série 1x2 : ×1.5 / ×2 / ×2.5 selon la longueur
-- Annonces admin (micro + pastille)
-- Notifications push
-- Admin (scores, sync, événements, annonces…)
-- Boutique de personnalisation de l'utilisateur
+- Classements saison
+
+**Autour (Mon espace)**
+- Compte, photo, bio, sport favori
+- Boutique + tenue de joueur (cosmétiques)
+
+**Ops**
+- Événements site, annonces admin, notifications push
+- Admin web (scores, sync, événements…)
 
 ---
 
@@ -100,12 +103,11 @@ Ou `git pull` depuis Gitea.
 ```
 app/            PHP métier
 public/         Racine web
-db/migrations/  SQL incrémental
+db/migrations/  SQL incrémental (source de vérité)
 wiki/           Pages pour le Wiki Gitea
 docs/           Notes lab / API
 lang/           FR / EN
 tools/          CLI (sync, vapid, diagnose…)
-db/migrations/  SQL (jusqu’à 009_site_announcements)
 ```
 
 Ne pas versionner : `.env`, caches, uploads utilisateurs.

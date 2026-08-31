@@ -205,30 +205,41 @@ function renderHomeHighlightBanner($list = null): void
         return;
     }
 
-    // Piste doublée pour un défilement sans trou
-    $track = array_merge($items, $items);
-    $duration = max(18, count($items) * 10);
+    // Deux passes identiques (items + séparateur) pour boucle fluide avec repère visuel.
+    $halfHtml = static function (array $items): void {
+        foreach ($items as $it) {
+            ?>
+            <span class="perf-highlight-item">
+                <strong class="perf-highlight-pseudo"><?php
+                    if (function_exists('renderCosmeticPseudo')) {
+                        renderCosmeticPseudo((string) $it['pseudo'], (string) ($it['name_style'] ?? ''));
+                    } else {
+                        echo e((string) $it['pseudo']);
+                    }
+                ?></strong>
+                <span class="perf-highlight-stats"><?= e($it['stats']) ?></span>
+            </span>
+            <?php
+        }
+        ?>
+        <span class="perf-highlight-gap" aria-hidden="true">
+            <span class="perf-highlight-gap-line"></span>
+            <span class="perf-highlight-gap-mark">◆</span>
+            <span class="perf-highlight-gap-line"></span>
+        </span>
+        <?php
+    };
+    $duration = max(20, count($items) * 12);
     ?>
     <aside class="perf-highlight" role="status" aria-label="<?= e(t('home.highlight_title')) ?>">
         <div class="perf-highlight-rail">
             <span class="perf-highlight-badge">
-                <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                <i class="fa-solid fa-star" aria-hidden="true"></i>
                 <?= e(t('home.highlight_title')) ?>
             </span>
             <div class="perf-highlight-viewport">
                 <div class="perf-highlight-track" style="--perf-duration: <?= (int) $duration ?>s">
-                    <?php foreach ($track as $it): ?>
-                        <span class="perf-highlight-item">
-                            <strong class="perf-highlight-pseudo"><?php
-                                if (function_exists('renderCosmeticPseudo')) {
-                                    renderCosmeticPseudo((string) $it['pseudo'], (string) ($it['name_style'] ?? ''));
-                                } else {
-                                    echo e((string) $it['pseudo']);
-                                }
-                            ?></strong>
-                            <span class="perf-highlight-stats"><?= e($it['stats']) ?></span>
-                        </span>
-                    <?php endforeach; ?>
+                    <?php $halfHtml($items); $halfHtml($items); ?>
                 </div>
             </div>
         </div>

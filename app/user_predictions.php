@@ -179,6 +179,18 @@ function predictionHistoryPresentation(array $h): array
         ];
     }
 
+    $lostPts = (int) ($h['points_gagnes'] ?? 0);
+    if ($lostPts < 0) {
+        $n = abs($lostPts);
+
+        return [
+            'item_class'   => 'loss',
+            'badge_class'  => 'loss',
+            'badge_label'  => '−' . $n . ' ' . ($n > 1 ? t('common.pts') : t('common.pt')),
+            'result'       => formatMatchResultLine($h),
+        ];
+    }
+
     return [
         'item_class'   => 'loss',
         'badge_class'  => 'loss',

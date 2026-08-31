@@ -30,16 +30,26 @@ foreach (sportCategories() as $cat) {
     }
 }
 
-$totalAffichés = 0;
-foreach ($matchsByCategoryDisplay as $catMatchs) {
-    $totalAffichés += count($catMatchs);
-}
-
 $predictions = getUserPredictions($pdo, $user ? (int) $user['id'] : null, $allMarketIds);
 $flashes = getFlashes();
 $userFavTeams = $user ? userFavoriteTeams($user) : [];
 $userFavTeam = $userFavTeams[0] ?? null;
 $homeHighlights = fetchHomeHighlights($pdo);
+
+if ($user) {
+    foreach (sportCategories() as $cat) {
+        $matchsByCategoryDisplay[$cat] = prioritizeUnfinishedMatches(
+            $matchsByCategoryDisplay[$cat],
+            $predictions,
+            $userFavTeams
+        );
+    }
+}
+
+$totalAffichés = 0;
+foreach ($matchsByCategoryDisplay as $catMatchs) {
+    $totalAffichés += count($catMatchs);
+}
 
 $marketsMeta = [];
 foreach ($matchs as $m) {
@@ -99,7 +109,7 @@ releaseSession();
                 <div class="hero-scene-felt"></div>
                 <div class="hero-scene-ball hero-scene-ball--foot"><i class="fa-solid fa-futbol"></i></div>
                 <div class="hero-scene-ball hero-scene-ball--basket"><i class="fa-solid fa-basketball"></i></div>
-                <div class="hero-scene-ball hero-scene-ball--tennis"><i class="fa-solid fa-table-tennis-paddle-ball"></i></div>
+                <div class="hero-scene-ball hero-scene-ball--tennis"><?php renderSportIcon('tennis-racket'); ?></div>
                 <div class="hero-scene-chalk">1 · N · 2</div>
             </div>
         </div>
@@ -151,7 +161,7 @@ releaseSession();
                         $count = count($matchsByCategoryDisplay[$cat]);
                     ?>
                     <button type="button" class="sport-cat-btn" data-cat="<?= e($cat) ?>">
-                        <i class="fa-solid <?= e($ui['icon']) ?>"></i> <?= e($ui['label']) ?>
+                        <?php renderSportIcon($ui['icon']); ?> <?= e($ui['label']) ?>
                         <span class="sport-cat-count"><?= $count ?></span>
                     </button>
                     <?php endforeach; ?>
@@ -171,7 +181,7 @@ releaseSession();
                 <section class="sport-section" data-cat-section="<?= e($cat) ?>">
                     <header class="sport-section-head">
                         <h2 class="sport-section-title match-cat-<?= e($cat) ?>">
-                            <i class="fa-solid <?= e($ui['icon']) ?>"></i>
+                            <?php renderSportIcon($ui['icon']); ?>
                             <?= e($ui['label']) ?>
                         </h2>
                         <span class="sport-section-meta"><?= e(t('home.matches_count', ['n' => count($catMatchs), 'max' => (int) MATCHS_PAR_CATEGORIE])) ?></span>

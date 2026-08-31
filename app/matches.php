@@ -78,10 +78,23 @@ function sportCategoryUi(string $category): array
         case 'basketball':
             return ['label' => t('sport.basketball'), 'icon' => 'fa-basketball'];
         case 'tennis':
-            return ['label' => t('sport.tennis'), 'icon' => 'fa-table-tennis-paddle-ball'];
+            // Icône custom (raquette) — FA free n’a que le ping-pong.
+            return ['label' => t('sport.tennis'), 'icon' => 'tennis-racket'];
         default:
             return ['label' => t('sport.generic'), 'icon' => 'fa-trophy'];
     }
+}
+
+/** Icône sport (FA ou raquette tennis SVG). */
+function renderSportIcon(string $icon, string $extraClass = ''): void
+{
+    $extra = $extraClass !== '' ? ' ' . $extraClass : '';
+    if ($icon === 'tennis-racket') {
+        echo '<span class="icon-tennis-racket' . e($extra) . '" aria-hidden="true"></span>';
+
+        return;
+    }
+    echo '<i class="fa-solid ' . e($icon) . e($extra) . '" aria-hidden="true"></i>';
 }
 
 /** Import équilibré : N sports max par groupe (Tennis, Basket, Foot). */
@@ -2965,6 +2978,100 @@ function sortMatchesForDisplay(array &$matches): void
         }
         return strcmp((string) ($a['date_match'] ?? ''), (string) ($b['date_match'] ?? ''));
     });
+}
+
+/**
+ * IDs des marchés encore jouables / visibles pour un utilisateur sur un match.
+ *
+ * @param list<string> $userFavTeams
+ * @return list<int>
+ */
+function matchVisibleOpenMarketIds(array $m, array $userFavTeams = []): array
+{
+    if (utcDatetimeTimestamp((string) ($m['date_match'] ?? '')) <= time()) {
+        return [];
+    }
+
+    $sport = (string) ($m['sport'] ?? '');
+    $isSoccer = isSoccerSport($sport);
+    $ids = [];
+    $market1x2 = null;
+    $marketScore = null;
+    $marketButeur = null;
+    $marketFav = null;
+    foreach ($m['markets'] ?? [] as $mk) {
+        $type = (string) ($mk['type'] ?? '');
+        if ($type === '1x2') {
+            $market1x2 = $mk;
+        } elseif ($type === 'score_exact') {
+            $marketScore = $mk;
+        } elseif ($type === 'buteur') {
+            $marketButeur = $mk;
+        } elseif ($type === 'fav_team') {
+            $marketFav = $mk;
+        }
+    }
+    if ($market1x2) {
+        $ids[] = (int) $market1x2['id'];
+    }
+    if ($marketFav && $userFavTeams !== [] && function_exists('matchFavoriteTeamsInMatch')) {
+        if (matchFavoriteTeamsInMatch($m, $userFavTeams) !== []) {
+            $ids[] = (int) $marketFav['id'];
+        }
+    }
+    if ($isSoccer && $marketScore) {
+        $ids[] = (int) $marketScore['id'];
+    }
+    if (
+        $isSoccer
+        && $marketButeur
+        && soccerSportHasScorerOdds($sport)
+        && !empty($marketButeur['options'])
+    ) {
+        $ids[] = (int) $marketButeur['id'];
+    }
+
+    return $ids;
+}
+
+/**
+ * True si au moins un marché visible n’a pas encore de prono validé.
+ *
+ * @param array<int|string, mixed> $predictions
+ * @param list<string> $userFavTeams
+ */
+function matchHasUnfinishedPicks(array $m, array $predictions, array $userFavTeams = []): bool
+{
+    foreach (matchVisibleOpenMarketIds($m, $userFavTeams) as $mid) {
+        if (empty($predictions[$mid]) && empty($predictions[(string) $mid])) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Non faits d’abord, ordre relatif conservé dans chaque groupe.
+ *
+ * @param list<array<string,mixed>> $matches
+ * @param array<int|string, mixed> $predictions
+ * @param list<string> $userFavTeams
+ * @return list<array<string,mixed>>
+ */
+function prioritizeUnfinishedMatches(array $matches, array $predictions, array $userFavTeams = []): array
+{
+    $open = [];
+    $done = [];
+    foreach ($matches as $m) {
+        if (matchHasUnfinishedPicks($m, $predictions, $userFavTeams)) {
+            $open[] = $m;
+        } else {
+            $done[] = $m;
+        }
+    }
+
+    return array_merge($open, $done);
 }
 
 function getUpcomingMatchesByCategory(PDO $pdo, ?int $perCategory = null): array

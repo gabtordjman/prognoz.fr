@@ -109,25 +109,64 @@ function userCurrentSerie(PDO $pdo, int $userId): int
     return $row ? max(0, (int) $row['serie_en_cours']) : 0;
 }
 
+/** Points perdus si le marché est raté (valeur positive ; 0 = pas de débit). */
+function marketPenalty(string $type): int
+{
+    switch ($type) {
+        case 'score_exact':
+            return defined('PENALTY_SCORE_EXACT') ? max(0, (int) PENALTY_SCORE_EXACT) : 2;
+        case 'buteur':
+            return defined('PENALTY_BUTEUR') ? max(0, (int) PENALTY_BUTEUR) : 1;
+        case 'fav_team':
+            return defined('PENALTY_FAV_TEAM') ? max(0, (int) PENALTY_FAV_TEAM) : 1;
+        case '1x2':
+            return defined('PENALTY_1X2') ? max(0, (int) PENALTY_1X2) : 0;
+        default:
+            return 0;
+    }
+}
+
+/**
+ * @param int $points Gain positif si correct ; perte négative ou 0 si incorrect
+ */
 function applyPredictionResult(PDO $pdo, array $pred, bool $correct, int $points, bool $affectsSerie): void
 {
     $statut = $correct ? 'correct' : 'incorrect';
+    $stored = $correct ? max(0, $points) : min(0, $points);
     ensurePredictionHistorySchema($pdo);
     $pdo->prepare(
         'UPDATE predictions SET statut = ?, points_gagnes = ?, resolved_at = UTC_TIMESTAMP() WHERE id = ?'
-    )->execute([$statut, $correct ? $points : 0, $pred['id']]);
+    )->execute([$statut, $stored, $pred['id']]);
 
-    if ($correct) {
+    if ($correct && $stored > 0) {
         $pdo->prepare(
             'UPDATE users SET points_totaux = points_totaux + ? WHERE id = ?'
-        )->execute([$points, $pred['user_id']]);
-        addSeasonPoints($pdo, (int) $pred['user_id'], $points);
+        )->execute([$stored, $pred['user_id']]);
+        addSeasonPoints($pdo, (int) $pred['user_id'], $stored);
         if ($affectsSerie) {
             $pdo->prepare(
                 'UPDATE users SET serie_en_cours = serie_en_cours + 1 WHERE id = ?'
             )->execute([$pred['user_id']]);
         }
-    } elseif ($affectsSerie) {
+    } elseif (!$correct && $stored < 0) {
+        $pdo->prepare(
+            'UPDATE users SET points_totaux = GREATEST(0, points_totaux + ?) WHERE id = ?'
+        )->execute([$stored, $pred['user_id']]);
+        addSeasonPoints($pdo, (int) $pred['user_id'], $stored);
+        if ($affectsSerie) {
+            $shield = false;
+            if (function_exists('eventHasStreakShield')) {
+                try {
+                    $shield = eventHasStreakShield($pdo);
+                } catch (Throwable $e) {
+                    $shield = false;
+                }
+            }
+            if (!$shield) {
+                $pdo->prepare('UPDATE users SET serie_en_cours = 0 WHERE id = ?')->execute([$pred['user_id']]);
+            }
+        }
+    } elseif (!$correct && $affectsSerie) {
         $shield = false;
         if (function_exists('eventHasStreakShield')) {
             try {
@@ -193,6 +232,9 @@ function scoreMarket(PDO $pdo, array $match, array $market): void
             $award = 0;
             if ($correct) {
                 $award = (int) max(0, (int) round($points * $mult * $eventMult));
+            } else {
+                $pen = marketPenalty('fav_team');
+                $award = $pen > 0 ? -$pen : 0;
             }
             applyPredictionResult($pdo, $pred, $correct, $award, false);
             if ($correct) {
@@ -254,8 +296,9 @@ function scoreMarket(PDO $pdo, array $match, array $market): void
 
     foreach ($predictions as $pred) {
         $correct = ($pred['reponse'] === $result);
-        $award = $points;
+        $award = 0;
         if ($correct) {
+            $award = $points;
             $streakMult = 1.0;
             if ($affectsSerie) {
                 $uid = (int) $pred['user_id'];
@@ -266,6 +309,9 @@ function scoreMarket(PDO $pdo, array $match, array $market): void
             if ($combined > 1.0) {
                 $award = (int) max(0, (int) round($points * $combined));
             }
+        } else {
+            $pen = marketPenalty($type);
+            $award = $pen > 0 ? -$pen : 0;
         }
         applyPredictionResult($pdo, $pred, $correct, $award, $affectsSerie);
         if ($correct) {

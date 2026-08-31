@@ -35,7 +35,6 @@ Fallbacks critiques récents : voir `i18nCriticalFallbacks()` dans `app/i18n.php
 
 - CSS principal : `public/assets/css/style.css`
 - Thème rétro : `retro.css` (navigateurs anciens / mode rétro)
-- Admin 5250 : `ibmi.css` + `ibmi.js` (poste IBM i `/admin/ibmi/`)
 - JS : `public/assets/js/` (cache-bust via `assetUrl()` = `?v=filemtime`)
 - Design : papier / feutre / bois / laiton — éviter les looks « dashboard violet »
 
@@ -43,9 +42,11 @@ Fallbacks critiques récents : voir `i18nCriticalFallbacks()` dans `app/i18n.php
 
 ## Points & événements
 
-- Barème dans la config / `app/scoring.php`
-- Multiplicateur d’événement branché au scoring quand un événement **publié** est actif
+- Gains / pénalités : constantes `POINTS_*` et `PENALTY_*` dans `app/config.php`
+- Attribution : `app/scoring.php` (`marketPenalty()`, `applyPredictionResult()`)
+- Multiplicateur d’événement branché au scoring quand un événement **publié** est actif (gains seulement, pas les pertes)
 - Bouclier de série, etc. : même fichier + table événements
+- Tenue joueur : `app/kit.php` + `public/assets/js/kit.js`
 
 ---
 

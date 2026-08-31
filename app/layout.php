@@ -200,7 +200,6 @@ function layoutTopbar(?array $user, string $active = ''): void
                         </a>
                         <a href="<?= e(url('account/friends.php')) ?>" class="nav-link<?= $active === 'friends' ? ' active' : '' ?>"><?= e(t('nav.friends')) ?></a>
                         <a href="<?= e(url('communities/index.php')) ?>" class="nav-link<?= $active === 'communities' ? ' active' : '' ?>"><?= e(t('nav.communities')) ?></a>
-                        <a href="<?= e(url('account/shop.php#look')) ?>" class="nav-link<?= $active === 'shop' ? ' active' : '' ?>"><?= e(t('nav.shop')) ?></a>
                     <?php else: ?>
                         <a href="<?= e(url('legal/comment-ca-marche.php')) ?>" class="nav-link"><?= e(t('nav.howto')) ?></a>
                     <?php endif; ?>
@@ -375,9 +374,18 @@ function layoutPointsHelp(): void
             <h3 class="points-help-subtitle"><?= e(t('points.subtitle_how')) ?></h3>
             <ul class="points-help-list points-help-list-compact">
                 <li><strong>+<?= (int) POINTS_1X2 ?> <?= e(t('common.pt')) ?></strong> — <?= e(t('points.earn_1x2')) ?></li>
-                <li><strong>+<?= (int) POINTS_SCORE_EXACT ?> <?= e(t('common.pts')) ?></strong> — <?= e(t('points.earn_score')) ?></li>
-                <li><strong>+<?= (int) (POINTS_FAV_TEAM * FAV_TEAM_WIN_MULTIPLIER) ?> <?= e(t('common.pts')) ?></strong> — <?= e(t('points.earn_fav')) ?></li>
+                <li><strong>+<?= (int) POINTS_SCORE_EXACT ?> <?= e(t('common.pts')) ?></strong> — <?= e(t('points.earn_score_win')) ?></li>
+                <li><strong>+<?= (int) (POINTS_FAV_TEAM * FAV_TEAM_WIN_MULTIPLIER) ?> <?= e(t('common.pts')) ?></strong> — <?= e(t('points.earn_fav_win')) ?></li>
+                <li><strong>+<?= (int) POINTS_BUTEUR ?> <?= e(t('common.pts')) ?></strong> — <?= e(t('points.earn_buteur_win')) ?></li>
             </ul>
+            <h3 class="points-help-subtitle"><?= e(t('points.subtitle_penalties')) ?></h3>
+            <ul class="points-help-list points-help-list-compact">
+                <li><strong>−<?= (int) PENALTY_SCORE_EXACT ?> <?= e(t('common.pts')) ?></strong> — <?= e(t('points.lose_score')) ?></li>
+                <li><strong>−<?= (int) PENALTY_BUTEUR ?> <?= e(t('common.pt')) ?></strong> — <?= e(t('points.lose_buteur')) ?></li>
+                <li><strong>−<?= (int) PENALTY_FAV_TEAM ?> <?= e(t('common.pt')) ?></strong> — <?= e(t('points.lose_fav')) ?></li>
+                <li><strong>0</strong> — <?= e(t('points.lose_1x2')) ?></li>
+            </ul>
+            <p class="points-help-note"><?= e(t('points.penalty_note')) ?></p>
             <p class="points-help-foot"><?= e(t('points.foot')) ?></p>
         </div>
     </div>

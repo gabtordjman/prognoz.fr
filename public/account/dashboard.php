@@ -178,17 +178,20 @@ while (count($currentFavNationals) < (int) FAV_TEAMS_MAX) {
             </div>
         </div>
         <nav class="dash-links" aria-label="<?= e(t('dash.title')) ?>">
+            <a href="<?= e(url('index.php')) ?>" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-futbol" aria-hidden="true"></i> <?= e(t('nav.matches')) ?>
+            </a>
             <a href="<?= e(url('account/friends.php')) ?>" class="btn btn-ghost btn-sm">
                 <i class="fa-solid fa-user-group" aria-hidden="true"></i> <?= e(t('dash.my_friends')) ?>
             </a>
             <a href="<?= e(userProfileUrl($userId)) ?>" class="btn btn-ghost btn-sm">
                 <i class="fa-solid fa-id-card" aria-hidden="true"></i> <?= e(t('dash.profile')) ?>
             </a>
-            <a href="<?= e(url('account/shop.php#look')) ?>" class="btn btn-ghost btn-sm">
-                <i class="fa-solid fa-store" aria-hidden="true"></i> <?= e(t('nav.shop')) ?>
-            </a>
             <a href="<?= e(url('account/settings.php')) ?>" class="btn btn-ghost btn-sm">
                 <i class="fa-solid fa-gear" aria-hidden="true"></i> <?= e(t('dash.settings')) ?>
+            </a>
+            <a href="<?= e(url('account/shop.php#look')) ?>" class="btn btn-ghost btn-sm">
+                <i class="fa-solid fa-store" aria-hidden="true"></i> <?= e(t('nav.shop')) ?>
             </a>
             <?php renderKitButtonAndDialog($user); ?>
         </nav>

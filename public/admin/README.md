@@ -34,12 +34,3 @@ php tools/generate_admin_credentials.php
 ```
 
 URL : `https://…/admin/?s=SLUG`
-
-### Poste 5250
-
-Look IBM i (phosphore vert), parité avec ce panel + dossier joueur (bio, dernière connexion).
-
-- URL : `https://…/admin/ibmi/?s=SLUG` (lien **Poste 5250** dans la colonne gauche)
-- SSH : `php tools/ops_terminal.php`
-
-Commandes : `WRKUSR`, `DSPUSR n`, `WRKSCR`, `GO OPS`, `GO MAIN`. F3 / F5 / F12. Sous-fichiers : colonne Opt (2=points, 4=désactiver, 5=afficher, …).
