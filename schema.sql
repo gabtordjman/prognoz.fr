@@ -3,8 +3,8 @@
 -- Schéma MySQL v1 — base de discussion, à affiner ensemble
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS pronosocial CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE pronosocial;
+CREATE DATABASE IF NOT EXISTS prognoz CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE prognoz;
 
 -- ------------------------------------------------------------
 -- Comptes utilisateurs (joueurs, PAS des gérants — l'admin passe
