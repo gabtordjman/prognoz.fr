@@ -333,7 +333,7 @@ return [
     'home.hero_title' => 'Le pari du bar, sans bookmaker',
     'home.highlight_title' => 'Les as',
     'home.highlight_msg' => '{pseudo} · {stats}',
-    'home.highlight_pts' => '+{n} pts / 24 h',
+    'home.highlight_pts' => '+{n} pts sur 24 h',
     'home.highlight_streak' => 'série ×{n}',
     'home.highlight_dot' => ' · ',
     'home.matches_count' => '{n} / {max} matchs',

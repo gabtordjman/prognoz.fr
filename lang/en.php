@@ -333,7 +333,7 @@ return [
     'home.hero_title' => 'Bar bets with friends — no bookmaker',
     'home.highlight_title' => 'Aces',
     'home.highlight_msg' => '{pseudo} · {stats}',
-    'home.highlight_pts' => '+{n} pts / 24 h',
+    'home.highlight_pts' => '+{n} pts in 24 h',
     'home.highlight_streak' => 'streak ×{n}',
     'home.highlight_dot' => ' · ',
     'home.matches_count' => '{n} / {max} matches',
