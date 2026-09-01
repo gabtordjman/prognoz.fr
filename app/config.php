@@ -35,11 +35,15 @@ define('FAV_TEAM_WIN_MULTIPLIER', 2);
 /** Nombre max de sélections nationales préférées (en plus du club). */
 define('FAV_TEAMS_MAX', 3);
 
-/** Pénalités sur prono raté (sans multiplicateur streak/event). 1x2 = 0 (reset série seulement). */
+/**
+ * Pénalités sur prono raté (valeur positive = pts retirés).
+ * Tout à 0 : les marchés durs (score exact, buteur…) sont des bonus purs.
+ * Un 1x2 raté reset la série seulement — il ne retire jamais de points.
+ */
 define('PENALTY_1X2', 0);
-define('PENALTY_BUTEUR', 1);
-define('PENALTY_FAV_TEAM', 1);
-define('PENALTY_SCORE_EXACT', 2);
+define('PENALTY_BUTEUR', 0);
+define('PENALTY_FAV_TEAM', 0);
+define('PENALTY_SCORE_EXACT', 0);
 
 /** Seuil points (24 h) pour le bandeau « perf » sur l’accueil. */
 define('HIGHLIGHT_POINTS_24H', 50);

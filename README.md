@@ -16,7 +16,7 @@ Le serveur web ne doit servir que le dossier **`public/`**. Le reste (`app/`, `.
 
 **Cœur**
 - Matchs (The Odds API) : 1/N/2, score exact, buteur, équipe préférée
-- Ticket de pronos + points / séries / saisons / pénalités soft
+- Ticket de pronos + points / séries / saisons (marchés durs = bonus, sans pénalité)
 - Communautés, amis, chat chiffré
 - Classements saison
 

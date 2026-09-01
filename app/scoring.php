@@ -114,11 +114,11 @@ function marketPenalty(string $type): int
 {
     switch ($type) {
         case 'score_exact':
-            return defined('PENALTY_SCORE_EXACT') ? max(0, (int) PENALTY_SCORE_EXACT) : 2;
+            return defined('PENALTY_SCORE_EXACT') ? max(0, (int) PENALTY_SCORE_EXACT) : 0;
         case 'buteur':
-            return defined('PENALTY_BUTEUR') ? max(0, (int) PENALTY_BUTEUR) : 1;
+            return defined('PENALTY_BUTEUR') ? max(0, (int) PENALTY_BUTEUR) : 0;
         case 'fav_team':
-            return defined('PENALTY_FAV_TEAM') ? max(0, (int) PENALTY_FAV_TEAM) : 1;
+            return defined('PENALTY_FAV_TEAM') ? max(0, (int) PENALTY_FAV_TEAM) : 0;
         case '1x2':
             return defined('PENALTY_1X2') ? max(0, (int) PENALTY_1X2) : 0;
         default:

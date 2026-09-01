@@ -18,7 +18,7 @@ Redéploie les deux. Vide le cache navigateur si besoin.
 
 ## J’ai perdu des points alors que j’avais faux
 
-C’est voulu : score exact **−2**, buteur / équipe fav **−1**. Le vainqueur (1x2) ne retire rien (série à zéro seulement). Le total et la saison ne passent jamais sous 0. Voir l’aide points sur le site.
+Aucun marché ne retire de points : score exact, buteur et fav sont des **bonus** (tu gagnes ou 0). Un vainqueur (1x2) raté remet seulement la série à zéro. Total et saison ne passent jamais sous 0. Voir l’aide points sur le site.
 
 ---
 

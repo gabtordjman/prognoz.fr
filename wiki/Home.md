@@ -36,11 +36,11 @@ Pas de paris d’argent : uniquement des **points**, des **classements** et des 
 | Marché | Si gagné | Si raté |
 |--------|----------|---------|
 | Vainqueur (1x2) | +1 (+ série / événement) | 0 pt (série à zéro) |
-| Score exact | +3 | **−2** |
-| Buteur | +2 | **−1** |
-| Équipe préférée | +4 | **−1** |
+| Score exact | +3 | 0 (bonus) |
+| Buteur | +2 | 0 (bonus) |
+| Équipe préférée | +4 | 0 (bonus) |
 
-Les pertes ne sont jamais multipliées et ne descendent jamais sous **0** (total + saison).  
+Aucun marché ne retire de points : score exact / buteur / fav sont des **bonus**. Seule la série tombe à zéro sur un 1x2 perdu. Total et saison ne descendent jamais sous **0**.  
 Détail aussi dans l’aide « ? » points sur le site et *Comment ça marche*.
 
 ## En deux mots (technique)

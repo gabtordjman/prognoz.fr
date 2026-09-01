@@ -200,6 +200,7 @@ function layoutTopbar(?array $user, string $active = ''): void
                         </a>
                         <a href="<?= e(url('account/friends.php')) ?>" class="nav-link<?= $active === 'friends' ? ' active' : '' ?>"><?= e(t('nav.friends')) ?></a>
                         <a href="<?= e(url('communities/index.php')) ?>" class="nav-link<?= $active === 'communities' ? ' active' : '' ?>"><?= e(t('nav.communities')) ?></a>
+                        <a href="<?= e(url('account/shop.php')) ?>" class="nav-link<?= $active === 'shop' ? ' active' : '' ?>"><?= e(t('nav.shop')) ?></a>
                     <?php else: ?>
                         <a href="<?= e(url('legal/comment-ca-marche.php')) ?>" class="nav-link"><?= e(t('nav.howto')) ?></a>
                     <?php endif; ?>
@@ -379,13 +380,29 @@ function layoutPointsHelp(): void
                 <li><strong>+<?= (int) POINTS_BUTEUR ?> <?= e(t('common.pts')) ?></strong> — <?= e(t('points.earn_buteur_win')) ?></li>
             </ul>
             <h3 class="points-help-subtitle"><?= e(t('points.subtitle_penalties')) ?></h3>
+            <?php
+            $anyPenalty = ((int) PENALTY_SCORE_EXACT + (int) PENALTY_BUTEUR + (int) PENALTY_FAV_TEAM + (int) PENALTY_1X2) > 0;
+            ?>
+            <?php if (!$anyPenalty): ?>
+            <p class="points-help-note"><?= e(t('points.penalty_note')) ?></p>
             <ul class="points-help-list points-help-list-compact">
-                <li><strong>−<?= (int) PENALTY_SCORE_EXACT ?> <?= e(t('common.pts')) ?></strong> — <?= e(t('points.lose_score')) ?></li>
+                <li><strong>0</strong> — <?= e(t('points.lose_1x2')) ?></li>
+            </ul>
+            <?php else: ?>
+            <ul class="points-help-list points-help-list-compact">
+                <?php if ((int) PENALTY_SCORE_EXACT > 0): ?>
+                <li><strong>−<?= (int) PENALTY_SCORE_EXACT ?> <?= e(t('common.pt')) ?></strong> — <?= e(t('points.lose_score')) ?></li>
+                <?php endif; ?>
+                <?php if ((int) PENALTY_BUTEUR > 0): ?>
                 <li><strong>−<?= (int) PENALTY_BUTEUR ?> <?= e(t('common.pt')) ?></strong> — <?= e(t('points.lose_buteur')) ?></li>
+                <?php endif; ?>
+                <?php if ((int) PENALTY_FAV_TEAM > 0): ?>
                 <li><strong>−<?= (int) PENALTY_FAV_TEAM ?> <?= e(t('common.pt')) ?></strong> — <?= e(t('points.lose_fav')) ?></li>
+                <?php endif; ?>
                 <li><strong>0</strong> — <?= e(t('points.lose_1x2')) ?></li>
             </ul>
             <p class="points-help-note"><?= e(t('points.penalty_note')) ?></p>
+            <?php endif; ?>
             <p class="points-help-foot"><?= e(t('points.foot')) ?></p>
         </div>
     </div>
