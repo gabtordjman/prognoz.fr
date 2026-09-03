@@ -64,14 +64,13 @@ a:visited { color: #1e5035; }
 .topbar-brand {
     display: inline-block;
     color: #e4d9c4 !important;
-    font-family: Arial Black, Arial, Helvetica, sans-serif;
-    font-size: 24px;
-    font-weight: bold;
-    letter-spacing: 2px;
     text-decoration: none !important;
-    text-transform: uppercase;
-    text-shadow: 1px 1px 0 #2a1a10;
     padding: 2px 0 4px;
+}
+.topbar-brand .brand-mark {
+    height: 26px;
+    width: auto;
+    vertical-align: middle;
 }
 
 .topbar-nav { margin: 4px 0 0; padding: 0; text-align: center; }
@@ -1202,7 +1201,7 @@ input[type="number"], input[type="search"], select, textarea {
     .topbar-side, .topbar-side-left, .topbar-side-right, .topbar-center {
         float: none; width: 100%; text-align: center; margin: 0 0 6px;
     }
-    .topbar-brand { font-size: 22px; }
+    .topbar-brand .brand-mark { height: 22px; }
     .nav-link { display: block; margin: 3px 0; padding: 8px 10px; }
     .app-main, .app-main-wide, .app-main--espace { padding: 8px 6px 24px; }
     .pronos-matches, .pronos-ticket { float: none; width: 100%; }

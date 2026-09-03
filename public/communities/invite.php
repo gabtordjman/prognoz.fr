@@ -84,7 +84,10 @@ if (empty($_SESSION['user_id'])) {
     <body>
     <div class="auth-shell">
         <div class="auth-card">
-            <div class="auth-brand"><?= e(APP_NAME) ?></div>
+            <div class="auth-brand">
+                <?php renderBrandMark(); ?>
+                <span class="sr-only"><?= e(APP_NAME) ?></span>
+            </div>
             <div class="auth-sub"><?= e(t('com.invite_guest_sub')) ?><br><strong><?= e($invite['community_nom']) ?></strong></div>
             <a href="<?= e(url('auth/register.php')) ?>" class="btn btn-primary btn-block" style="margin-bottom:0.6rem;"><?= e(t('com.invite_register_join')) ?></a>
             <a href="<?= e(url('auth/login.php')) ?>" class="btn btn-ghost btn-block"><?= e(t('com.invite_have_account')) ?></a>

@@ -44,7 +44,10 @@ if ($token === '' && !$done) {
     <div class="auth-wrap">
         <?php layoutAuthBack('auth/login.php', t('auth.forgot.back')); ?>
         <div class="auth-card">
-            <div class="auth-brand"><?= e(APP_NAME) ?></div>
+            <div class="auth-brand">
+                <?php renderBrandMark(); ?>
+                <span class="sr-only"><?= e(APP_NAME) ?></span>
+            </div>
 
             <?php if ($done): ?>
                 <div class="alert alert-success"><?= e(t('auth.reset.success')) ?></div>

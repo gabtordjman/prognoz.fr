@@ -45,7 +45,10 @@ if (!empty($_GET['redirect'])) {
     <div class="auth-wrap">
         <?php layoutAuthBack(); ?>
         <div class="auth-card">
-        <div class="auth-brand"><?= e(APP_NAME) ?></div>
+        <div class="auth-brand">
+            <?php renderBrandMark(); ?>
+            <span class="sr-only"><?= e(APP_NAME) ?></span>
+        </div>
         <p class="auth-sub"><?= e(t('auth.login.sub')) ?></p>
 
         <?php if ($erreur): ?><div class="alert alert-error"><?= e($erreur) ?></div><?php endif; ?>
