@@ -55,6 +55,8 @@
         url('../img/felt.jpg'),
         linear-gradient(180deg, #142218 0%, #1a3226 55%, #15261d 100%);
     --tex-wood: url('../img/wood-counter.jpg');
+    /* ~1024px : même densité de grain que l’ancienne image, sans zoom cover. */
+    --wood-tile: 64rem;
     --tex-wood-sheen: linear-gradient(
         180deg,
         rgba(255, 220, 170, 0.12) 0%,
@@ -108,9 +110,9 @@ a:hover { color: var(--green); }
 .topbar {
     background-color: var(--wood-bar);
     background-image: var(--tex-wood-sheen), var(--tex-wood);
-    background-size: auto, cover;
-    background-position: center, 50% 42%;
-    background-repeat: no-repeat;
+    background-size: auto, var(--wood-tile) 100%;
+    background-position: center, 0 50%;
+    background-repeat: no-repeat, repeat-x;
     border-bottom: 2px solid var(--brass);
     box-shadow:
         0 2px 10px rgba(0, 0, 0, 0.3),
@@ -176,6 +178,7 @@ a:hover { color: var(--green); }
     height: 2.05rem;
     width: auto;
     overflow: visible;
+    /* La boule 8 dépasse à gauche : le mot PROGNOZ reste l’axe du centrage. */
 }
 
 .brand-icon { display: none; }
@@ -793,9 +796,9 @@ button.pill-points-btn:active {
     height: 26%;
     background-color: var(--wood-bar);
     background-image: var(--tex-wood-sheen), var(--tex-wood);
-    background-size: auto, cover;
-    background-position: center, 50% 40%;
-    background-repeat: no-repeat;
+    background-size: auto, var(--wood-tile) 100%;
+    background-position: center, 0 50%;
+    background-repeat: no-repeat, repeat-x;
     border-bottom: 2px solid var(--brass);
 }
 

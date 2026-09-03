@@ -25,6 +25,7 @@
         url("../img/felt.jpg"),
         linear-gradient(180deg, #142218 0%, #1a3226 55%, #15261d 100%);
     --tex-wood: url("../img/wood-counter.jpg");
+    --wood-tile: 64rem;
     --tex-wood-sheen: linear-gradient(
         180deg,
         rgba(255, 220, 170, 0.12) 0%,
@@ -63,9 +64,9 @@ html, body {
 .ops-topbar {
     background-color: var(--wood-bar);
     background-image: var(--tex-wood-sheen), var(--tex-wood);
-    background-size: auto, cover;
-    background-position: center, 50% 42%;
-    background-repeat: no-repeat;
+    background-size: auto, var(--wood-tile) 100%;
+    background-position: center, 0 50%;
+    background-repeat: no-repeat, repeat-x;
     border-bottom: 2px solid var(--brass);
     padding: 0.7rem 1rem 0.55rem;
 }
