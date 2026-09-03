@@ -12,6 +12,10 @@ define('APP_VERSION', '1.3.0');
 define('APP_BETA', envBool('APP_BETA', false));
 define('APP_MAINTENANCE', envBool('APP_MAINTENANCE', false));
 define('APP_CONTACT_EMAIL', env('APP_CONTACT_EMAIL', 'contact@example.com'));
+/** Âge minimum déclaré à l’inscription (chat / communautés ; pas de consentement parental). */
+define('APP_MIN_AGE', 16);
+/** Publicité Google AdSense — vide = désactivé. Scripts chargés seulement après consentement. */
+define('ADSENSE_CLIENT', trim(env('ADSENSE_CLIENT', 'ca-pub-7134608349713810')));
 /** Boîte admin pour alertes résultats indisponibles / rapports. */
 define('ADMIN_NOTIFY_EMAIL', env('ADMIN_NOTIFY_EMAIL', 'admin@prognoz.fr'));
 define('APP_OG_DESCRIPTION', env(

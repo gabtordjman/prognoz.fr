@@ -36,6 +36,7 @@ if (
 require __DIR__ . '/db.php';
 require __DIR__ . '/encryption.php';
 require __DIR__ . '/auth.php';
+require __DIR__ . '/legal.php';
 require __DIR__ . '/mail.php';
 require __DIR__ . '/user_predictions.php';
 require __DIR__ . '/friends.php';

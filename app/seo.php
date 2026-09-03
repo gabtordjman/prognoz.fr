@@ -28,6 +28,15 @@ function seoPage(string $key, array $overrides = []): array
             'priority'    => '0.3',
             'changefreq'  => 'yearly',
         ],
+        'mentions' => [
+            'title'       => t('seo.mentions.title'),
+            'description' => t('seo.mentions.desc'),
+            'path'        => 'legal/mentions-legales',
+            'robots'      => 'index,follow',
+            'sitemap'     => true,
+            'priority'    => '0.3',
+            'changefreq'  => 'yearly',
+        ],
         'login' => [
             'title'       => t('seo.login.title'),
             'description' => t('seo.login.desc'),
@@ -151,7 +160,7 @@ function seoJsonLdHome(): array
 /** Entrées publiques pour le sitemap XML. */
 function seoSitemapEntries(): array
 {
-    $keys = ['home', 'privacy', 'howto', 'terms'];
+    $keys = ['home', 'privacy', 'howto', 'terms', 'mentions'];
     $entries = [];
 
     foreach ($keys as $key) {
@@ -202,7 +211,7 @@ function seoRenderRobotsTxt(): string
         'Disallow: /admin/',
         'Disallow: /communities/',
         '',
-        '# Pages publiques indexables : accueil et confidentialité',
+        '# Pages publiques indexables : accueil et pages légales',
         'Allow: /legal/',
         '',
         'Sitemap: ' . $sitemap,

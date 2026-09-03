@@ -584,6 +584,7 @@ $plannedSeasonEnd = nextMonthStartDatetime(); // 2026-08-01… tant qu’on est 
     <nav class="settings-legal" aria-label="<?= e(t('common.legal_nav')) ?>">
         <a href="<?= e(url('legal/cgu.php')) ?>"><?= e(t('legal.cgu.h1')) ?></a>
         <a href="<?= e(url('legal/confidentialite.php')) ?>"><?= e(t('common.privacy')) ?></a>
+        <a href="<?= e(url('legal/mentions-legales.php')) ?>"><?= e(t('common.mentions')) ?></a>
     </nav>
 </div>
 

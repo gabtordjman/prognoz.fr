@@ -9,13 +9,16 @@ if (!defined('APP_BOOT')) {
  * la communauté "Générale". Lève une InvalidArgumentException avec
  * un message lisible en cas de problème (pseudo/email déjà pris...).
  */
-function registerUser(PDO $pdo, string $pseudo, string $email, string $password, bool $privacyAccepted = false): int
+function registerUser(PDO $pdo, string $pseudo, string $email, string $password, bool $privacyAccepted = false, bool $ageAccepted = false): int
 {
     $pseudo = trim($pseudo);
     $email  = strtolower(trim($email));
 
     if (!$privacyAccepted) {
         throw new InvalidArgumentException(t('auth.err.accept_legal'));
+    }
+    if (!$ageAccepted) {
+        throw new InvalidArgumentException(t('auth.err.accept_age', ['n' => APP_MIN_AGE]));
     }
 
     if (mb_strlen($pseudo) < 3 || mb_strlen($pseudo) > 30) {

@@ -3343,9 +3343,86 @@ body.kit-dialog-open {
     margin-bottom: 0.5rem;
 }
 
-.legal-body a {
+.legal-body h3 {
+    font-family: var(--font-display);
+    font-size: 0.98rem;
+    margin: 1.6rem 0 0.7rem;
     color: var(--green-dark);
+}
+
+.legal-body code {
+    font-family: var(--font-mono);
+    font-size: 0.82em;
+    background: rgba(30, 80, 53, 0.08);
+    padding: 0.08em 0.35em;
+    border-radius: 4px;
+}
+
+.legal-cross {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem 1.25rem;
+    margin: -0.4rem 0 1.35rem;
+    font-size: 0.86rem;
+}
+
+.legal-cross a,
+.legal-cross-current {
     font-weight: 600;
+}
+
+.legal-cross-current {
+    color: var(--green-dark);
+}
+
+.cookie-banner {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 80;
+    padding: 0.85rem 1rem 1rem;
+    background: rgba(15, 26, 20, 0.94);
+    border-top: 1px solid rgba(232, 208, 120, 0.28);
+    box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.28);
+}
+
+.cookie-banner-inner {
+    max-width: var(--page-max);
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem 1.25rem;
+}
+
+.cookie-banner-text {
+    margin: 0;
+    flex: 1 1 16rem;
+    font-size: 0.86rem;
+    line-height: 1.5;
+    color: var(--paper);
+}
+
+.cookie-banner-text a {
+    color: var(--brass-shine);
+    font-weight: 600;
+}
+
+.cookie-banner-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.cookie-banner .btn-ghost {
+    color: var(--paper);
+    border-color: rgba(228, 217, 196, 0.28);
+}
+
+body:has(#cookieBanner:not([hidden])) {
+    padding-bottom: 7.5rem;
 }
 
 /* --- Pages statut (404, maintenance) --- */

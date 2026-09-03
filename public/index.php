@@ -92,9 +92,6 @@ releaseSession();
 <html lang="<?= e(htmlLang()) ?>"<?= function_exists('htmlUiClassAttr') ? htmlUiClassAttr() : '' ?>>
 <head>
     <?php layoutHead(t('home.title'), true, seoPage('home')); ?>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7134608349713810"
-     crossorigin="anonymous">
-    </script>
 </head>
 <body>
 

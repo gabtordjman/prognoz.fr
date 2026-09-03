@@ -70,6 +70,9 @@ function layoutHead(string $title, bool $withIcons = true, array $seo = []): voi
     <link href="<?= e(assetUrl('assets/css/style.css')) ?>" rel="stylesheet">
     <?php endif; ?>
     <?php
+    if (function_exists('layoutAdsenseLoader')) {
+        layoutAdsenseLoader();
+    }
 }
 
 /** Page statut (404, maintenance…) — même charte visuelle. */
@@ -312,6 +315,10 @@ function layoutFooter(): void
                 <a href="<?= e(url('legal/comment-ca-marche.php')) ?>"><?= e(t('nav.howto')) ?></a>
                 <a href="<?= e(url('legal/cgu.php')) ?>"><?= e(t('common.cgu')) ?></a>
                 <a href="<?= e(url('legal/confidentialite.php')) ?>"><?= e(t('common.privacy')) ?></a>
+                <a href="<?= e(url('legal/mentions-legales.php')) ?>"><?= e(t('common.mentions')) ?></a>
+                <?php if (function_exists('adsenseConfigured') && adsenseConfigured()): ?>
+                <a href="<?= e(url('legal/confidentialite.php')) ?>#cookies" data-cookie-settings><?= e(t('common.cookies')) ?></a>
+                <?php endif; ?>
             </nav>
         </div>
     </footer>
@@ -323,6 +330,9 @@ function layoutFooter(): void
     <?php if (function_exists('renderSiteEventStarRain')) {
         renderSiteEventStarRain();
     } ?>
+    <?php if (function_exists('layoutConsentBanner')) {
+        layoutConsentBanner();
+    } ?>
     <?php
 }
 
@@ -333,9 +343,14 @@ function layoutAuthFooter(): void
         <a href="<?= e(url('legal/cgu.php')) ?>"><?= e(t('common.cgu')) ?></a>
         <span class="auth-footer-sep" aria-hidden="true">·</span>
         <a href="<?= e(url('legal/confidentialite.php')) ?>"><?= e(t('common.privacy')) ?></a>
+        <span class="auth-footer-sep" aria-hidden="true">·</span>
+        <a href="<?= e(url('legal/mentions-legales.php')) ?>"><?= e(t('common.mentions')) ?></a>
     </nav>
     <div class="auth-lang-wrap"><?php layoutLangSwitcher(); ?></div>
     <?php layoutI18nScript(); ?>
+    <?php if (function_exists('layoutConsentBanner')) {
+        layoutConsentBanner();
+    } ?>
     <?php
 }
 

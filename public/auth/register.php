@@ -21,7 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $pdo = getPDO();
             $acceptedLegal = !empty($_POST['privacy_accept']) && !empty($_POST['cgu_accept']);
-            $userId = registerUser($pdo, $pseudo, $email, $password, $acceptedLegal);
+            $acceptedAge = !empty($_POST['age_accept']);
+            $userId = registerUser($pdo, $pseudo, $email, $password, $acceptedLegal, $acceptedAge);
             loginUser($pdo, $email, $password);
             flash('success', t('auth.register.welcome'));
 
@@ -88,6 +89,10 @@ if (!empty($_GET['redirect'])) {
                     <span class="field-check-text">
                         <?= t('auth.register.accept_terms', ['link' => '<a href="' . e(url('legal/cgu.php')) . '" target="_blank" rel="noopener">' . e(t('auth.register.terms_link')) . '</a>']) ?>
                     </span>
+                </label>
+                <label class="field-check">
+                    <input type="checkbox" name="age_accept" value="1" required <?= !empty($_POST['age_accept']) ? 'checked' : '' ?>>
+                    <span class="field-check-text"><?= e(t('auth.register.accept_age', ['n' => APP_MIN_AGE])) ?></span>
                 </label>
             </div>
             <button type="submit" class="btn btn-primary btn-block"><?= e(t('auth.register.submit')) ?></button>

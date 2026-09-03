@@ -1159,6 +1159,18 @@ input[type="number"], input[type="search"], select, textarea {
 .status-title { color: #1e5035; }
 .status-ball { display: none; }
 .legal-panel .panel-body { font-size: 12px; line-height: 1.55; }
+.legal-cross { margin: 8px 0 12px; font-size: 12px; }
+.cookie-banner {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 80;
+    padding: 10px;
+    background: #e4d9c4;
+    border-top: 2px solid #9a7420;
+    color: #1a1612;
+}
+.cookie-banner-inner { max-width: 720px; margin: 0 auto; }
+.cookie-banner-actions { margin-top: 8px; }
 
 /* FA absent */
 .fa-solid, .fa-regular, [class^="fa-"], [class*=" fa-"] { display: none !important; }
