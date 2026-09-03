@@ -121,28 +121,6 @@ function layoutStatusPage(
     <?php
 }
 
-/** Logo SVG (boule 8 + PROGNOZ), transparent — fill lettres = currentColor. */
-function renderBrandMark(): void
-{
-    static $n = 0;
-    $n++;
-    $gid = 'pball' . $n;
-    ?>
-    <svg class="brand-mark" viewBox="0 0 168 36" overflow="visible" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-        <defs>
-            <radialGradient id="<?= e($gid) ?>" cx="35%" cy="30%" r="65%">
-                <stop offset="0%" stop-color="#2a2a2a"/>
-                <stop offset="100%" stop-color="#0a0a0a"/>
-            </radialGradient>
-        </defs>
-        <circle cx="-20" cy="18" r="16" fill="url(#<?= e($gid) ?>)" stroke="#c4a035" stroke-width="1.35"/>
-        <circle cx="-20" cy="18" r="7.4" fill="#f5f0e6"/>
-        <text x="-20" y="21.6" text-anchor="middle" font-family="Georgia, 'Times New Roman', Times, serif" font-size="11.2" font-weight="700" fill="#1a1612">8</text>
-        <text x="84" y="24.5" text-anchor="middle" font-family="Georgia, 'Times New Roman', Times, serif" font-size="18.5" font-weight="700" letter-spacing="2.4" fill="currentColor">PROGNOZ</text>
-    </svg>
-    <?php
-}
-
 function layoutTopbar(?array $user, string $active = ''): void
 {
     $unseenResults = 0;
@@ -213,10 +191,7 @@ function layoutTopbar(?array $user, string $active = ''): void
             </div>
 
             <div class="topbar-center">
-                <a href="<?= e(url('index.php')) ?>" class="topbar-brand">
-                    <?php renderBrandMark(); ?>
-                    <span class="sr-only"><?= e(APP_NAME) ?></span>
-                </a>
+                <a href="<?= e(url('index.php')) ?>" class="topbar-brand"><?= e(APP_NAME) ?></a>
                 <nav class="topbar-nav">
                     <a href="<?= e(url('index.php')) ?>" class="nav-link<?= $active === 'matchs' ? ' active' : '' ?>"><?= e(t('nav.matches')) ?></a>
                     <?php if ($user): ?>

@@ -54,15 +54,9 @@
     --tex-felt:
         url('../img/felt.jpg'),
         linear-gradient(180deg, #142218 0%, #1a3226 55%, #15261d 100%);
-    --tex-wood: url('../img/wood-counter.jpg');
-    /* ~1024px : même densité de grain que l’ancienne image, sans zoom cover. */
-    --wood-tile: 64rem;
-    --tex-wood-sheen: linear-gradient(
-        180deg,
-        rgba(255, 220, 170, 0.12) 0%,
-        transparent 42%,
-        rgba(0, 0, 0, 0.3) 100%
-    );
+    --tex-wood:
+        url('../img/wood-counter.jpg'),
+        linear-gradient(180deg, #5a3e2c 0%, var(--wood-bar) 45%, #3a2618 100%);
     --tex-paper: var(--paper);
 }
 
@@ -109,10 +103,16 @@ a:hover { color: var(--green); }
 /* --- Topbar comptoir --- */
 .topbar {
     background-color: var(--wood-bar);
-    background-image: var(--tex-wood-sheen), var(--tex-wood);
-    background-size: auto, var(--wood-tile) 100%;
-    background-position: center, 0 50%;
-    background-repeat: no-repeat, repeat-x;
+    background-image:
+        linear-gradient(
+            180deg,
+            rgba(255, 220, 170, 0.1) 0%,
+            transparent 42%,
+            rgba(0, 0, 0, 0.22) 100%
+        ),
+        var(--tex-wood);
+    background-size: auto, 100% 100%, auto;
+    background-repeat: no-repeat, no-repeat, no-repeat;
     border-bottom: 2px solid var(--brass);
     box-shadow:
         0 2px 10px rgba(0, 0, 0, 0.3),
@@ -163,22 +163,19 @@ a:hover { color: var(--green); }
 }
 
 .topbar-brand {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.4rem;
     color: var(--paper);
     text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 0;
-    padding: 0.15rem 0.1rem;
-    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
-}
-
-.brand-mark {
-    display: block;
-    height: 2.05rem;
-    width: auto;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.28);
+    letter-spacing: 0.1em;
+    line-height: 1.6;
+    display: inline-block;
+    text-align: center;
+    text-transform: uppercase;
+    padding: 0.4rem 0.25rem 0.45rem;
     overflow: visible;
-    /* La boule 8 dépasse à gauche : le mot PROGNOZ reste l’axe du centrage. */
 }
 
 .brand-icon { display: none; }
@@ -663,17 +660,17 @@ button.pill-points-btn:active {
 }
 
 .auth-brand {
-    color: var(--green-dark);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.7rem;
     text-align: center;
-    line-height: 0;
+    line-height: normal;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     position: relative;
-    margin: 0 0 0.15rem;
-    padding: 0.2rem 0;
-}
-
-.auth-brand .brand-mark {
-    height: 2.45rem;
-    margin: 0 auto;
+    margin: 0;
+    padding: 0.35rem 0.1rem 0.4rem;
+    overflow: visible;
 }
 
 .auth-sub {
@@ -795,10 +792,11 @@ button.pill-points-btn:active {
     right: 0;
     height: 26%;
     background-color: var(--wood-bar);
-    background-image: var(--tex-wood-sheen), var(--tex-wood);
-    background-size: auto, var(--wood-tile) 100%;
-    background-position: center, 0 50%;
-    background-repeat: no-repeat, repeat-x;
+    background-image:
+        linear-gradient(180deg, rgba(255, 220, 170, 0.1), transparent 50%, rgba(0, 0, 0, 0.2)),
+        var(--tex-wood);
+    background-size: auto, 100% 100%, auto;
+    background-repeat: no-repeat;
     border-bottom: 2px solid var(--brass);
 }
 
@@ -3745,16 +3743,10 @@ body:has(#cookieBanner:not([hidden])) {
         gap: 0.4rem;
     }
 
-    .topbar-brand .brand-mark {
-        height: 1.7rem;
-        max-width: 11.5rem;
-    }
-
-    @media (max-width: 400px) {
-        .topbar-brand .brand-mark {
-            height: 1.45rem;
-            max-width: 9.8rem;
-        }
+    .topbar-brand {
+        font-size: 1.25rem;
+        letter-spacing: 0.08em;
+        padding: 0.25rem 0.2rem 0.3rem;
     }
 
     .hero h1 { font-size: 1.2rem; }
