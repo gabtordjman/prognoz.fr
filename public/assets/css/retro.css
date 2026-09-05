@@ -73,6 +73,19 @@ a:visited { color: #1e5035; }
     text-shadow: 1px 1px 0 #2a1a10;
     padding: 2px 0 4px;
 }
+.brand-lockup { display: inline-block; }
+.brand-ball {
+    width: 22px;
+    height: 22px;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+.brand-word {
+    font-family: Arial Black, Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
 
 .topbar-nav { margin: 4px 0 0; padding: 0; text-align: center; }
 .nav-link {
@@ -1203,6 +1216,7 @@ input[type="number"], input[type="search"], select, textarea {
         float: none; width: 100%; text-align: center; margin: 0 0 6px;
     }
     .topbar-brand { font-size: 22px; }
+    .brand-ball { width: 18px; height: 18px; }
     .nav-link { display: block; margin: 3px 0; padding: 8px 10px; }
     .app-main, .app-main-wide, .app-main--espace { padding: 8px 6px 24px; }
     .pronos-matches, .pronos-ticket { float: none; width: 100%; }

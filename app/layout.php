@@ -121,6 +121,31 @@ function layoutStatusPage(
     <?php
 }
 
+/** Logo du comptoir : boule 8 (favicon) + mot PROGNOZ, fond transparent. */
+function renderBrandMark(?string $word = null): void
+{
+    static $n = 0;
+    $n++;
+    $gid = 'pball' . $n;
+    $label = $word ?? APP_NAME;
+    ?>
+    <span class="brand-lockup">
+        <svg class="brand-ball" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <defs>
+                <radialGradient id="<?= e($gid) ?>" cx="35%" cy="30%" r="65%">
+                    <stop offset="0%" stop-color="#2a2a2a"/>
+                    <stop offset="100%" stop-color="#0a0a0a"/>
+                </radialGradient>
+            </defs>
+            <circle cx="16" cy="16" r="14.6" fill="url(#<?= e($gid) ?>)" stroke="#c4a035" stroke-width="1.15"/>
+            <circle cx="16" cy="16" r="6.6" fill="#f5f0e6"/>
+            <text x="16" y="19.1" text-anchor="middle" font-family="Georgia, 'Times New Roman', Times, serif" font-size="9.4" font-weight="700" fill="#1a1612">8</text>
+        </svg>
+        <span class="brand-word"><?= e($label) ?></span>
+    </span>
+    <?php
+}
+
 function layoutTopbar(?array $user, string $active = ''): void
 {
     $unseenResults = 0;
@@ -191,7 +216,7 @@ function layoutTopbar(?array $user, string $active = ''): void
             </div>
 
             <div class="topbar-center">
-                <a href="<?= e(url('index.php')) ?>" class="topbar-brand"><?= e(APP_NAME) ?></a>
+                <a href="<?= e(url('index.php')) ?>" class="topbar-brand"><?php renderBrandMark(); ?></a>
                 <nav class="topbar-nav">
                     <a href="<?= e(url('index.php')) ?>" class="nav-link<?= $active === 'matchs' ? ' active' : '' ?>"><?= e(t('nav.matches')) ?></a>
                     <?php if ($user): ?>

@@ -54,9 +54,13 @@
     --tex-felt:
         url('../img/felt.jpg'),
         linear-gradient(180deg, #142218 0%, #1a3226 55%, #15261d 100%);
-    --tex-wood:
-        url('../img/wood-counter.jpg'),
-        linear-gradient(180deg, #5a3e2c 0%, var(--wood-bar) 45%, #3a2618 100%);
+    --tex-wood: url('../img/wood-counter.jpg');
+    --tex-wood-sheen: linear-gradient(
+        180deg,
+        rgba(255, 220, 170, 0.12) 0%,
+        transparent 42%,
+        rgba(0, 0, 0, 0.28) 100%
+    );
     --tex-paper: var(--paper);
 }
 
@@ -103,16 +107,10 @@ a:hover { color: var(--green); }
 /* --- Topbar comptoir --- */
 .topbar {
     background-color: var(--wood-bar);
-    background-image:
-        linear-gradient(
-            180deg,
-            rgba(255, 220, 170, 0.1) 0%,
-            transparent 42%,
-            rgba(0, 0, 0, 0.22) 100%
-        ),
-        var(--tex-wood);
-    background-size: auto, 100% 100%, auto;
-    background-repeat: no-repeat, no-repeat, no-repeat;
+    background-image: var(--tex-wood-sheen), var(--tex-wood);
+    background-size: auto, 100% 100%;
+    background-position: center, center;
+    background-repeat: no-repeat;
     border-bottom: 2px solid var(--brass);
     box-shadow:
         0 2px 10px rgba(0, 0, 0, 0.3),
@@ -163,19 +161,44 @@ a:hover { color: var(--green); }
 }
 
 .topbar-brand {
+    color: #f5f0e6;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem 0.15rem;
+    overflow: visible;
+}
+
+.brand-lockup {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.48rem;
+    min-width: 0;
+}
+
+.brand-ball {
+    display: block;
+    width: 1.72rem;
+    height: 1.72rem;
+    flex: 0 0 auto;
+    overflow: visible;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.55));
+}
+
+.brand-word {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: 1.4rem;
-    color: var(--paper);
-    text-decoration: none;
-    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.28);
-    letter-spacing: 0.1em;
-    line-height: 1.6;
-    display: inline-block;
-    text-align: center;
+    font-size: 1.38rem;
+    letter-spacing: 0.11em;
+    line-height: 1;
     text-transform: uppercase;
-    padding: 0.4rem 0.25rem 0.45rem;
-    overflow: visible;
+    color: inherit;
+    text-shadow:
+        0 1px 0 rgba(0, 0, 0, 0.55),
+        0 2px 6px rgba(0, 0, 0, 0.4),
+        0 0 1px rgba(232, 208, 120, 0.28);
 }
 
 .brand-icon { display: none; }
@@ -183,12 +206,10 @@ a:hover { color: var(--green); }
 .topbar-nav {
     display: flex;
     gap: 0.4rem;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     justify-content: center;
     max-width: min(100%, 36rem);
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    overflow: visible;
     padding: 0.1rem 0.15rem;
 }
 
@@ -660,17 +681,25 @@ button.pill-points-btn:active {
 }
 
 .auth-brand {
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: 1.7rem;
+    display: flex;
+    justify-content: center;
+    color: var(--ink);
     text-align: center;
-    line-height: normal;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
     position: relative;
     margin: 0;
-    padding: 0.35rem 0.1rem 0.4rem;
+    padding: 0.2rem 0.1rem 0.25rem;
     overflow: visible;
+}
+
+.auth-brand .brand-ball {
+    width: 2.05rem;
+    height: 2.05rem;
+}
+
+.auth-brand .brand-word {
+    font-size: 1.7rem;
+    letter-spacing: 0.08em;
+    text-shadow: none;
 }
 
 .auth-sub {
@@ -792,10 +821,9 @@ button.pill-points-btn:active {
     right: 0;
     height: 26%;
     background-color: var(--wood-bar);
-    background-image:
-        linear-gradient(180deg, rgba(255, 220, 170, 0.1), transparent 50%, rgba(0, 0, 0, 0.2)),
-        var(--tex-wood);
-    background-size: auto, 100% 100%, auto;
+    background-image: var(--tex-wood-sheen), var(--tex-wood);
+    background-size: auto, 100% 100%;
+    background-position: center, center;
     background-repeat: no-repeat;
     border-bottom: 2px solid var(--brass);
 }
@@ -3720,18 +3748,23 @@ body:has(#cookieBanner:not([hidden])) {
         box-shadow: 0 2px 8px rgba(30, 80, 53, 0.45);
     }
 
+    .topbar {
+        padding: 0.55rem var(--page-gutter) 0.6rem;
+    }
+
     .topbar-nav {
         width: 100%;
         max-width: 100%;
-        justify-content: flex-start;
-        padding-left: 0.25rem;
-        padding-right: 0.25rem;
-        gap: 0.3rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        overflow: visible;
+        padding: 0.05rem 0;
+        gap: 0.18rem 0.2rem;
     }
 
     .nav-link {
-        padding: 0.38rem 0.75rem;
-        font-size: 0.78rem;
+        padding: 0.3rem 0.52rem;
+        font-size: 0.74rem;
     }
 
     /* Pseudo en moins — avatar + admin suffisent */
@@ -3744,9 +3777,21 @@ body:has(#cookieBanner:not([hidden])) {
     }
 
     .topbar-brand {
-        font-size: 1.25rem;
+        padding: 0.1rem 0;
+    }
+
+    .topbar-brand .brand-lockup {
+        gap: 0.34rem;
+    }
+
+    .topbar-brand .brand-ball {
+        width: 1.32rem;
+        height: 1.32rem;
+    }
+
+    .topbar-brand .brand-word {
+        font-size: 1.08rem;
         letter-spacing: 0.08em;
-        padding: 0.25rem 0.2rem 0.3rem;
     }
 
     .hero h1 { font-size: 1.2rem; }
@@ -4014,6 +4059,29 @@ body:has(#cookieBanner:not([hidden])) {
 @media (max-width: 400px) {
     :root {
         --sport-cat-mobile-height: 2.85rem;
+    }
+
+    .topbar-brand .brand-ball {
+        width: 1.18rem;
+        height: 1.18rem;
+    }
+
+    .topbar-brand .brand-word {
+        font-size: 0.98rem;
+        letter-spacing: 0.07em;
+    }
+
+    .topbar-nav {
+        display: grid;
+        grid-template-columns: repeat(3, max-content);
+        justify-content: center;
+        column-gap: 0.12rem;
+        row-gap: 0.12rem;
+    }
+
+    .nav-link {
+        padding: 0.28rem 0.4rem;
+        font-size: 0.72rem;
     }
 
     .score-entry-team { font-size: 0.92rem; }

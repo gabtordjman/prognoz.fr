@@ -63,7 +63,7 @@ function adminLayoutStart(string $title, string $active = 'dashboard'): void
 <div class="ops-shell">
     <header class="ops-topbar">
         <div class="ops-topbar-row">
-            <a class="ops-brand" href="<?= e(url('admin/dashboard.php')) ?>">Prognoz</a>
+            <a class="ops-brand" href="<?= e(url('admin/dashboard.php')) ?>"><?php renderBrandMark(); ?></a>
             <span class="ops-topbar-meta">Admin · v<?= e(APP_VERSION) ?> · <?= e($user) ?></span>
         </div>
     </header>

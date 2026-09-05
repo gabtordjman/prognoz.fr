@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="auth-wrap">
         <?php layoutAuthBack('auth/login.php', t('auth.forgot.back')); ?>
         <div class="auth-card">
-            <div class="auth-brand"><?= e(APP_NAME) ?></div>
+            <div class="auth-brand"><?php renderBrandMark(); ?></div>
             <div class="auth-sub"><?= e(t('auth.forgot.sub2')) ?></div>
 
             <?php if ($sent): ?>
