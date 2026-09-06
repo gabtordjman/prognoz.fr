@@ -2258,15 +2258,15 @@ button.pill-points-btn:active {
 
 .ticket-stamp {
     position: absolute;
-    top: 42%;
+    top: 28%;
     left: 50%;
-    z-index: 5;
+    z-index: 6;
     margin: 0;
     padding: 0.28rem 0.75rem;
     border: 3px solid #1e5035;
     border-radius: 4px;
     color: #1e5035;
-    background: rgba(228, 217, 196, 0.92);
+    background: rgba(228, 217, 196, 0.94);
     font-family: var(--font-display);
     font-size: 1.15rem;
     font-weight: 800;
@@ -2277,18 +2277,12 @@ button.pill-points-btn:active {
     transform: translate(-50%, -50%) rotate(-14deg) scale(1.25);
 }
 
-.ticket-slip.is-stamping {
-    animation: ticket-slip-punch 0.42s var(--ease-spring);
-}
-
 .ticket-slip.is-stamping .ticket-stamp {
     animation: ticket-stamp-in 0.7s var(--ease-spring) both;
 }
 
-@keyframes ticket-slip-punch {
-    0% { transform: scale(1); }
-    40% { transform: scale(0.985); }
-    100% { transform: scale(1); }
+.ticket-slip.is-stamping .ticket-item-draft {
+    animation: ticket-item-ink 0.55s var(--ease-out) both;
 }
 
 @keyframes ticket-stamp-in {
@@ -2304,6 +2298,12 @@ button.pill-points-btn:active {
         opacity: 1;
         transform: translate(-50%, -50%) rotate(-14deg) scale(1);
     }
+}
+
+@keyframes ticket-item-ink {
+    0% { background: rgba(255, 252, 244, 0.92); }
+    40% { background: rgba(220, 236, 226, 0.98); }
+    100% { background: rgba(255, 252, 244, 0.92); }
 }
 
 .ticket-slip-wide {
@@ -3723,6 +3723,11 @@ body:has(#cookieBanner:not([hidden])) {
         color: #f3ead8;
         font-size: 0.78rem;
         font-weight: 700;
+        transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    .topbar-menu-btn i {
+        transition: transform 0.28s var(--ease-out);
     }
 
     .topbar-fold.is-open .topbar-menu-btn {
@@ -3731,17 +3736,68 @@ body:has(#cookieBanner:not([hidden])) {
         color: var(--brass-shine);
     }
 
+    .topbar-fold.is-open .topbar-menu-btn i {
+        transform: rotate(90deg);
+    }
+
     .topbar-fold-body {
-        display: none;
+        display: flex;
         grid-column: 1 / -1;
         flex-direction: column;
         gap: 0.45rem;
-        padding: 0.45rem 0 0.1rem;
-        border-top: 1px solid rgba(232, 220, 180, 0.2);
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        padding: 0;
+        border-top: 1px solid transparent;
+        transform: translateY(-0.4rem);
+        pointer-events: none;
+        visibility: hidden;
+        transition:
+            max-height 0.34s var(--ease-out),
+            opacity 0.22s ease,
+            transform 0.3s var(--ease-out),
+            padding 0.3s var(--ease-out),
+            border-color 0.22s ease,
+            visibility 0s linear 0.32s;
     }
 
     .topbar-fold.is-open .topbar-fold-body {
-        display: flex;
+        max-height: 26rem;
+        opacity: 1;
+        padding: 0.45rem 0 0.1rem;
+        border-top-color: rgba(232, 220, 180, 0.2);
+        transform: translateY(0);
+        pointer-events: auto;
+        visibility: visible;
+        transition:
+            max-height 0.34s var(--ease-out),
+            opacity 0.22s ease,
+            transform 0.3s var(--ease-out),
+            padding 0.3s var(--ease-out),
+            border-color 0.22s ease,
+            visibility 0s linear 0s;
+    }
+
+    .topbar-fold.is-open .nav-link {
+        animation: nav-fold-in 0.28s var(--ease-out) both;
+    }
+
+    .topbar-fold.is-open .nav-link:nth-child(1) { animation-delay: 0.04s; }
+    .topbar-fold.is-open .nav-link:nth-child(2) { animation-delay: 0.07s; }
+    .topbar-fold.is-open .nav-link:nth-child(3) { animation-delay: 0.1s; }
+    .topbar-fold.is-open .nav-link:nth-child(4) { animation-delay: 0.13s; }
+    .topbar-fold.is-open .nav-link:nth-child(5) { animation-delay: 0.16s; }
+
+    @keyframes nav-fold-in {
+        from {
+            opacity: 0;
+            transform: translateY(-0.35rem);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .topbar-tools {
@@ -4186,6 +4242,10 @@ body:has(#cookieBanner:not([hidden])) {
     .ticket-validate-btn,
     .ticket-slip.is-stamping,
     .ticket-stamp,
+    .ticket-item-draft,
+    .topbar-fold-body,
+    .topbar-menu-btn,
+    .topbar-menu-btn i,
     .sport-section,
     .sport-cat-panel,
     .sport-cat-btn,

@@ -545,6 +545,7 @@ function renderTicketPanel(?array $user, array $ticketItems): void
                 <?php endif; ?>
             </p>
             <ul class="ticket-list" id="ticketList" hidden></ul>
+            <span class="ticket-stamp" id="ticketStamp" aria-hidden="true"><?= e(t('ticket.stamped')) ?></span>
             <div class="ticket-footer" id="ticketFooter" hidden>
                 <div class="ticket-slip-tear" aria-hidden="true"></div>
                 <div class="ticket-gain">
@@ -565,7 +566,6 @@ function renderTicketPanel(?array $user, array $ticketItems): void
         </div>
         </div>
         <div class="ticket-slip-edge ticket-slip-edge-bottom" aria-hidden="true"></div>
-        <span class="ticket-stamp" id="ticketStamp" aria-hidden="true"><?= e(t('ticket.stamped')) ?></span>
     </aside>
     <?php
 }

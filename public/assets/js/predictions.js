@@ -282,15 +282,27 @@
         el.classList.toggle('ticket-flash-err', !ok);
     }
 
-    function playTicketStamp() {
+    function playTicketStamp(done) {
         var slip = document.getElementById('pronosTicket');
-        if (!slip) return;
+        var finish = typeof done === 'function' ? done : function () {};
+        var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!slip) {
+            finish();
+            return Promise.resolve();
+        }
+        if (isMobileTicket()) {
+            expandMobileTicket();
+        }
         slip.classList.remove('is-stamping');
         void slip.offsetWidth;
         slip.classList.add('is-stamping');
-        window.setTimeout(function () {
-            slip.classList.remove('is-stamping');
-        }, 1100);
+        return new Promise(function (resolve) {
+            window.setTimeout(function () {
+                slip.classList.remove('is-stamping');
+                finish();
+                resolve();
+            }, reduced ? 80 : 850);
+        });
     }
 
     function renderTicket() {
@@ -716,21 +728,21 @@
 
             syncValidatedFromServer(data.ticket);
 
-            var remaining = loadDraftPicks();
-            list.forEach(function (p) {
-                delete remaining[String(p.market_id)];
-            });
-            saveDraftPicks(remaining);
-
             Object.keys(validated).forEach(function (k) {
                 updateMarketUI(parseInt(k, 10), validated[k], { locked: true });
             });
 
-            renderTicket();
-            var msg = data.saved > 1 ? i18n('js.saved_other', { n: data.saved }) : i18n('js.saved_one', { n: data.saved });
-            showFlash(msg, true);
-            playTicketStamp();
-            reorderMatchCardsByPicks();
+            return playTicketStamp(function () {
+                var remaining = loadDraftPicks();
+                list.forEach(function (p) {
+                    delete remaining[String(p.market_id)];
+                });
+                saveDraftPicks(remaining);
+                renderTicket();
+                var msg = data.saved > 1 ? i18n('js.saved_other', { n: data.saved }) : i18n('js.saved_one', { n: data.saved });
+                showFlash(msg, true);
+                reorderMatchCardsByPicks();
+            });
         })
         .catch(function (err) {
             var msg = (err && err.name === 'AbortError')
