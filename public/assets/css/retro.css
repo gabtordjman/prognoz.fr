@@ -87,7 +87,10 @@ a:visited { color: #1e5035; }
     text-transform: uppercase;
 }
 
-.topbar-nav { margin: 4px 0 0; padding: 0; text-align: center; }
+.topbar-nav { clear: both; width: 100%; margin: 4px 0 0; padding: 0; text-align: center; }
+.nav-label-full { display: inline; }
+.nav-label-short { display: none; }
+.topbar-icon-btn, .topbar-register { display: inline-block; }
 .nav-link {
     display: inline-block;
     margin: 2px 3px;
@@ -1217,6 +1220,8 @@ input[type="number"], input[type="search"], select, textarea {
     }
     .topbar-brand { font-size: 22px; }
     .brand-ball { width: 18px; height: 18px; }
+    .nav-label-full { display: none; }
+    .nav-label-short { display: inline; }
     .nav-link { display: block; margin: 3px 0; padding: 8px 10px; }
     .app-main, .app-main-wide, .app-main--espace { padding: 8px 6px 24px; }
     .pronos-matches, .pronos-ticket { float: none; width: 100%; }

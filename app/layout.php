@@ -180,9 +180,12 @@ function layoutTopbar(?array $user, string $active = ''): void
     <div class="topbar">
         <div class="topbar-inner">
             <div class="topbar-side topbar-side-left">
+                <?php if (!$user): ?>
+                    <?php layoutLangSwitcher(); ?>
+                <?php endif; ?>
                 <?php if ($user): ?>
                     <button type="button" class="pill-points pill-points-btn" id="pointsHelpBtn" aria-haspopup="dialog" aria-controls="pointsHelpModal" title="<?= $seasonLabel !== '' ? e(t('nav.season_pts')) . ' · ' . e($seasonLabel) . ' · ' : '' ?><?= e(t('nav.total_pts', ['n' => (int) $user['points_totaux']])) ?>">
-                        <?php if (!(function_exists('wantsRetroUi') && wantsRetroUi())): ?><i class="fa-solid fa-coins"></i> <?php endif; ?><?= $seasonPoints ?> <?= e(t('common.pts')) ?>
+                        <?php if (!(function_exists('wantsRetroUi') && wantsRetroUi())): ?><i class="fa-solid fa-coins"></i> <?php endif; ?><?= $seasonPoints ?><span class="pill-pts-label"> <?= e(t('common.pts')) ?></span>
                     </button>
                     <div class="topbar-announce" id="announceWrap">
                     <button type="button"
@@ -217,27 +220,11 @@ function layoutTopbar(?array $user, string $active = ''): void
 
             <div class="topbar-center">
                 <a href="<?= e(url('index.php')) ?>" class="topbar-brand"><?php renderBrandMark(); ?></a>
-                <nav class="topbar-nav">
-                    <a href="<?= e(url('index.php')) ?>" class="nav-link<?= $active === 'matchs' ? ' active' : '' ?>"><?= e(t('nav.matches')) ?></a>
-                    <?php if ($user): ?>
-                        <a href="<?= e(url('account/dashboard.php')) ?>" class="nav-link nav-link-badge-wrap<?= $active === 'dashboard' ? ' active' : '' ?>">
-                            <?= e(t('nav.dashboard')) ?>
-                            <?php if ($unseenResults > 0): ?>
-                                <span class="nav-badge" title="<?= e($unseenResults > 1 ? t('nav.new_results_plural', ['n' => $unseenResults]) : t('nav.new_results', ['n' => $unseenResults])) ?>"><?= $unseenResults > 9 ? '9+' : (int) $unseenResults ?></span>
-                            <?php endif; ?>
-                        </a>
-                        <a href="<?= e(url('account/friends.php')) ?>" class="nav-link<?= $active === 'friends' ? ' active' : '' ?>"><?= e(t('nav.friends')) ?></a>
-                        <a href="<?= e(url('communities/index.php')) ?>" class="nav-link<?= $active === 'communities' ? ' active' : '' ?>"><?= e(t('nav.communities')) ?></a>
-                        <a href="<?= e(url('account/shop.php')) ?>" class="nav-link<?= $active === 'shop' ? ' active' : '' ?>"><?= e(t('nav.shop')) ?></a>
-                    <?php else: ?>
-                        <a href="<?= e(url('legal/comment-ca-marche.php')) ?>" class="nav-link"><?= e(t('nav.howto')) ?></a>
-                    <?php endif; ?>
-                </nav>
             </div>
 
             <div class="topbar-side topbar-side-right">
-                <?php layoutLangSwitcher(); ?>
                 <?php if ($user): ?>
+                    <?php layoutLangSwitcher(); ?>
                     <span class="topbar-user">
                         <?php renderUserAvatar($user['pseudo'], 'sm', $user['avatar_url'] ?? null); ?>
                         <?php if (function_exists('renderCosmeticPseudo')): ?>
@@ -249,12 +236,51 @@ function layoutTopbar(?array $user, string $active = ''): void
                             <?= adminBadgeHtml() ?>
                         <?php endif; ?>
                     </span>
-                    <a href="<?= e(url('auth/logout.php')) ?>" class="btn btn-ghost btn-sm"><?= e(t('nav.logout')) ?></a>
+                    <a href="<?= e(url('auth/logout.php')) ?>" class="btn btn-ghost btn-sm topbar-icon-btn topbar-logout" title="<?= e(t('nav.logout')) ?>" aria-label="<?= e(t('nav.logout')) ?>">
+                        <?php if (!(function_exists('wantsRetroUi') && wantsRetroUi())): ?>
+                            <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+                        <?php endif; ?>
+                        <span class="topbar-logout-text"><?= e(t('nav.logout')) ?></span>
+                    </a>
                 <?php else: ?>
-                    <a href="<?= e(url('auth/login.php')) ?>" class="btn btn-ghost btn-sm"><?= e(t('nav.login')) ?></a>
-                    <a href="<?= e(url('auth/register.php')) ?>" class="btn btn-primary btn-sm"><?= e(t('nav.register')) ?></a>
+                    <a href="<?= e(url('auth/login.php')) ?>" class="btn btn-ghost btn-sm topbar-icon-btn topbar-login" title="<?= e(t('nav.login')) ?>" aria-label="<?= e(t('nav.login')) ?>">
+                        <?php if (!(function_exists('wantsRetroUi') && wantsRetroUi())): ?>
+                            <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+                        <?php endif; ?>
+                        <span class="topbar-auth-text"><?= e(t('nav.login')) ?></span>
+                    </a>
+                    <a href="<?= e(url('auth/register.php')) ?>" class="btn btn-primary btn-sm topbar-register" title="<?= e(t('nav.register')) ?>">
+                        <?php if (!(function_exists('wantsRetroUi') && wantsRetroUi())): ?>
+                            <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+                        <?php endif; ?>
+                        <span class="topbar-auth-text"><?= e(t('nav.register')) ?></span>
+                    </a>
                 <?php endif; ?>
             </div>
+
+            <nav class="topbar-nav">
+                <a href="<?= e(url('index.php')) ?>" class="nav-link<?= $active === 'matchs' ? ' active' : '' ?>"><?= e(t('nav.matches')) ?></a>
+                <?php if ($user): ?>
+                    <a href="<?= e(url('account/dashboard.php')) ?>" class="nav-link nav-link-badge-wrap<?= $active === 'dashboard' ? ' active' : '' ?>">
+                        <span class="nav-label-full"><?= e(t('nav.dashboard')) ?></span>
+                        <span class="nav-label-short"><?= e(t('nav.dashboard_short')) ?></span>
+                        <?php if ($unseenResults > 0): ?>
+                            <span class="nav-badge" title="<?= e($unseenResults > 1 ? t('nav.new_results_plural', ['n' => $unseenResults]) : t('nav.new_results', ['n' => $unseenResults])) ?>"><?= $unseenResults > 9 ? '9+' : (int) $unseenResults ?></span>
+                        <?php endif; ?>
+                    </a>
+                    <a href="<?= e(url('account/friends.php')) ?>" class="nav-link<?= $active === 'friends' ? ' active' : '' ?>"><?= e(t('nav.friends')) ?></a>
+                    <a href="<?= e(url('communities/index.php')) ?>" class="nav-link<?= $active === 'communities' ? ' active' : '' ?>">
+                        <span class="nav-label-full"><?= e(t('nav.communities')) ?></span>
+                        <span class="nav-label-short"><?= e(t('nav.communities_short')) ?></span>
+                    </a>
+                    <a href="<?= e(url('account/shop.php')) ?>" class="nav-link<?= $active === 'shop' ? ' active' : '' ?>"><?= e(t('nav.shop')) ?></a>
+                <?php else: ?>
+                    <a href="<?= e(url('legal/comment-ca-marche.php')) ?>" class="nav-link">
+                        <span class="nav-label-full"><?= e(t('nav.howto')) ?></span>
+                        <span class="nav-label-short"><?= e(t('nav.howto_short')) ?></span>
+                    </a>
+                <?php endif; ?>
+            </nav>
         </div>
     </div>
     <?php if ($user): ?>

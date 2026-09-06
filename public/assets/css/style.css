@@ -123,9 +123,25 @@ a:hover { color: var(--green); }
     overflow: visible;
 }
 
-.topbar::before,
-.topbar::after {
+.topbar::before {
     display: none;
+}
+
+.topbar::after {
+    content: '';
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(
+        105deg,
+        transparent 38%,
+        rgba(255, 220, 170, 0.1) 50%,
+        transparent 62%
+    );
+    background-size: 240% 100%;
+    animation: wood-sheen 11s ease-in-out infinite;
 }
 
 .topbar-inner {
@@ -133,9 +149,12 @@ a:hover { color: var(--green); }
     margin: 0 auto;
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-areas:
+        "left brand right"
+        "nav nav nav";
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.35rem 0.75rem;
     position: relative;
     z-index: 1;
 }
@@ -143,18 +162,18 @@ a:hover { color: var(--green); }
 .topbar-side {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
     min-width: 0;
 }
 
-.topbar-side-left { justify-content: flex-start; }
-.topbar-side-right { justify-content: flex-end; flex-wrap: wrap; }
+.topbar-side-left { grid-area: left; justify-content: flex-start; }
+.topbar-side-right { grid-area: right; justify-content: flex-end; flex-wrap: wrap; }
 
 .topbar-center {
+    grid-area: brand;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.35rem;
     text-align: center;
     min-width: 0;
     overflow: visible;
@@ -176,6 +195,7 @@ a:hover { color: var(--green); }
     justify-content: center;
     gap: 0.48rem;
     min-width: 0;
+    animation: ui-rise-in var(--dur-med) var(--ease-out) both;
 }
 
 .brand-ball {
@@ -185,6 +205,14 @@ a:hover { color: var(--green); }
     flex: 0 0 auto;
     overflow: visible;
     filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.55));
+    transform-origin: 50% 50%;
+    animation: ball-gleam 3.8s ease-in-out infinite;
+    transition: transform 0.35s var(--ease-spring);
+}
+
+.topbar-brand:hover .brand-ball,
+.auth-brand:hover .brand-ball {
+    transform: rotate(-14deg);
 }
 
 .brand-word {
@@ -204,34 +232,55 @@ a:hover { color: var(--green); }
 .brand-icon { display: none; }
 
 .topbar-nav {
+    grid-area: nav;
     display: flex;
     gap: 0.4rem;
     flex-wrap: wrap;
     justify-content: center;
+    justify-self: center;
     max-width: min(100%, 36rem);
     overflow: visible;
     padding: 0.1rem 0.15rem;
 }
+
+.nav-label-full { display: inline; }
+.nav-label-short { display: none; }
 
 .topbar-nav::-webkit-scrollbar {
     display: none;
 }
 
 .nav-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     color: rgba(228, 217, 196, 0.78);
     text-decoration: none;
     font-size: 0.8rem;
     font-weight: 600;
-    padding: 0.4rem 0.85rem;
+    padding: 0.4rem 0.85rem 0.45rem;
     border-radius: var(--radius-sm);
     border: none;
-    border-bottom: 2px solid transparent;
     flex-shrink: 0;
     white-space: nowrap;
     transition:
         color var(--dur-fast) ease,
-        border-color var(--dur-fast) ease,
         background var(--dur-fast) ease;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    left: 18%;
+    right: 18%;
+    bottom: 0.12rem;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--brass-light);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform var(--dur-med) var(--ease-out);
 }
 
 .nav-link:active {
@@ -241,14 +290,17 @@ a:hover { color: var(--green); }
 .nav-link:hover {
     background: rgba(0, 0, 0, 0.15);
     color: var(--paper);
-    border-color: transparent;
     box-shadow: none;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+    transform: scaleX(1);
 }
 
 .nav-link.active {
     background: transparent;
     color: var(--paper);
-    border-bottom-color: var(--brass-light);
     box-shadow: none;
 }
 
@@ -264,6 +316,14 @@ a:hover { color: var(--green); }
         font-size: 0.84rem;
         padding: 0.42rem 1rem;
     }
+}
+
+.topbar-icon-btn,
+.topbar-register {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
 }
 
 .topbar-actions { display: none; }
@@ -326,12 +386,6 @@ button.pill-points-btn:hover {
 
 button.pill-points-btn:active {
     transform: none;
-}
-
-.topbar-side-left {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
 }
 
 .topbar-announce {
@@ -673,7 +727,8 @@ button.pill-points-btn:active {
     width: 100%;
     box-shadow: var(--shadow-card);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    animation: ui-rise-in var(--dur-slow) var(--ease-out) both;
 }
 
 .auth-card::before {
@@ -846,7 +901,7 @@ button.pill-points-btn:active {
     font-size: 0.88rem;
     color: #fff;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
-    animation: none;
+    animation: hero-ball-float 3.8s ease-in-out infinite;
 }
 
 .hero-scene-ball--foot {
@@ -859,12 +914,16 @@ button.pill-points-btn:active {
     right: 16%;
     top: 48%;
     background: #a04814;
+    animation-duration: 4.3s;
+    animation-delay: 0.35s;
 }
 
 .hero-scene-ball--tennis {
     left: 42%;
     bottom: 16%;
     background: #8fa018;
+    animation-duration: 3.4s;
+    animation-delay: 0.7s;
 }
 
 .hero-scene-chalk {
@@ -880,8 +939,8 @@ button.pill-points-btn:active {
 }
 
 @keyframes hero-ball-float {
-    0%, 100% { transform: none; }
-    50% { transform: none; }
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
 }
 
 .hero-eyebrow {
@@ -1174,7 +1233,8 @@ button.pill-points-btn:active {
     transition:
         background var(--dur-fast) ease,
         border-color var(--dur-fast) ease,
-        color var(--dur-fast) ease;
+        color var(--dur-fast) ease,
+        transform var(--dur-fast) var(--ease-out);
 }
 
 .sport-cat-btn:active {
@@ -1185,6 +1245,7 @@ button.pill-points-btn:active {
     background: rgba(45, 107, 72, 0.08);
     border-color: rgba(45, 107, 72, 0.25);
     color: var(--green-dark);
+    transform: translateY(-1px);
 }
 
 .sport-cat-btn.is-active {
@@ -1266,16 +1327,25 @@ button.pill-points-btn:active {
 }
 
 .match-teams {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 1.5rem minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: 0.4rem;
     margin-bottom: 0.65rem;
     font-weight: 700;
-    font-size: 1.42rem;
+    font-size: 1.18rem;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
     position: relative;
 }
 
-.team { flex: 1; line-height: 1.3; min-width: 0; overflow-wrap: anywhere; }
+.team {
+    min-width: 0;
+    line-height: 1.25;
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: none;
+}
 .team.home { text-align: right; }
 .team.away { text-align: left; }
 .vs {
@@ -1286,6 +1356,9 @@ button.pill-points-btn:active {
     font-weight: 600;
     opacity: 0.75;
     letter-spacing: 0.04em;
+    text-align: center;
+    line-height: 1.25;
+    align-self: baseline;
 }
 
 .market-block {
@@ -1346,7 +1419,8 @@ button.pill-points-btn:active {
     transition:
         background var(--dur-fast) ease,
         border-color var(--dur-fast) ease,
-        color var(--dur-fast) ease;
+        color var(--dur-fast) ease,
+        transform var(--dur-fast) var(--ease-out);
 }
 
 .pick-val { font-size: 1.05rem; line-height: 1; }
@@ -1376,19 +1450,20 @@ button.pill-points-btn:active {
     border-color: var(--green-light);
     background: rgba(238, 245, 240, 0.9);
     box-shadow: none;
-    transform: none;
+    transform: translateY(-1px);
 }
 
 .pick-btn:active:not(:disabled),
 .score-btn:active:not(:disabled) {
-    transform: none;
+    transform: scale(0.97);
 }
 
 .pick-btn.selected, .score-btn.selected {
     background: var(--green);
     border-color: var(--green-dark);
     color: #fff;
-    box-shadow: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    animation: pick-stamp 0.32s var(--ease-spring);
 }
 
 .score-entry {
@@ -1406,16 +1481,20 @@ button.pill-points-btn:active {
 }
 
 .score-entry-team {
-    font-size: 1.05rem;
+    font-size: 0.92rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.03em;
     color: var(--muted);
     line-height: 1.2;
+    min-height: 1.35em;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+.score-entry-side:first-child .score-entry-team { text-align: right; }
+.score-entry-side:last-child .score-entry-team { text-align: left; }
 
 .score-entry-control {
     display: grid;
@@ -3589,13 +3668,10 @@ body:has(#cookieBanner:not([hidden])) {
     }
 
     .topbar-inner {
-        grid-template-columns: 1fr;
-        gap: 0.5rem;
+        gap: 0.3rem 0.4rem;
     }
 
-    .topbar-center { order: 1; }
-    .topbar-side-left { order: 2; justify-content: center; }
-    .topbar-side-right { order: 3; justify-content: center; }
+    .topbar-side-right { flex-wrap: nowrap; }
 
     .beta-ribbon {
         width: 84px;
@@ -3754,18 +3830,34 @@ body:has(#cookieBanner:not([hidden])) {
 
     .topbar-nav {
         width: 100%;
-        max-width: 100%;
+        max-width: none;
         justify-content: center;
-        flex-wrap: wrap;
-        overflow: visible;
-        padding: 0.05rem 0;
-        gap: 0.18rem 0.2rem;
+        justify-self: stretch;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding: 0.05rem 0 0.12rem;
+        gap: 0.12rem;
     }
 
     .nav-link {
-        padding: 0.3rem 0.52rem;
-        font-size: 0.74rem;
+        padding: 0.28rem 0.15rem 0.34rem;
+        font-size: 0.7rem;
+        flex: 1 1 0;
+        min-width: 0;
+        max-width: 4.8rem;
+        overflow: hidden;
     }
+
+    .nav-link::after {
+        left: 12%;
+        right: 12%;
+        bottom: 0.08rem;
+    }
+
+    .nav-label-full { display: none; }
+    .nav-label-short { display: inline; }
 
     /* Pseudo en moins — avatar + admin suffisent */
     .topbar-user > .user-avatar ~ *:not(.badge-admin) {
@@ -3773,7 +3865,32 @@ body:has(#cookieBanner:not([hidden])) {
     }
 
     .topbar-side-right {
-        gap: 0.4rem;
+        gap: 0.25rem;
+    }
+
+    .topbar-logout-text,
+    .topbar-auth-text { display: none; }
+
+    .topbar-icon-btn,
+    .topbar-register {
+        width: 2rem;
+        height: 2rem;
+        padding: 0;
+        gap: 0;
+    }
+
+    .lang-switch {
+        padding: 0.08rem;
+        margin-right: 0;
+    }
+    .lang-switch-btn {
+        padding: 0.18rem 0.32rem;
+        font-size: 0.62rem;
+    }
+
+    .pill-points {
+        font-size: 0.65rem;
+        padding: 0.22rem 0.4rem;
     }
 
     .topbar-brand {
@@ -3795,8 +3912,11 @@ body:has(#cookieBanner:not([hidden])) {
     }
 
     .hero h1 { font-size: 1.2rem; }
-    .match-teams { flex-direction: column; text-align: center; gap: 0.2rem; }
-    .team.home, .team.away { text-align: center; flex: none; }
+    .match-teams {
+        font-size: 0.95rem;
+        column-gap: 0.28rem;
+        grid-template-columns: minmax(0, 1fr) 1.1rem minmax(0, 1fr);
+    }
     .scorer-grid {
         grid-template-columns: 1fr;
     }
@@ -3954,6 +4074,28 @@ body:has(#cookieBanner:not([hidden])) {
     to { opacity: 1; }
 }
 
+@keyframes wood-sheen {
+    0%, 100% { background-position: 120% 0; }
+    50% { background-position: -20% 0; }
+}
+
+@keyframes ball-gleam {
+    0%, 100% {
+        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.55));
+    }
+    50% {
+        filter:
+            drop-shadow(0 1px 1px rgba(0, 0, 0, 0.55))
+            drop-shadow(0 0 6px rgba(196, 160, 53, 0.48));
+    }
+}
+
+@keyframes pick-stamp {
+    0% { transform: scale(1.05); }
+    55% { transform: scale(0.97); }
+    100% { transform: scale(1); }
+}
+
 .app-main {
     overflow: visible;
 }
@@ -4022,6 +4164,7 @@ body:has(#cookieBanner:not([hidden])) {
     .hero,
     .match-card,
     .panel,
+    .auth-card,
     .ticket-slip {
         transition: none !important;
         animation: none !important;
@@ -4054,6 +4197,22 @@ body:has(#cookieBanner:not([hidden])) {
     .point-toast--out {
         animation: none;
     }
+
+    .topbar::after,
+    .brand-ball,
+    .brand-lockup,
+    .hero-scene-ball,
+    .pick-btn.selected,
+    .score-btn.selected {
+        animation: none !important;
+    }
+
+    .topbar-brand:hover .brand-ball,
+    .auth-brand:hover .brand-ball,
+    .pick-btn:hover,
+    .score-btn:hover {
+        transform: none;
+    }
 }
 
 @media (max-width: 400px) {
@@ -4071,20 +4230,42 @@ body:has(#cookieBanner:not([hidden])) {
         letter-spacing: 0.07em;
     }
 
-    .topbar-nav {
-        display: grid;
-        grid-template-columns: repeat(3, max-content);
-        justify-content: center;
-        column-gap: 0.12rem;
-        row-gap: 0.12rem;
-    }
-
     .nav-link {
-        padding: 0.28rem 0.4rem;
-        font-size: 0.72rem;
+        padding: 0.24rem 0.08rem 0.3rem;
+        font-size: 0.66rem;
+        max-width: 4.1rem;
     }
 
-    .score-entry-team { font-size: 0.92rem; }
+    .lang-switch-btn {
+        padding: 0.14rem 0.2rem;
+        font-size: 0.58rem;
+    }
+
+    .pill-pts-label { display: none; }
+    .pill-points {
+        font-size: 0.6rem;
+        padding: 0.2rem 0.32rem;
+    }
+
+    .topbar-side-right {
+        gap: 0.18rem;
+    }
+
+    .topbar-user .user-avatar-sm {
+        width: 1.4rem;
+        height: 1.4rem;
+        font-size: 0.5rem;
+    }
+
+    .topbar-icon-btn,
+    .topbar-register,
+    .topbar-announce-btn {
+        width: 1.7rem;
+        height: 1.7rem;
+    }
+
+    .score-entry-team { font-size: 0.82rem; }
+    .match-teams { font-size: 0.88rem; }
     .score-entry-control {
         grid-template-columns: 2rem minmax(2rem, 1fr) 2rem;
         min-height: 2.65rem;
@@ -4113,6 +4294,13 @@ body:has(#cookieBanner:not([hidden])) {
     .site-footer-nav a,
     .settings-legal a {
         padding: 0.35rem 0.5rem;
+    }
+}
+
+@media (max-width: 360px) {
+    /* Langue + avatar + sortie débordent sur le logo ; l’invité garde FR/EN à gauche. */
+    .topbar-side-right .lang-switch {
+        display: none;
     }
 }
 
@@ -5187,6 +5375,7 @@ body:has(#cookieBanner:not([hidden])) {
 
 .nav-link-badge-wrap {
     position: relative;
+    display: inline-flex;
 }
 
 .nav-badge {
