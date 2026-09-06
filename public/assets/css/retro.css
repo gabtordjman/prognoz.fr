@@ -58,8 +58,11 @@ a:visited { color: #1e5035; }
 }
 .topbar-side { width: 22%; padding-top: 4px; }
 .topbar-side-left { float: left; text-align: left; }
-.topbar-side-right { float: right; text-align: right; }
 .topbar-center { float: left; width: 56%; text-align: center; }
+.topbar-fold { display: block; }
+.topbar-menu-btn { display: none; }
+.topbar-fold-body { display: block; }
+.topbar-tools { float: right; width: 22%; text-align: right; padding-top: 4px; }
 
 .topbar-brand {
     display: inline-block;
@@ -1212,7 +1215,8 @@ input[type="number"], input[type="search"], select, textarea {
 /* —— Mobile —— */
 @media screen and (max-width: 720px) {
     body { font-size: 14px; }
-    .topbar-side, .topbar-side-left, .topbar-side-right, .topbar-center {
+    .topbar-side, .topbar-side-left, .topbar-side-right, .topbar-center,
+    .topbar-tools, .topbar-fold, .topbar-fold-body {
         float: none; width: 100%; text-align: center; margin: 0 0 6px;
     }
     .topbar-brand { font-size: 22px; }

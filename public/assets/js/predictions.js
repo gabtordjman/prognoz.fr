@@ -282,6 +282,17 @@
         el.classList.toggle('ticket-flash-err', !ok);
     }
 
+    function playTicketStamp() {
+        var slip = document.getElementById('pronosTicket');
+        if (!slip) return;
+        slip.classList.remove('is-stamping');
+        void slip.offsetWidth;
+        slip.classList.add('is-stamping');
+        window.setTimeout(function () {
+            slip.classList.remove('is-stamping');
+        }, 1100);
+    }
+
     function renderTicket() {
         var ticket = draftTicket();
         var list = document.getElementById('ticketList');
@@ -718,6 +729,7 @@
             renderTicket();
             var msg = data.saved > 1 ? i18n('js.saved_other', { n: data.saved }) : i18n('js.saved_one', { n: data.saved });
             showFlash(msg, true);
+            playTicketStamp();
             reorderMatchCardsByPicks();
         })
         .catch(function (err) {
