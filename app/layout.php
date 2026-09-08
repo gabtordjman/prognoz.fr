@@ -369,6 +369,8 @@ function layoutFooter(): void
             <span>&copy; <?= date('Y') ?> <?= e(APP_NAME) ?></span>
             <nav class="site-footer-nav">
                 <a href="<?= e(url('legal/comment-ca-marche.php')) ?>"><?= e(t('nav.howto')) ?></a>
+                <a href="<?= e(url('guide/')) ?>"><?= e(t('nav.guides')) ?></a>
+                <a href="<?= e(url('guide/faq.php')) ?>"><?= e(t('nav.faq')) ?></a>
                 <a href="<?= e(url('legal/cgu.php')) ?>"><?= e(t('common.cgu')) ?></a>
                 <a href="<?= e(url('legal/confidentialite.php')) ?>"><?= e(t('common.privacy')) ?></a>
                 <a href="<?= e(url('legal/mentions-legales.php')) ?>"><?= e(t('common.mentions')) ?></a>

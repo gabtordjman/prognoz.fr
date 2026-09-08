@@ -14,6 +14,8 @@ $user = currentUser($pdo);
 
 <main class="app-main app-main-wide legal-page">
     <h1 class="page-title"><?= e(t('howto.title')) ?></h1>
+    <p class="page-sub"><?= e(t('howto.lead')) ?></p>
+    <?php guideCrossNav('howto'); ?>
 
     <div class="howto-grid">
         <article class="howto-card">
@@ -42,6 +44,21 @@ $user = currentUser($pdo);
             <p><?= e(t('howto.s5_text')) ?></p>
         </article>
     </div>
+
+    <article class="panel legal-panel howto-deep">
+        <div class="panel-body legal-body">
+            <h2><?= e(t('howto.deep_title')) ?></h2>
+            <p><?= e(t('howto.deep_p1')) ?></p>
+            <p><?= e(t('howto.deep_p2')) ?></p>
+            <ul>
+                <li><a href="<?= e(url('guide/a-propos.php')) ?>"><?= e(t('guide.about.card_title')) ?></a> — <?= e(t('guide.about.card_desc')) ?></li>
+                <li><a href="<?= e(url('guide/points.php')) ?>"><?= e(t('guide.points.card_title')) ?></a> — <?= e(t('guide.points.card_desc')) ?></li>
+                <li><a href="<?= e(url('guide/communautes.php')) ?>"><?= e(t('guide.communities.card_title')) ?></a> — <?= e(t('guide.communities.card_desc')) ?></li>
+                <li><a href="<?= e(url('guide/faq.php')) ?>"><?= e(t('guide.faq.card_title')) ?></a> — <?= e(t('guide.faq.card_desc')) ?></li>
+            </ul>
+            <p><a href="<?= e(url('guide/')) ?>"><?= e(t('howto.deep_all_guides')) ?></a></p>
+        </div>
+    </article>
 
     <p class="howto-cta">
         <?php if ($user): ?>

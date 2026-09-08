@@ -82,6 +82,51 @@ function seoPage(string $key, array $overrides = []): array
             'priority'    => '0.7',
             'changefreq'  => 'monthly',
         ],
+        'guide_hub' => [
+            'title'       => t('seo.guide_hub.title'),
+            'description' => t('seo.guide_hub.desc'),
+            'path'        => 'guide/',
+            'robots'      => 'index,follow',
+            'sitemap'     => true,
+            'priority'    => '0.8',
+            'changefreq'  => 'monthly',
+        ],
+        'guide_about' => [
+            'title'       => t('seo.guide_about.title'),
+            'description' => t('seo.guide_about.desc'),
+            'path'        => 'guide/a-propos',
+            'robots'      => 'index,follow',
+            'sitemap'     => true,
+            'priority'    => '0.7',
+            'changefreq'  => 'monthly',
+        ],
+        'guide_points' => [
+            'title'       => t('seo.guide_points.title'),
+            'description' => t('seo.guide_points.desc'),
+            'path'        => 'guide/points',
+            'robots'      => 'index,follow',
+            'sitemap'     => true,
+            'priority'    => '0.7',
+            'changefreq'  => 'monthly',
+        ],
+        'guide_communities' => [
+            'title'       => t('seo.guide_communities.title'),
+            'description' => t('seo.guide_communities.desc'),
+            'path'        => 'guide/communautes',
+            'robots'      => 'index,follow',
+            'sitemap'     => true,
+            'priority'    => '0.7',
+            'changefreq'  => 'monthly',
+        ],
+        'guide_faq' => [
+            'title'       => t('seo.guide_faq.title'),
+            'description' => t('seo.guide_faq.desc'),
+            'path'        => 'guide/faq',
+            'robots'      => 'index,follow',
+            'sitemap'     => true,
+            'priority'    => '0.7',
+            'changefreq'  => 'monthly',
+        ],
         'terms' => [
             'title'       => t('seo.terms.title'),
             'description' => t('seo.terms.desc'),
@@ -160,7 +205,18 @@ function seoJsonLdHome(): array
 /** Entrées publiques pour le sitemap XML. */
 function seoSitemapEntries(): array
 {
-    $keys = ['home', 'privacy', 'howto', 'terms', 'mentions'];
+    $keys = [
+        'home',
+        'guide_hub',
+        'guide_about',
+        'guide_points',
+        'guide_communities',
+        'guide_faq',
+        'howto',
+        'privacy',
+        'terms',
+        'mentions',
+    ];
     $entries = [];
 
     foreach ($keys as $key) {
@@ -211,8 +267,9 @@ function seoRenderRobotsTxt(): string
         'Disallow: /admin/',
         'Disallow: /communities/',
         '',
-        '# Pages publiques indexables : accueil et pages légales',
+        '# Pages publiques indexables : accueil, guides, pages légales',
         'Allow: /legal/',
+        'Allow: /guide/',
         '',
         'Sitemap: ' . $sitemap,
     ];
