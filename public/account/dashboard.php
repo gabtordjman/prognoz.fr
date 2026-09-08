@@ -123,11 +123,7 @@ while (count($currentFavNationals) < (int) FAV_TEAMS_MAX) {
                     <?= csrfField() ?>
                     <input type="hidden" name="action" value="upload_avatar">
                     <label class="dash-avatar-cam" title="<?= e($hasAvatar ? t('avatar.change') : t('avatar.add')) ?>">
-                        <?php if (function_exists('wantsRetroUi') && wantsRetroUi()): ?>
-                            <span class="dash-avatar-cam-label"><?= e($hasAvatar ? t('avatar.change') : t('avatar.add')) ?></span>
-                        <?php else: ?>
-                            <i class="fa-solid fa-camera" aria-hidden="true"></i>
-                        <?php endif; ?>
+                        <i class="fa-solid fa-camera" aria-hidden="true"></i>
                         <span class="sr-only"><?= e($hasAvatar ? t('avatar.change') : t('avatar.add')) ?></span>
                         <input type="file" id="dashAvatarPick" name="avatar" accept="image/jpeg,image/png,image/webp" required class="dash-avatar-input">
                     </label>
@@ -137,11 +133,7 @@ while (count($currentFavNationals) < (int) FAV_TEAMS_MAX) {
                     <?= csrfField() ?>
                     <input type="hidden" name="action" value="remove_avatar">
                     <button type="submit" class="dash-avatar-remove" title="<?= e(t('avatar.remove')) ?>">
-                        <?php if (function_exists('wantsRetroUi') && wantsRetroUi()): ?>
-                            <span><?= e(t('avatar.remove')) ?></span>
-                        <?php else: ?>
-                            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-                        <?php endif; ?>
+                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                         <span class="sr-only"><?= e(t('avatar.remove')) ?></span>
                     </button>
                 </form>

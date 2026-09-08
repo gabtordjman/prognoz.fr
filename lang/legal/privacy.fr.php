@@ -169,8 +169,6 @@ return <<<'HTML'
     <li>Cookie de session PHP — authentification, durée d’environ {session_days} jours, renouvelée
         à l’usage. Sans lui, la connexion et l’enregistrement des pronostics ne fonctionnent pas.</li>
     <li>Cookie de langue (<code>prognoz_lang</code>) — mémorise FR ou EN, jusqu’à 13 mois.</li>
-    <li>Cookie d’affichage rétro (<code>prognoz_ui</code>) — uniquement si un navigateur ancien
-        déclenche le mode simplifié.</li>
     <li>Cookie d’accueil guidé (<code>prognoz_onboard_hide</code>) — masque le tutoriel si vous
         le fermez.</li>
     <li>Cookie de choix (<code>prognoz_consent</code>) — mémorise votre acceptation ou votre refus

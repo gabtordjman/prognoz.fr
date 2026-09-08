@@ -288,11 +288,7 @@ $community = decryptCommunityRow($stmt->fetch() ?: []);
             <form class="chat-form" id="chatForm">
                 <input type="text" id="chatInput" placeholder="<?= e(t('com.chat_input')) ?>" maxlength="500" autocomplete="off">
                 <button type="submit" class="chat-send-btn" title="<?= e(t('com.chat_send')) ?>">
-                    <?php if (function_exists('wantsRetroUi') && wantsRetroUi()): ?>
-                        <?= e(t('com.chat_send')) ?>
-                    <?php else: ?>
-                        <i class="fa-solid fa-paper-plane"></i><span class="sr-only"><?= e(t('com.chat_send')) ?></span>
-                    <?php endif; ?>
+                    <i class="fa-solid fa-paper-plane"></i><span class="sr-only"><?= e(t('com.chat_send')) ?></span>
                 </button>
             </form>
         </div>

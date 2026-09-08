@@ -17,16 +17,12 @@ function layoutHead(string $title, bool $withIcons = true, array $seo = []): voi
     }
     $ogUrl    = $seo['og_url'] ?? ($canonical ?? absoluteUrl('index.php'));
     $robots   = $seo['robots'] ?? 'index,follow';
-    $retroUi  = function_exists('wantsRetroUi') && wantsRetroUi();
     ?>
     <meta charset="UTF-8">
-    <?php if ($retroUi): ?>
-    <script>document.documentElement.className+=(document.documentElement.className?" ":"")+"theme-retro"</script>
-    <?php endif; ?>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="<?= e($description) ?>">
     <meta name="robots" content="<?= e($robots) ?>">
-    <meta name="theme-color" content="<?= $retroUi ? '#145a32' : '#0f1a14' ?>">
+    <meta name="theme-color" content="#0f1a14">
     <title><?= e($documentTitle) ?></title>
     <?php if ($canonical): ?>
     <link rel="canonical" href="<?= e($canonical) ?>">
@@ -57,10 +53,7 @@ function layoutHead(string $title, bool $withIcons = true, array $seo = []): voi
                 . "</script>\n    ";
         }
     }
-    if ($retroUi): ?>
-    <script src="<?= e(assetUrl('assets/js/legacy-polyfill.js')) ?>"></script>
-    <link href="<?= e(assetUrl('assets/css/retro.css')) ?>" rel="stylesheet">
-    <?php else: ?>
+    ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400..800;1,400..800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -68,7 +61,6 @@ function layoutHead(string $title, bool $withIcons = true, array $seo = []): voi
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <?php endif; ?>
     <link href="<?= e(assetUrl('assets/css/style.css')) ?>" rel="stylesheet">
-    <?php endif; ?>
     <?php
     if (function_exists('layoutAdsenseLoader')) {
         layoutAdsenseLoader();
@@ -169,11 +161,7 @@ function layoutTopbar(?array $user, string $active = ''): void
         }
     }
     $annUnread = (int) ($annPayload['unread_count'] ?? 0);
-    if (function_exists('wantsRetroUi') && wantsRetroUi()): ?>
-    <div class="retro-banner" role="status">
-        <?= e(t('retro.banner')) ?>
-    </div>
-    <?php endif; ?>
+    ?>
     <?php if (function_exists('renderSiteEventBanner')) {
         renderSiteEventBanner();
     } ?>
@@ -182,7 +170,7 @@ function layoutTopbar(?array $user, string $active = ''): void
             <div class="topbar-side topbar-side-left">
                 <?php if ($user): ?>
                     <button type="button" class="pill-points pill-points-btn" id="pointsHelpBtn" aria-haspopup="dialog" aria-controls="pointsHelpModal" title="<?= $seasonLabel !== '' ? e(t('nav.season_pts')) . ' · ' . e($seasonLabel) . ' · ' : '' ?><?= e(t('nav.total_pts', ['n' => (int) $user['points_totaux']])) ?>">
-                        <?php if (!(function_exists('wantsRetroUi') && wantsRetroUi())): ?><i class="fa-solid fa-coins"></i> <?php endif; ?><?= $seasonPoints ?> <?= e(t('common.pts')) ?>
+                        <i class="fa-solid fa-coins"></i> <?= $seasonPoints ?> <?= e(t('common.pts')) ?>
                     </button>
                     <div class="topbar-announce" id="announceWrap">
                     <button type="button"
@@ -193,11 +181,7 @@ function layoutTopbar(?array $user, string $active = ''): void
                             aria-controls="announcePanel"
                             aria-label="<?= e(t('announce.aria')) ?>"
                             title="<?= e(t('announce.aria')) ?>">
-                        <?php if (!(function_exists('wantsRetroUi') && wantsRetroUi())): ?>
-                            <i class="fa-solid fa-microphone" aria-hidden="true"></i>
-                        <?php else: ?>
-                            Mic
-                        <?php endif; ?>
+                        <i class="fa-solid fa-microphone" aria-hidden="true"></i>
                         <span class="topbar-announce-dot" id="announceBadge"<?= $annUnread > 0 ? '' : ' hidden' ?> aria-hidden="true"></span>
                     </button>
                     <div class="announce-panel" id="announcePanel" role="dialog" aria-labelledby="announceListTitle" hidden>
@@ -221,9 +205,7 @@ function layoutTopbar(?array $user, string $active = ''): void
 
             <div class="topbar-fold" id="topbarFold">
                 <button type="button" class="topbar-menu-btn" id="topbarMenuBtn" aria-expanded="false" aria-controls="topbarFoldBody">
-                    <?php if (!(function_exists('wantsRetroUi') && wantsRetroUi())): ?>
-                        <i class="fa-solid fa-bars" aria-hidden="true"></i>
-                    <?php endif; ?>
+                    <i class="fa-solid fa-bars" aria-hidden="true"></i>
                     <span class="topbar-menu-text"><?= e(t('nav.menu')) ?></span>
                 </button>
                 <div class="topbar-fold-body" id="topbarFoldBody">
@@ -382,9 +364,7 @@ function layoutFooter(): void
     </footer>
     <?php layoutI18nScript(); ?>
     <script>try{sessionStorage.removeItem('prognoz_sync_reload');}catch(e){}</script>
-    <?php if (!(function_exists('wantsRetroUi') && wantsRetroUi())): ?>
     <script src="<?= e(url('assets/js/theme-time.js')) ?>"></script>
-    <?php endif; ?>
     <?php if (function_exists('renderSiteEventStarRain')) {
         renderSiteEventStarRain();
     } ?>

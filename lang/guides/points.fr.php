@@ -7,10 +7,9 @@ if (!defined('APP_BOOT')) {
 return <<<'HTML'
 <p>
     Sur {app}, les <strong>points</strong> sont la monnaie du jeu — et uniquement du jeu. Ils
-    récompensent vos bons pronostics, alimentent les classements et débloquent des cosmétiques.
-    Ils ne s’achètent pas, ne se vendent pas et ne se convertissent jamais en argent. Ce guide
-    détaille les marchés, la série, les saisons et ce qui se passe quand un résultat est
-    indisponible.
+    récompensent tes bons pronos, alimentent les classements et débloquent des cosmétiques.
+    Ils ne s’achètent pas, ne se vendent pas et ne se convertissent jamais en argent. Ici&nbsp;:
+    marchés, série, saisons, et ce qui se passe quand un résultat manque.
 </p>
 
 <h2>Les marchés et les points gagnés</h2>
@@ -100,8 +99,8 @@ return <<<'HTML'
     <a href="{cgu_url}">CGU</a> et peut entraîner des sanctions.
 </p>
 <p>
-    Pour une vue courte des barèmes, ouvrez aussi l’aide points (icône de points) une fois
-    connecté, ou relisez <a href="{howto_url}">Comment ça marche</a>. Pour l’esprit du produit,
-    voir <a href="{about_url}">À propos de {app}</a>.
+    Pour une vue courte des barèmes, ouvre aussi l’aide points (icône de points) une fois
+    connecté, ou relis <a href="{howto_url}">Comment ça marche</a>. Pour le projet en bref&nbsp;:
+    <a href="{about_url}">À propos de {app}</a>.
 </p>
 HTML;

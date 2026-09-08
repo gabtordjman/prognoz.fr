@@ -69,11 +69,7 @@ function normalizeAvatarPath(?string $avatarUrl): ?string
     return $path;
 }
 
-/**
- * URL navigateur pour une photo, ou null.
- * Sur vieux navigateurs (pas de WebP) : préfère un .jpg jumeau, sinon génère
- * un JPEG une fois, sinon null (initiales) pour éviter l’icône cassée.
- */
+/** URL navigateur pour une photo, ou null si fichier absent. */
 function avatarPublicUrl(?string $avatarUrl): ?string
 {
     $path = normalizeAvatarPath($avatarUrl);
@@ -83,28 +79,6 @@ function avatarPublicUrl(?string $avatarUrl): ?string
     $baseDir = dirname(__DIR__) . '/public/';
     $full = $baseDir . $path;
     if (!is_file($full)) {
-        return null;
-    }
-
-    $legacy = function_exists('isLegacyBrowser') && isLegacyBrowser();
-    if ($legacy && preg_match('/\.webp$/i', $path)) {
-        $jpgRel = preg_replace('/\.webp$/i', '.jpg', $path);
-        $jpgFull = $baseDir . $jpgRel;
-        if (is_file($jpgFull)) {
-            return assetUrl($jpgRel);
-        }
-        if (function_exists('imagecreatefromwebp') && function_exists('imagejpeg')) {
-            $img = @imagecreatefromwebp($full);
-            if ($img !== false) {
-                $ok = @imagejpeg($img, $jpgFull, 82);
-                imagedestroy($img);
-                if ($ok && is_file($jpgFull)) {
-                    return assetUrl($jpgRel);
-                }
-            }
-        }
-
-        // Pas de JPEG utilisable → initiales plutôt qu’image cassée
         return null;
     }
 
@@ -127,6 +101,13 @@ function deleteAvatarFile(?string $avatarUrl): void
     $full = avatarAbsolutePath($avatarUrl);
     if ($full !== null) {
         @unlink($full);
+        // Anciens JPEG jumeaux (mode rétro) éventuels
+        if (preg_match('/\.webp$/i', $full)) {
+            $jpgTwin = preg_replace('/\.webp$/i', '.jpg', $full);
+            if (is_string($jpgTwin) && is_file($jpgTwin)) {
+                @unlink($jpgTwin);
+            }
+        }
     }
 }
 
@@ -253,10 +234,6 @@ function avatarWriteCompressed(\GdImage $img, string $destBase): array
             $size = (int) filesize($path);
             $candidates[] = [$path, 'webp', $size];
             if ($size <= AVATAR_TARGET_BYTES) {
-                // JPEG jumeau pour IE / vieux Safari (pas de WebP)
-                $jpgPath = $destBase . '.jpg';
-                @imagejpeg($img, $jpgPath, 82);
-
                 return [$path, 'webp'];
             }
         }
@@ -294,17 +271,7 @@ function avatarWriteCompressed(\GdImage $img, string $destBase): array
     [$bestPath, $bestExt] = $candidates[0];
     foreach ($candidates as [$path]) {
         if ($path !== $bestPath && is_file($path)) {
-            // Garder un .jpg jumeau si le gagnant est .webp
-            if ($bestExt === 'webp' && preg_match('/\.jpg$/i', (string) $path)) {
-                continue;
-            }
             @unlink($path);
-        }
-    }
-    if ($bestExt === 'webp') {
-        $jpgPath = $destBase . '.jpg';
-        if (!is_file($jpgPath)) {
-            @imagejpeg($img, $jpgPath, 82);
         }
     }
 

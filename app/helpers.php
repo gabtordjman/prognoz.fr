@@ -407,7 +407,7 @@ function renderUserAvatar(string $pseudo, string $size = 'md', ?string $avatarUr
     ?>
     <span class="user-avatar user-avatar-<?= e($sizeClass) ?><?= $hasPhoto ? ' has-photo' : '' ?>" style="background-color: <?= e(userAvatarColor($pseudo)) ?>;" title="<?= e($pseudo) ?>"<?= $hasPhoto ? '' : ' aria-hidden="true"' ?>>
         <?php if ($hasPhoto): ?>
-            <img src="<?= e($src) ?>" alt="" width="<?= $px ?>" height="<?= $px ?>"<?= function_exists('isLegacyBrowser') && isLegacyBrowser() ? '' : ' loading="lazy" decoding="async"' ?>>
+            <img src="<?= e($src) ?>" alt="" width="<?= $px ?>" height="<?= $px ?>" loading="lazy" decoding="async">
         <?php else: ?>
             <span class="user-avatar-initials"><?= e(userInitials($pseudo)) ?></span>
         <?php endif; ?>

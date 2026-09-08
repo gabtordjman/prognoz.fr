@@ -17,7 +17,7 @@ initI18n();
 require __DIR__ . '/routes.php';
 require __DIR__ . '/maintenance.php';
 
-enforceRetroUiGate();
+clearObsoleteRetroUiCookie();
 
 $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
 $isAdminArea = str_contains($scriptName, '/admin/')

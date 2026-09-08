@@ -109,7 +109,7 @@ return <<<'HTML'
     <a href="{mentions_url}">mentions légales</a>.
 </p>
 <p>
-    Vous voulez l’esprit du projet en une page&nbsp;?
+    Tu veux le projet en bref&nbsp;?
     <a href="{about_url}">À propos de {app}</a>. Tous les guides&nbsp;:
     <a href="{guides_url}">sommaire</a>.
 </p>

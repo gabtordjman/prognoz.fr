@@ -6,96 +6,87 @@ if (!defined('APP_BOOT')) {
 
 return <<<'HTML'
 <p>
-    {app} n’est pas conçu comme un classement anonyme géant. Depuis le début, l’ambition est de
-    retrouver l’ambiance d’un défi entre potes&nbsp;: qui a le mieux vu le derby, qui ose le score
-    exact, qui tient la série. Les <strong>amis</strong> et les <strong>communautés privées</strong>
-    portent cet esprit.
+    {app} n’est pas un classement anonyme géant. L’idée, depuis le début&nbsp;: retrouver l’ambiance
+    d’un défi entre potes — qui a vu le derby, qui ose le score exact, qui tient la série. Les
+    <strong>amis</strong> et les <strong>communautés privées</strong> portent ça.
 </p>
 
 <h2>Amis</h2>
 <p>
-    La liste d’amis sert à retrouver rapidement les profils qui comptent pour vous. Vous voyez
-    leurs points, leur série, leur saison — de quoi lancer une conversation ou une petite rivalité
-    saine. Ajouter quelqu’un reste volontaire&nbsp;: personne n’est forcé d’accepter une demande.
+    La liste d’amis sert à retrouver vite les profils qui comptent. Tu vois leurs points, leur
+    série, leur saison — de quoi lancer une vanne ou une petite rivalité. Ajouter quelqu’un reste
+    volontaire&nbsp;: personne n’est forcé d’accepter.
 </p>
 <p>
-    Les amis ne remplacent pas le ticket&nbsp;: chacun compose et valide ses propres pronostics.
-    En revanche, comparer les historiques et les classements devient beaucoup plus parlant quand
-    on sait pour qui on joue.
+    Chacun compose et valide ses propres pronos. Comparer les historiques a juste plus de sens
+    quand on sait pour qui on joue.
 </p>
 
 <h2>Communautés privées</h2>
 <p>
-    Une communauté est un espace fermé avec&nbsp;:
+    Une communauté, c’est un espace fermé avec&nbsp;:
 </p>
 <ul>
     <li>un nom choisi par le créateur&nbsp;;</li>
     <li>des membres invités (lien d’invitation)&nbsp;;</li>
-    <li>un classement saison propre au groupe&nbsp;;</li>
-    <li>un chat pour commenter les matchs, se moquer gentiment d’un ticket raté, ou fêter une série.</li>
+    <li>un classement saison du groupe&nbsp;;</li>
+    <li>un chat pour commenter les matchs, se moquer d’un ticket raté, ou fêter une série.</li>
 </ul>
 <p>
-    Les communautés sont <strong>privées par conception</strong>&nbsp;: elles ne sont pas une vitrine
-    publique pour le référencement. L’accès se fait sur invitation. C’est volontaire&nbsp;: le contenu
-    des discussions appartient au cercle, pas à un fil ouvert.
+    Les communautés sont <strong>privées</strong>&nbsp;: pas une vitrine publique. On y entre sur
+    invitation. Les discussions restent dans le cercle.
 </p>
 <p>
-    Le créateur (ou l’admin de la communauté, selon les droits) peut gérer les membres. Les règles
-    de respect du site s’appliquent aussi dans le chat&nbsp;: pas de harcèlement, pas de contenus
-    illicites, pas de spam. Le détail figure dans les <a href="{cgu_url}">CGU</a>.
+    Le créateur (ou l’admin du groupe) gère les membres. Dans le chat comme ailleurs&nbsp;: pas de
+    harcèlement, pas de contenus illicites, pas de spam. Détail dans les
+    <a href="{cgu_url}">CGU</a>.
 </p>
 
-<h2>Chat et confidentialité</h2>
+<h2>Chat et données</h2>
 <p>
-    Les messages de communauté sont traités avec des mesures de protection décrites dans la
-    <a href="{privacy_url}">politique de confidentialité</a>. L’éditeur peut intervenir en cas de
-    signalement ou de contenu contraire aux règles, de façon proportionnée. Le chat n’est pas un
-    espace «&nbsp;tout est permis&nbsp;»&nbsp;: c’est un outil pour parler sport entre membres.
+    Les messages sont traités comme décrit dans la
+    <a href="{privacy_url}">politique de confidentialité</a>. En cas de signalement ou de contenu
+    hors règles, l’éditeur peut intervenir de façon proportionnée. Le chat sert à parler sport
+    entre membres, pas à n’importe quoi.
 </p>
 <p>
-    Les notifications push (si vous les activez) peuvent vous prévenir d’un message ou d’un prono
-    gagné. Vous restez libre de les refuser dans les paramètres du compte et du navigateur.
+    Les notifications push (si tu les actives) peuvent prévenir d’un message ou d’un prono gagné.
+    Tu peux les refuser dans les paramètres du compte et du navigateur.
 </p>
 
-<h2>Classement global vs classement de communauté</h2>
-<p>
-    Deux lectures utiles&nbsp;:
-</p>
+<h2>Classement global vs communauté</h2>
 <ul>
-    <li><strong>Saison / profil global</strong> — votre progression sur tout le site, avec les
-        mêmes barèmes de points pour tous (voir
-        <a href="{points_url}">Points, saisons et séries</a>).</li>
-    <li><strong>Classement communauté</strong> — la compétition locale entre membres du groupe.
-        Idéal pour un challenge de bureau, une bande de supporters ou une famille.</li>
+    <li><strong>Saison / profil global</strong> — ta progression sur tout le site, mêmes barèmes
+        pour tous (voir <a href="{points_url}">Points, saisons et séries</a>).</li>
+    <li><strong>Classement communauté</strong> — la compétition locale du groupe (bureau, supporters,
+        famille…).</li>
 </ul>
 <p>
-    Vous pouvez appartenir à plusieurs communautés. Chaque groupe a sa dynamique&nbsp;; le compte
-    reste unique et gratuit.
+    Tu peux appartenir à plusieurs communautés. Un seul compte, toujours gratuit.
 </p>
 
 <h2>Inviter sans pression</h2>
 <p>
-    Un lien d’invitation permet à une personne de rejoindre la communauté après connexion ou
-    inscription. {app} reste gratuit pour les invités comme pour vous. Il n’y a pas de «&nbsp;parrainage
-    payant&nbsp;» ni de quota d’invitations monétisé. Si quelqu’un préfère seulement parcourir les
-    matchs sans rejoindre de groupe, c’est possible aussi.
+    Un lien d’invitation fait rejoindre après connexion ou inscription. Gratuit pour les invités
+    comme pour toi. Pas de parrainage payant ni de quota monétisé. Si quelqu’un veut juste regarder
+    les matchs sans rejoindre de groupe, c’est possible aussi.
 </p>
 
-<h2>Bonnes pratiques communautaires</h2>
+<h2>Quelques règles de bon sens</h2>
 <ul>
-    <li>Clarifier dès le départ le ton du groupe (décontracté, compétitif, familial).</li>
-    <li>Éviter de spoiler un résultat si des membres n’ont pas encore vu le match — simple courtoisie.</li>
-    <li>Ne pas harceler quelqu’un qui perd une série&nbsp;: le jeu doit rester un plaisir.</li>
-    <li>Utiliser le signalement / contact ({contact_mailto}) si un comportement dépasse les limites.</li>
+    <li>Se mettre d’accord sur le ton du groupe (décontracté, compétitif, familial).</li>
+    <li>Éviter de spoiler un résultat si des membres n’ont pas vu le match.</li>
+    <li>Ne pas harceler quelqu’un qui perd une série.</li>
+    <li>Signaler / écrire à {contact_mailto} si ça dépasse les limites.</li>
 </ul>
 
 <h2>Lien avec le reste du site</h2>
 <p>
-    Les communautés ne changent pas la nature du produit&nbsp;: toujours des
+    Les communautés ne changent pas le produit&nbsp;: toujours des
     <strong>pronostics gratuits</strong>, toujours des <strong>points de jeu</strong>, toujours
-    l’esprit potes. Pour comprendre le projet global, lisez
-    <a href="{about_url}">À propos de {app}</a>. Pour démarrer en cinq étapes,
-    <a href="{howto_url}">Comment ça marche</a>. Questions fréquentes&nbsp;:
+    l’esprit potes. Vue d’ensemble&nbsp;:
+    <a href="{about_url}">À propos de {app}</a>. Démarrage en cinq étapes&nbsp;:
+    <a href="{howto_url}">Comment ça marche</a>. Questions&nbsp;:
     <a href="{faq_url}">FAQ</a>.
 </p>
 HTML;

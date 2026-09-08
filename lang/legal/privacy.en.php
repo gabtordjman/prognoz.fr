@@ -163,8 +163,6 @@ return <<<'HTML'
     <li>PHP session cookie — authentication, lasting about {session_days} days, renewed as you
         browse. Without it, login and saving predictions do not work.</li>
     <li>Language cookie (<code>prognoz_lang</code>) — remembers FR or EN, up to 13 months.</li>
-    <li>Retro display cookie (<code>prognoz_ui</code>) — only if a legacy browser triggers the
-        simplified layout.</li>
     <li>Onboarding cookie (<code>prognoz_onboard_hide</code>) — hides the tutorial if you dismiss it.</li>
     <li>Choice cookie (<code>prognoz_consent</code>) — stores your acceptance or refusal of
         advertising cookies, 180 days.</li>

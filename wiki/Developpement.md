@@ -34,7 +34,6 @@ Fallbacks critiques récents : voir `i18nCriticalFallbacks()` dans `app/i18n.php
 ## Front
 
 - CSS principal : `public/assets/css/style.css`
-- Thème rétro : `retro.css` (navigateurs anciens / mode rétro)
 - JS : `public/assets/js/` (cache-bust via `assetUrl()` = `?v=filemtime`)
 - Design : papier / feutre / bois / laiton — éviter les looks « dashboard violet »
 
