@@ -18,12 +18,22 @@
     var seenIds = {};
     var i18n = window.PRONO_CHAT_I18N || {};
 
-    function formatHeure(dateStr) {
+    function formatDateHeure(dateStr) {
         var d = new Date(String(dateStr).replace(' ', 'T') + 'Z');
         if (isNaN(d.getTime())) {
             d = new Date(String(dateStr).replace(' ', 'T'));
         }
-        return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        if (isNaN(d.getTime())) {
+            return '';
+        }
+        var locale = (document.documentElement.lang || 'fr').indexOf('en') === 0 ? 'en-GB' : 'fr-FR';
+        return d.toLocaleString(locale, {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     }
 
     function escapeHtml(str) {
@@ -160,7 +170,7 @@
                 avatarBlock +
                 '<div class="chat-msg-meta">' +
                     authorHtml +
-                    ' <time class="chat-time">' + formatHeure(msg.created_at) + '</time>' +
+                    ' <time class="chat-time">' + formatDateHeure(msg.created_at) + '</time>' +
                 '</div>' +
             '</div>' +
             '<div class="bubble">' + escapeHtml(msg.contenu) + '</div>';
