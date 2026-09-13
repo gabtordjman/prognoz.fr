@@ -50,6 +50,7 @@ require __DIR__ . '/kit.php';
 require __DIR__ . '/layout.php';
 require __DIR__ . '/matches.php';
 require __DIR__ . '/events.php';
+require __DIR__ . '/site_theme.php';
 require __DIR__ . '/favorite_team.php';
 require __DIR__ . '/highlights.php';
 require __DIR__ . '/announcements.php';
@@ -87,6 +88,7 @@ try {
     ensureFavoriteTeamSchema($pdoBoot);
     ensureFavTeamMarketsForOpenMatches($pdoBoot);
     ensureSiteAnnouncementsSchema($pdoBoot);
+    ensureUserThemeSchema($pdoBoot);
 } catch (Throwable $e) {
     // Connexion / ALTER : géré ailleurs ou migration manuelle
 }

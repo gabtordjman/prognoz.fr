@@ -22,7 +22,7 @@ function layoutHead(string $title, bool $withIcons = true, array $seo = []): voi
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="<?= e($description) ?>">
     <meta name="robots" content="<?= e($robots) ?>">
-    <meta name="theme-color" content="#0f1a14">
+    <meta name="theme-color" content="<?= e(function_exists('siteThemeColorMeta') ? siteThemeColorMeta() : '#0f1a14') ?>">
     <title><?= e($documentTitle) ?></title>
     <?php if ($canonical): ?>
     <link rel="canonical" href="<?= e($canonical) ?>">
@@ -57,6 +57,14 @@ function layoutHead(string $title, bool $withIcons = true, array $seo = []): voi
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400..800;1,400..800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <?php
+    if (function_exists('siteThemeGoogleFontsHref')) {
+        $themeFonts = siteThemeGoogleFontsHref();
+        if ($themeFonts !== '') {
+            echo '<link href="' . e($themeFonts) . '" rel="stylesheet">' . "\n    ";
+        }
+    }
+    ?>
     <?php if ($withIcons): ?>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <?php endif; ?>

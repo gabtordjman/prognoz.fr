@@ -39,6 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             clearCurrentUserCache();
             flash('success', t('dash.profile_saved'));
+        } elseif ($action === 'set_ui_theme') {
+            setUserSiteTheme($pdo, $userId, (string) ($_POST['theme'] ?? ''));
+            flash('success', t('settings.theme_ok'));
         }
     } catch (InvalidArgumentException $e) {
         flash('error', $e->getMessage());
@@ -102,6 +105,8 @@ foreach ($currentFavNationals as $nat) {
 while (count($currentFavNationals) < (int) FAV_TEAMS_MAX) {
     $currentFavNationals[] = '';
 }
+$currentSiteTheme = resolveUserSiteTheme($user);
+$siteThemes = siteThemeCatalog();
 ?>
 <!DOCTYPE html>
 <html lang="<?= e(htmlLang()) ?>"<?= function_exists('htmlUiClassAttr') ? htmlUiClassAttr() : '' ?>>
@@ -188,6 +193,41 @@ while (count($currentFavNationals) < (int) FAV_TEAMS_MAX) {
             <?php renderKitButtonAndDialog($user); ?>
         </nav>
     </header>
+
+    <div class="panel panel-spaced">
+        <div class="panel-head"><?= e(t('settings.theme_head')) ?></div>
+        <div class="panel-body">
+            <p class="settings-hint"><?= e(t('settings.theme_hint')) ?></p>
+            <form method="post" class="theme-picker-form">
+                <?= csrfField() ?>
+                <input type="hidden" name="action" value="set_ui_theme">
+                <div class="theme-picker" role="radiogroup" aria-label="<?= e(t('settings.theme_head')) ?>">
+                    <?php foreach ($siteThemes as $theme): ?>
+                        <?php
+                        $tid = (string) $theme['id'];
+                        $checked = $tid === $currentSiteTheme;
+                        ?>
+                        <label class="theme-picker-card<?= $checked ? ' is-active' : '' ?>">
+                            <input type="radio" name="theme" value="<?= e($tid) ?>"<?= $checked ? ' checked' : '' ?>>
+                            <span class="theme-picker-swatches" aria-hidden="true">
+                                <?php foreach ($theme['preview'] as $swatch): ?>
+                                    <span class="theme-picker-swatch" style="background:<?= e($swatch) ?>"></span>
+                                <?php endforeach; ?>
+                            </span>
+                            <span class="theme-picker-copy">
+                                <strong class="theme-picker-name"><?= e(t($theme['name_key'])) ?></strong>
+                                <span class="theme-picker-desc"><?= e(t($theme['desc_key'])) ?></span>
+                            </span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm theme-picker-submit">
+                    <i class="fa-solid fa-palette" aria-hidden="true"></i>
+                    <?= e(t('settings.theme_save')) ?>
+                </button>
+            </form>
+        </div>
+    </div>
 
     <section class="panel dash-stats-panel" aria-label="<?= e(t('dash.title')) ?>">
         <div class="dash-stats">

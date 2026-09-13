@@ -1,6 +1,6 @@
 <?php
 /**
- * Classes HTML globales (thèmes événement / fond boutique).
+ * Classes HTML globales (thèmes site / événement / fond boutique).
  * L’ancien mode « rétro » (UA, cookie prognoz_ui, retro.css) a été retiré.
  */
 if (!defined('APP_BOOT')) {
@@ -12,6 +12,15 @@ if (!defined('APP_BOOT')) {
 function htmlUiClassAttr(): string
 {
     $classes = [];
+
+    try {
+        if (function_exists('siteThemeHtmlClass')) {
+            $classes[] = siteThemeHtmlClass();
+        }
+    } catch (Throwable $e) {
+        // ignore
+    }
+
     try {
         if (function_exists('getDisplaySiteEvent') && function_exists('primaryEventThemeSlug')) {
             $ev = getDisplaySiteEvent(getPDO());
@@ -27,8 +36,10 @@ function htmlUiClassAttr(): string
     } catch (Throwable $e) {
         // ignore
     }
+
     try {
-        if (function_exists('shopResolvedPageBackgroundCss')) {
+        $allowShopBg = !function_exists('siteThemeAllowsShopPageBg') || siteThemeAllowsShopPageBg();
+        if ($allowShopBg && function_exists('shopResolvedPageBackgroundCss')) {
             $pageBg = shopResolvedPageBackgroundCss();
             if ($pageBg !== '') {
                 $classes[] = 'page-bg';
