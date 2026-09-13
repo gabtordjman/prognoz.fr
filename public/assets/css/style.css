@@ -7449,7 +7449,7 @@ a.shop-card-preview:focus-visible .shop-card-preview-lbl {
 }
 
 /* ==========================================================================
-   Thèmes globaux du site (html.site-theme-*)
+   Thèmes utilisateur (html.site-theme-*)
    ========================================================================== */
 
 html.site-theme-classic {
@@ -7475,7 +7475,7 @@ html.site-theme-classic {
     --topbar-ink: #f5f0e6;
 }
 
-/* --- Projecteurs : stade de nuit --- */
+/* --- Pelouse : projecteurs + lignes de terrain --- */
 html.site-theme-floodlight {
     --bg: #07090b;
     --felt: #0e1216;
@@ -7502,9 +7502,13 @@ html.site-theme-floodlight {
     --shadow-soft: 0 8px 28px rgba(0, 0, 0, 0.45);
     --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.35), 0 10px 24px rgba(0, 0, 0, 0.12);
     --tex-felt:
-        linear-gradient(180deg, rgba(61, 255, 138, 0.05) 0%, transparent 18%),
-        radial-gradient(ellipse 90% 55% at 50% -10%, rgba(240, 248, 255, 0.16), transparent 55%),
-        linear-gradient(180deg, #0a0d10 0%, #0e1216 48%, #080a0c 100%);
+        linear-gradient(90deg, rgba(61, 255, 138, 0.045) 50%, transparent 50%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px),
+        radial-gradient(ellipse 42% 28% at 50% 42%, transparent 58%, rgba(61, 255, 138, 0.07) 59%, transparent 62%),
+        linear-gradient(90deg, transparent 49.5%, rgba(255, 255, 255, 0.1) 49.5%, rgba(255, 255, 255, 0.1) 50.5%, transparent 50.5%),
+        radial-gradient(ellipse 120% 70% at 8% -5%, rgba(255, 255, 255, 0.22), transparent 42%),
+        radial-gradient(ellipse 120% 70% at 92% -5%, rgba(255, 255, 255, 0.18), transparent 42%),
+        linear-gradient(180deg, #080b0e 0%, #0c1410 38%, #07100a 100%);
     --tex-wood: none;
     --tex-wood-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 50%, rgba(0, 0, 0, 0.35) 100%);
     --topbar-border: #3dff8a;
@@ -7515,13 +7519,38 @@ html.site-theme-floodlight {
 html.site-theme-floodlight body {
     background-color: var(--bg);
     background-image: var(--tex-felt);
-    background-size: auto;
+    background-size:
+        56px 100%,
+        100% 72px,
+        min(520px, 70vw) min(340px, 48vh),
+        100% 100%,
+        100% 100%,
+        100% 100%,
+        auto;
+    background-position: 0 0, 0 0, 50% 38%, 0 0, 0 0, 0 0, 0 0;
+    background-repeat: repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
     background-attachment: scroll;
+}
+
+html.site-theme-floodlight body::before {
+    display: block;
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+        radial-gradient(ellipse 28% 18% at 12% 0%, rgba(255, 255, 255, 0.35), transparent 70%),
+        radial-gradient(ellipse 28% 18% at 88% 0%, rgba(255, 255, 255, 0.28), transparent 70%),
+        linear-gradient(180deg, rgba(61, 255, 138, 0.06) 0%, transparent 22%);
+    opacity: 0.85;
 }
 
 html.site-theme-floodlight .topbar {
     background-color: var(--wood-bar);
-    background-image: var(--tex-wood-sheen);
+    background-image:
+        repeating-linear-gradient(90deg, transparent 0 10px, rgba(61, 255, 138, 0.08) 10px 11px),
+        var(--tex-wood-sheen);
     border-bottom-width: 2px;
     box-shadow:
         0 2px 18px rgba(0, 0, 0, 0.55),
@@ -7529,13 +7558,22 @@ html.site-theme-floodlight .topbar {
         inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
+html.site-theme-floodlight .topbar::before {
+    display: block;
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 3px;
+    z-index: 2;
+    pointer-events: none;
+    background: repeating-linear-gradient(90deg, #3dff8a 0 8px, transparent 8px 16px);
+    opacity: 0.55;
+}
+
 html.site-theme-floodlight .topbar::after {
-    background: linear-gradient(
-        105deg,
-        transparent 35%,
-        rgba(255, 255, 255, 0.12) 50%,
-        transparent 65%
-    );
+    background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.14) 50%, transparent 65%);
 }
 
 html.site-theme-floodlight .topbar-brand,
@@ -7553,6 +7591,27 @@ html.site-theme-floodlight .page-title {
     text-transform: uppercase;
 }
 
+html.site-theme-floodlight .panel {
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card), 0 0 0 1px rgba(61, 255, 138, 0.08);
+}
+
+html.site-theme-floodlight .panel::before {
+    display: block;
+    content: '';
+    position: absolute;
+    top: 0.55rem;
+    right: 0.65rem;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: #3dff8a;
+    box-shadow: 0 0 10px rgba(61, 255, 138, 0.7);
+    opacity: 0.75;
+    z-index: 2;
+    pointer-events: none;
+}
+
 html.site-theme-floodlight .btn-primary {
     background: linear-gradient(180deg, #4dff98 0%, #1f9a52 100%);
     color: #04140a;
@@ -7568,12 +7627,21 @@ html.site-theme-floodlight .btn-accent {
 
 html.site-theme-floodlight.theme-match-night {
     --tex-felt:
-        linear-gradient(180deg, rgba(61, 255, 138, 0.04) 0%, transparent 20%),
-        radial-gradient(ellipse 80% 50% at 50% -8%, rgba(255, 255, 255, 0.1), transparent 50%),
+        linear-gradient(90deg, rgba(61, 255, 138, 0.03) 50%, transparent 50%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px),
+        radial-gradient(ellipse 42% 28% at 50% 42%, transparent 58%, rgba(61, 255, 138, 0.05) 59%, transparent 62%),
+        linear-gradient(90deg, transparent 49.5%, rgba(255, 255, 255, 0.07) 49.5%, rgba(255, 255, 255, 0.07) 50.5%, transparent 50.5%),
+        radial-gradient(ellipse 120% 70% at 8% -5%, rgba(255, 255, 255, 0.14), transparent 42%),
+        radial-gradient(ellipse 120% 70% at 92% -5%, rgba(255, 255, 255, 0.12), transparent 42%),
         linear-gradient(180deg, #050708 0%, #0a0d10 55%, #040506 100%);
 }
 
-/* --- Tableau : ardoise tactique --- */
+html.site-theme-floodlight.theme-match-night body::before {
+    display: block;
+    opacity: 0.7;
+}
+
+/* --- Vestiaire : ardoise + craie --- */
 html.site-theme-chalk {
     --bg: #1a221e;
     --felt: #24302a;
@@ -7601,8 +7669,11 @@ html.site-theme-chalk {
     --shadow-soft: 0 6px 20px rgba(0, 0, 0, 0.35);
     --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.4), 0 6px 16px rgba(20, 30, 24, 0.14);
     --tex-felt:
-        linear-gradient(90deg, rgba(232, 228, 216, 0.04) 1px, transparent 1px),
-        linear-gradient(0deg, rgba(232, 228, 216, 0.04) 1px, transparent 1px),
+        radial-gradient(circle at 18% 22%, rgba(232, 228, 216, 0.07) 0 1px, transparent 2px),
+        radial-gradient(circle at 72% 64%, rgba(232, 228, 216, 0.055) 0 1.2px, transparent 2.2px),
+        radial-gradient(circle at 44% 81%, rgba(232, 228, 216, 0.04) 0 0.8px, transparent 1.6px),
+        linear-gradient(90deg, rgba(232, 228, 216, 0.05) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(232, 228, 216, 0.05) 1px, transparent 1px),
         linear-gradient(165deg, #1c2621 0%, #24302a 45%, #18201c 100%);
     --tex-wood: none;
     --tex-wood-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 40%, rgba(0, 0, 0, 0.3) 100%);
@@ -7614,8 +7685,20 @@ html.site-theme-chalk {
 html.site-theme-chalk body {
     background-color: var(--bg);
     background-image: var(--tex-felt);
-    background-size: 28px 28px, 28px 28px, auto;
+    background-size: 140px 140px, 180px 180px, 110px 110px, 28px 28px, 28px 28px, auto;
     background-attachment: scroll;
+}
+
+html.site-theme-chalk body::before {
+    display: block;
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+        radial-gradient(ellipse 55% 40% at 15% 90%, rgba(232, 228, 216, 0.06), transparent 70%),
+        radial-gradient(ellipse 40% 30% at 90% 12%, rgba(232, 228, 216, 0.05), transparent 65%);
 }
 
 html.site-theme-chalk .topbar {
@@ -7630,6 +7713,19 @@ html.site-theme-chalk .topbar::after {
     display: none;
 }
 
+html.site-theme-chalk .topbar::before {
+    display: block;
+    content: '';
+    position: absolute;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.35rem;
+    height: 1px;
+    border-bottom: 1px dashed rgba(233, 228, 214, 0.28);
+    z-index: 2;
+    pointer-events: none;
+}
+
 html.site-theme-chalk .brand-word,
 html.site-theme-chalk .panel-head,
 html.site-theme-chalk .page-title,
@@ -7641,9 +7737,47 @@ html.site-theme-chalk .hero-guest-copy h1 {
 }
 
 html.site-theme-chalk .panel {
-    box-shadow:
-        var(--shadow-card),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+    box-shadow: var(--shadow-card), inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+    border: 1px dashed rgba(60, 80, 68, 0.35);
+}
+
+html.site-theme-chalk .panel::before {
+    display: block;
+    content: '';
+    position: absolute;
+    top: 0.7rem;
+    right: 0.85rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    border: 2px solid rgba(126, 200, 160, 0.55);
+    border-radius: 50%;
+    box-shadow: 0.55rem 0.55rem 0 -0.35rem rgba(126, 200, 160, 0.35);
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+html.site-theme-chalk .panel-head {
+    border-bottom-style: dashed;
+    background:
+        linear-gradient(180deg, transparent 70%, rgba(60, 90, 70, 0.08) 100%),
+        linear-gradient(180deg, var(--paper) 0%, var(--paper-mid) 100%);
+}
+
+html.site-theme-chalk .panel-head::after {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    right: 1rem;
+    bottom: 0.2rem;
+    height: 2px;
+    background: repeating-linear-gradient(
+        90deg,
+        rgba(60, 90, 70, 0.35) 0 6px,
+        transparent 6px 10px
+    );
+    opacity: 0.55;
+    pointer-events: none;
 }
 
 html.site-theme-chalk .btn-primary {
@@ -7655,12 +7789,19 @@ html.site-theme-chalk .btn-primary {
 
 html.site-theme-chalk.theme-match-night {
     --tex-felt:
-        linear-gradient(90deg, rgba(232, 228, 216, 0.03) 1px, transparent 1px),
-        linear-gradient(0deg, rgba(232, 228, 216, 0.03) 1px, transparent 1px),
+        radial-gradient(circle at 18% 22%, rgba(232, 228, 216, 0.05) 0 1px, transparent 2px),
+        radial-gradient(circle at 72% 64%, rgba(232, 228, 216, 0.04) 0 1.2px, transparent 2.2px),
+        radial-gradient(circle at 44% 81%, rgba(232, 228, 216, 0.03) 0 0.8px, transparent 1.6px),
+        linear-gradient(90deg, rgba(232, 228, 216, 0.035) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(232, 228, 216, 0.035) 1px, transparent 1px),
         linear-gradient(165deg, #121816 0%, #1a221e 50%, #101612 100%);
 }
 
-/* --- Tribune : cabine presse --- */
+html.site-theme-chalk.theme-match-night body::before {
+    display: block;
+}
+
+/* --- Cabine : grille LED + scanlines --- */
 html.site-theme-pressbox {
     --bg: #10141a;
     --felt: #161c26;
@@ -7687,7 +7828,8 @@ html.site-theme-pressbox {
     --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.4);
     --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 22px rgba(16, 24, 36, 0.12);
     --tex-felt:
-        linear-gradient(180deg, rgba(240, 160, 32, 0.06) 0%, transparent 14%),
+        radial-gradient(circle, rgba(240, 160, 32, 0.09) 0.7px, transparent 1px),
+        linear-gradient(180deg, rgba(240, 160, 32, 0.07) 0%, transparent 14%),
         linear-gradient(135deg, #121820 0%, #161c26 40%, #0e1218 100%);
     --tex-wood: none;
     --tex-wood-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 45%, rgba(0, 0, 0, 0.35) 100%);
@@ -7699,8 +7841,25 @@ html.site-theme-pressbox {
 html.site-theme-pressbox body {
     background-color: var(--bg);
     background-image: var(--tex-felt);
-    background-size: auto;
+    background-size: 12px 12px, auto, auto;
     background-attachment: scroll;
+}
+
+html.site-theme-pressbox body::before {
+    display: block;
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+        repeating-linear-gradient(
+            180deg,
+            transparent 0 3px,
+            rgba(0, 0, 0, 0.08) 3px 4px
+        );
+    opacity: 0.45;
+    mix-blend-mode: multiply;
 }
 
 html.site-theme-pressbox .topbar {
@@ -7714,13 +7873,27 @@ html.site-theme-pressbox .topbar {
         0 0 0 1px rgba(240, 160, 32, 0.15);
 }
 
-html.site-theme-pressbox .topbar::after {
-    background: linear-gradient(
+html.site-theme-pressbox .topbar::before {
+    display: block;
+    content: '';
+    position: absolute;
+    top: 0.4rem;
+    right: 0.75rem;
+    width: 2.4rem;
+    height: 0.55rem;
+    z-index: 2;
+    pointer-events: none;
+    background: repeating-linear-gradient(
         90deg,
-        transparent 0%,
-        rgba(240, 176, 64, 0.18) 50%,
-        transparent 100%
+        #f0a020 0 3px,
+        transparent 3px 6px
     );
+    opacity: 0.7;
+    box-shadow: 0 0 8px rgba(240, 160, 32, 0.35);
+}
+
+html.site-theme-pressbox .topbar::after {
+    background: linear-gradient(90deg, transparent 0%, rgba(240, 176, 64, 0.18) 50%, transparent 100%);
     animation: none;
     opacity: 0.7;
 }
@@ -7734,6 +7907,19 @@ html.site-theme-pressbox .hero-guest-copy h1 {
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+}
+
+html.site-theme-pressbox .panel::before {
+    display: block;
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, #f0a020 0%, #e09a18 40%, transparent 100%);
+    z-index: 2;
+    pointer-events: none;
 }
 
 html.site-theme-pressbox .btn-primary {
@@ -7750,15 +7936,21 @@ html.site-theme-pressbox .btn-accent {
 html.site-theme-pressbox .panel-head {
     background: linear-gradient(180deg, #f2f5fa 0%, var(--paper-mid) 100%);
     border-bottom: 2px solid rgba(224, 154, 24, 0.35);
+    padding-left: 1.15rem;
 }
 
 html.site-theme-pressbox.theme-match-night {
     --tex-felt:
+        radial-gradient(circle, rgba(240, 160, 32, 0.07) 0.7px, transparent 1px),
         linear-gradient(180deg, rgba(240, 160, 32, 0.05) 0%, transparent 16%),
         linear-gradient(135deg, #0a0e14 0%, #121820 45%, #080c10 100%);
 }
 
-/* --- Soirée derby --- */
+html.site-theme-pressbox.theme-match-night body::before {
+    display: block;
+}
+
+/* --- Classico : écharpe / diagonales --- */
 html.site-theme-derby {
     --bg: #120a0a;
     --felt: #1a1010;
@@ -7785,6 +7977,13 @@ html.site-theme-derby {
     --shadow-soft: 0 8px 26px rgba(40, 0, 0, 0.4);
     --shadow-card: 0 1px 0 rgba(255, 245, 230, 0.45), 0 8px 20px rgba(40, 10, 8, 0.14);
     --tex-felt:
+        repeating-linear-gradient(
+            -32deg,
+            transparent 0 18px,
+            rgba(196, 90, 58, 0.07) 18px 20px,
+            transparent 20px 36px,
+            rgba(184, 146, 42, 0.06) 36px 38px
+        ),
         radial-gradient(ellipse 70% 40% at 50% 0%, rgba(196, 90, 58, 0.18), transparent 55%),
         linear-gradient(180deg, #140c0c 0%, #1a1010 50%, #100808 100%);
     --tex-wood: none;
@@ -7801,22 +8000,64 @@ html.site-theme-derby body {
     background-attachment: scroll;
 }
 
+html.site-theme-derby body::before,
+html.site-theme-derby body::after {
+    display: block;
+    content: '';
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: min(4.5rem, 9vw);
+    pointer-events: none;
+    z-index: 0;
+    background: repeating-linear-gradient(
+        180deg,
+        #8a3a2a 0 14px,
+        #b8922a 14px 28px,
+        #1a1010 28px 42px
+    );
+    opacity: 0.42;
+}
+
+html.site-theme-derby body::before { left: 0; }
+html.site-theme-derby body::after { right: 0; }
+
 html.site-theme-derby .topbar {
     background-color: var(--wood-bar);
-    background-image: var(--tex-wood-sheen);
+    background-image:
+        repeating-linear-gradient(
+            -28deg,
+            transparent 0 12px,
+            rgba(196, 90, 58, 0.12) 12px 14px,
+            transparent 14px 24px,
+            rgba(184, 146, 42, 0.1) 24px 26px
+        ),
+        var(--tex-wood-sheen);
     border-bottom-width: 3px;
     box-shadow:
         0 2px 16px rgba(0, 0, 0, 0.55),
         0 0 28px rgba(196, 90, 58, 0.12);
 }
 
+html.site-theme-derby .topbar::before {
+    display: block;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 0.55rem solid transparent;
+    border-right: 0.55rem solid transparent;
+    border-top: 0.7rem solid #c45a3a;
+    z-index: 2;
+    pointer-events: none;
+    filter: drop-shadow(0 0 4px rgba(196, 90, 58, 0.4));
+}
+
 html.site-theme-derby .topbar::after {
-    background: linear-gradient(
-        105deg,
-        transparent 30%,
-        rgba(240, 200, 120, 0.14) 50%,
-        transparent 70%
-    );
+    background: linear-gradient(105deg, transparent 30%, rgba(240, 200, 120, 0.14) 50%, transparent 70%);
 }
 
 html.site-theme-derby .brand-word,
@@ -7828,6 +8069,27 @@ html.site-theme-derby .panel-head {
     font-weight: 600;
     letter-spacing: 0.05em;
     text-transform: uppercase;
+}
+
+html.site-theme-derby .panel {
+    box-shadow:
+        var(--shadow-card),
+        inset 0 0 0 1px rgba(196, 90, 58, 0.12);
+}
+
+html.site-theme-derby .panel::before {
+    display: block;
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 1.6rem;
+    height: 1.6rem;
+    background:
+        linear-gradient(225deg, #c45a3a 0 50%, transparent 50%);
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0.85;
 }
 
 html.site-theme-derby .btn-primary {
@@ -7849,8 +8111,21 @@ html.site-theme-derby .panel-head {
 
 html.site-theme-derby.theme-match-night {
     --tex-felt:
+        repeating-linear-gradient(
+            -32deg,
+            transparent 0 18px,
+            rgba(196, 90, 58, 0.05) 18px 20px,
+            transparent 20px 36px,
+            rgba(184, 146, 42, 0.04) 36px 38px
+        ),
         radial-gradient(ellipse 65% 38% at 50% 0%, rgba(196, 90, 58, 0.14), transparent 55%),
         linear-gradient(180deg, #0c0606 0%, #140c0c 52%, #0a0505 100%);
+}
+
+html.site-theme-derby.theme-match-night body::before,
+html.site-theme-derby.theme-match-night body::after {
+    display: block;
+    opacity: 0.32;
 }
 
 /* Événements : teintes légères au-dessus des thèmes non-classic */
@@ -7880,6 +8155,26 @@ html.site-theme-derby.event-theme-fest {
     --brass-light: #f0d070;
 }
 
+/* Derby + événement : ne pas écraser les bandes latérales */
+html.site-theme-derby.event-theme-double body::after,
+html.site-theme-derby.event-theme-default body::after,
+html.site-theme-derby.event-theme-night body::after,
+html.site-theme-derby.event-theme-fest body::after {
+    inset: auto;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: auto;
+    width: min(4.5rem, 9vw);
+    background: repeating-linear-gradient(
+        180deg,
+        #8a3a2a 0 14px,
+        #b8922a 14px 28px,
+        #1a1010 28px 42px
+    );
+    opacity: 0.42;
+}
+
 /* --- Sélecteur de thème (Mon Espace) --- */
 .theme-picker-form {
     display: flex;
@@ -7898,7 +8193,7 @@ html.site-theme-derby.event-theme-fest {
     display: flex;
     flex-direction: column;
     gap: 0.65rem;
-    padding: 0.85rem 0.8rem 0.9rem;
+    padding: 0.75rem 0.7rem 0.85rem;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     background: rgba(255, 255, 255, 0.35);
@@ -7931,23 +8226,81 @@ html.site-theme-derby.event-theme-fest {
     pointer-events: none;
 }
 
-.theme-picker-swatches {
-    display: flex;
-    gap: 0.28rem;
-    height: 1.55rem;
+.theme-picker-preview {
+    position: relative;
+    display: block;
+    height: 3.1rem;
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
-.theme-picker-swatch {
-    flex: 1;
-    border-radius: 4px;
-    border: 1px solid rgba(0, 0, 0, 0.12);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+.theme-picker-motif {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.theme-picker-card--classic .theme-picker-motif {
+    background:
+        linear-gradient(180deg, rgba(255, 220, 170, 0.2) 0%, transparent 40%),
+        url('../img/felt.jpg'),
+        linear-gradient(180deg, #1a3226, #0f1a14);
+    background-size: auto, 120px 120px, auto;
+}
+
+.theme-picker-card--floodlight .theme-picker-motif {
+    background:
+        radial-gradient(ellipse 40% 50% at 15% 0%, rgba(255, 255, 255, 0.45), transparent 60%),
+        radial-gradient(ellipse 40% 50% at 85% 0%, rgba(255, 255, 255, 0.35), transparent 60%),
+        linear-gradient(90deg, transparent 49%, rgba(255, 255, 255, 0.35) 49%, rgba(255, 255, 255, 0.35) 51%, transparent 51%),
+        linear-gradient(90deg, rgba(61, 255, 138, 0.12) 50%, transparent 50%),
+        linear-gradient(180deg, #0a0d10, #0c1410);
+    background-size: auto, auto, auto, 14px 100%, auto;
+}
+
+.theme-picker-card--chalk .theme-picker-motif {
+    background:
+        radial-gradient(circle at 30% 40%, rgba(232, 228, 216, 0.2) 0 1px, transparent 2px),
+        radial-gradient(circle at 70% 65%, rgba(232, 228, 216, 0.15) 0 1px, transparent 2px),
+        linear-gradient(90deg, rgba(232, 228, 216, 0.12) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(232, 228, 216, 0.12) 1px, transparent 1px),
+        linear-gradient(165deg, #1c2621, #24302a);
+    background-size: 40px 40px, 50px 50px, 10px 10px, 10px 10px, auto;
+}
+
+.theme-picker-card--pressbox .theme-picker-motif {
+    background:
+        repeating-linear-gradient(180deg, transparent 0 2px, rgba(0, 0, 0, 0.18) 2px 3px),
+        radial-gradient(circle, rgba(240, 160, 32, 0.35) 0.6px, transparent 1px),
+        linear-gradient(135deg, #121820, #1a2230);
+    background-size: auto, 8px 8px, auto;
+}
+
+.theme-picker-card--pressbox .theme-picker-preview::after {
+    content: '';
+    position: absolute;
+    top: 0.35rem;
+    right: 0.4rem;
+    width: 1.4rem;
+    height: 0.35rem;
+    background: repeating-linear-gradient(90deg, #f0a020 0 2px, transparent 2px 4px);
+}
+
+.theme-picker-card--derby .theme-picker-motif {
+    background:
+        repeating-linear-gradient(
+            -32deg,
+            #8a3a2a 0 8px,
+            #b8922a 8px 16px,
+            #1a1010 16px 24px
+        );
 }
 
 .theme-picker-copy {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: 0.15rem;
     min-width: 0;
 }
 
@@ -7976,11 +8329,27 @@ html.site-theme-derby.event-theme-fest {
     html.site-theme-pressbox body,
     html.site-theme-derby body {
         background-attachment: scroll !important;
-        background-size: cover;
     }
 
     html.site-theme-chalk body {
-        background-size: 22px 22px, 22px 22px, cover;
+        background-size: 100px 100px, 130px 130px, 90px 90px, 22px 22px, 22px 22px, cover;
+    }
+
+    html.site-theme-floodlight body {
+        background-size:
+            40px 100%,
+            100% 56px,
+            min(360px, 80vw) min(240px, 40vh),
+            100% 100%,
+            100% 100%,
+            100% 100%,
+            auto;
+    }
+
+    html.site-theme-derby body::before,
+    html.site-theme-derby body::after {
+        width: 0.55rem;
+        opacity: 0.28;
     }
 
     html.site-theme-floodlight .brand-word,
@@ -8015,12 +8384,16 @@ html.site-theme-derby.event-theme-fest {
     }
 
     .theme-picker-card {
-        padding: 0.7rem 0.65rem 0.75rem;
+        padding: 0.65rem 0.6rem 0.7rem;
         -webkit-tap-highlight-color: transparent;
     }
 
     .theme-picker-card:hover {
         transform: none;
+    }
+
+    .theme-picker-preview {
+        height: 2.5rem;
     }
 
     .theme-picker-desc {
@@ -8047,8 +8420,10 @@ html.site-theme-derby.event-theme-fest {
     }
 }
 
-
-
-
-
-
+@media (prefers-reduced-motion: reduce) {
+    html.site-theme-floodlight .topbar::after,
+    html.site-theme-pressbox .topbar::after,
+    html.site-theme-derby .topbar::after {
+        animation: none;
+    }
+}

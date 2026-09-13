@@ -207,12 +207,10 @@ $siteThemes = siteThemeCatalog();
                         $tid = (string) $theme['id'];
                         $checked = $tid === $currentSiteTheme;
                         ?>
-                        <label class="theme-picker-card<?= $checked ? ' is-active' : '' ?>">
+                        <label class="theme-picker-card theme-picker-card--<?= e($tid) ?><?= $checked ? ' is-active' : '' ?>">
                             <input type="radio" name="theme" value="<?= e($tid) ?>"<?= $checked ? ' checked' : '' ?>>
-                            <span class="theme-picker-swatches" aria-hidden="true">
-                                <?php foreach ($theme['preview'] as $swatch): ?>
-                                    <span class="theme-picker-swatch" style="background:<?= e($swatch) ?>"></span>
-                                <?php endforeach; ?>
+                            <span class="theme-picker-preview" aria-hidden="true">
+                                <span class="theme-picker-motif"></span>
                             </span>
                             <span class="theme-picker-copy">
                                 <strong class="theme-picker-name"><?= e(t($theme['name_key'])) ?></strong>
