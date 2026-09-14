@@ -13,8 +13,8 @@ const SHOP_NAME_STAFF = 'name_root';
  * Catalogue boutique (contenu site, pas en BDD).
  *
  * @return array<string, array{
- *   id:string, type:'bg'|'name', rarity:'common'|'rare'|'epic'|'legend'|'staff',
- *   price:int, image:?string, css:string, animated?:bool, exclusive?:bool
+ *   id:string, type:'bg'|'name'|'kit', rarity:'common'|'rare'|'epic'|'legend'|'staff',
+ *   price:int, image:?string, css:string, animated?:bool, exclusive?:bool, kit_jersey?:string
  * }>
  */
 function shopCatalog(): array
@@ -155,6 +155,37 @@ function shopCatalog(): array
             'id' => SHOP_NAME_STAFF, 'type' => 'name', 'rarity' => 'staff', 'price' => 0,
             'image' => null, 'css' => 'root', 'animated' => true,
             'exclusive' => true,
+        ],
+
+        'kit_france_98' => [
+            'id' => 'kit_france_98', 'type' => 'kit', 'rarity' => 'epic', 'price' => 220,
+            'image' => 'assets/img/kit/kit-france-98.jpg', 'css' => 'france_98',
+            'kit_jersey' => 'france_98',
+        ],
+        'kit_france_06' => [
+            'id' => 'kit_france_06', 'type' => 'kit', 'rarity' => 'epic', 'price' => 200,
+            'image' => 'assets/img/kit/kit-france-06.jpg', 'css' => 'france_06',
+            'kit_jersey' => 'france_06',
+        ],
+        'kit_barca_09' => [
+            'id' => 'kit_barca_09', 'type' => 'kit', 'rarity' => 'epic', 'price' => 240,
+            'image' => 'assets/img/kit/kit-barca-09.jpg', 'css' => 'barca_09',
+            'kit_jersey' => 'barca_09',
+        ],
+        'kit_ol_07' => [
+            'id' => 'kit_ol_07', 'type' => 'kit', 'rarity' => 'rare', 'price' => 160,
+            'image' => 'assets/img/kit/kit-ol-07.jpg', 'css' => 'ol_07',
+            'kit_jersey' => 'ol_07',
+        ],
+        'kit_italy_06' => [
+            'id' => 'kit_italy_06', 'type' => 'kit', 'rarity' => 'rare', 'price' => 180,
+            'image' => 'assets/img/kit/kit-italy-06.jpg', 'css' => 'italy_06',
+            'kit_jersey' => 'italy_06',
+        ],
+        'kit_brazil_02' => [
+            'id' => 'kit_brazil_02', 'type' => 'kit', 'rarity' => 'epic', 'price' => 210,
+            'image' => 'assets/img/kit/kit-brazil-02.jpg', 'css' => 'brazil_02',
+            'kit_jersey' => 'brazil_02',
         ],
     ];
 
@@ -508,9 +539,18 @@ function purchaseShopItem(PDO $pdo, int $userId, string $cosmeticId): string
         $pdo->prepare('INSERT INTO shop_ledger (user_id, amount, reason, ref) VALUES (?, ?, ?, ?)')
             ->execute([$userId, -$price, 'purchase', $cosmeticId]);
 
-        $typeCol = $item['type'] === 'bg' ? 'equipped_bg' : 'equipped_name';
-        $pdo->prepare("UPDATE users SET {$typeCol} = ? WHERE id = ?")
-            ->execute([$cosmeticId, $userId]);
+        if (($item['type'] ?? '') === 'kit') {
+            ensureKitSchema($pdo);
+            $jerseyId = (string) ($item['kit_jersey'] ?? '');
+            if ($jerseyId !== '' && kitJersey($jerseyId)) {
+                $pdo->prepare('UPDATE users SET kit_jersey = ? WHERE id = ?')
+                    ->execute([$jerseyId, $userId]);
+            }
+        } else {
+            $typeCol = $item['type'] === 'bg' ? 'equipped_bg' : 'equipped_name';
+            $pdo->prepare("UPDATE users SET {$typeCol} = ? WHERE id = ?")
+                ->execute([$cosmeticId, $userId]);
+        }
 
         $pdo->commit();
     } catch (InvalidArgumentException $e) {
@@ -547,13 +587,22 @@ function equipShopItem(PDO $pdo, int $userId, string $cosmeticId): string
         }
     }
 
-    $col = $item['type'] === 'bg' ? 'equipped_bg' : 'equipped_name';
-    $pdo->prepare("UPDATE users SET {$col} = ? WHERE id = ?")->execute([$cosmeticId, $userId]);
+    if (($item['type'] ?? '') === 'kit') {
+        ensureKitSchema($pdo);
+        $jerseyId = (string) ($item['kit_jersey'] ?? '');
+        if ($jerseyId === '' || !kitJersey($jerseyId)) {
+            throw new InvalidArgumentException(t('shop.err.unknown'));
+        }
+        $pdo->prepare('UPDATE users SET kit_jersey = ? WHERE id = ?')->execute([$jerseyId, $userId]);
+    } else {
+        $col = $item['type'] === 'bg' ? 'equipped_bg' : 'equipped_name';
+        $pdo->prepare("UPDATE users SET {$col} = ? WHERE id = ?")->execute([$cosmeticId, $userId]);
+    }
 
     return t('shop.flash.equipped', ['name' => shopItemName($item)]);
 }
 
-/** Remet le fond ou le pseudo au classique (l’article reste en inventaire). */
+/** Remet le fond, le pseudo ou le maillot boutique au classique (l’article reste en inventaire). */
 function unequipShopSlot(PDO $pdo, int $userId, string $slot): string
 {
     ensureShopSchema($pdo);
@@ -565,6 +614,21 @@ function unequipShopSlot(PDO $pdo, int $userId, string $slot): string
         $col = 'equipped_name';
         $reset = SHOP_NAME_DEFAULT;
         $ok = 'shop.flash.unequipped_name';
+    } elseif ($slot === 'kit') {
+        ensureKitSchema($pdo);
+        $stmt = $pdo->prepare('SELECT kit_jersey FROM users WHERE id = ?');
+        $stmt->execute([$userId]);
+        $current = $stmt->fetchColumn();
+        if ($current === false || $current === null || $current === '') {
+            throw new InvalidArgumentException(t('shop.err.already_classic'));
+        }
+        $jersey = kitJersey((string) $current);
+        if (!$jersey || !kitJerseyRequiresUnlock($jersey)) {
+            throw new InvalidArgumentException(t('shop.err.already_classic'));
+        }
+        $pdo->prepare('UPDATE users SET kit_jersey = NULL WHERE id = ?')->execute([$userId]);
+
+        return t('shop.flash.unequipped_kit');
     } else {
         throw new InvalidArgumentException(t('shop.err.unknown'));
     }
@@ -658,13 +722,20 @@ function shopResolvedPageBackgroundCss(): string
 
 function shopProfilePreviewUrl(int $userId, array $item): string
 {
-    $key = ($item['type'] ?? '') === 'name' ? 'preview_name' : 'preview_bg';
+    $type = (string) ($item['type'] ?? '');
+    if ($type === 'name') {
+        $key = 'preview_name';
+    } elseif ($type === 'kit') {
+        $key = 'preview_kit';
+    } else {
+        $key = 'preview_bg';
+    }
 
     return userProfileUrl($userId) . '&' . $key . '=' . rawurlencode((string) $item['id']);
 }
 
 /**
- * Aperçu temporaire sur son propre profil (?preview_bg= / ?preview_name=).
+ * Aperçu temporaire sur son propre profil (?preview_bg= / ?preview_name= / ?preview_kit=).
  *
  * @return array<string,mixed>
  */
@@ -674,7 +745,7 @@ function applyShopPreviewToUser(array $user, bool $allowed): array
     if (!$allowed) {
         return $user;
     }
-    foreach (['bg' => 'preview_bg', 'name' => 'preview_name'] as $type => $key) {
+    foreach (['bg' => 'preview_bg', 'name' => 'preview_name', 'kit' => 'preview_kit'] as $type => $key) {
         $id = (string) ($_GET[$key] ?? '');
         if ($id === '') {
             continue;
@@ -688,13 +759,37 @@ function applyShopPreviewToUser(array $user, bool $allowed): array
         }
         if ($type === 'bg') {
             $user['equipped_bg'] = $item['id'];
-        } else {
+        } elseif ($type === 'name') {
             $user['equipped_name'] = $item['id'];
+        } else {
+            $jersey = (string) ($item['kit_jersey'] ?? '');
+            if ($jersey !== '' && kitJersey($jersey)) {
+                $user['kit_jersey'] = $jersey;
+            }
         }
         $user['_shop_preview_items'][] = $item;
     }
 
     return $user;
+}
+
+/** Id boutique du maillot rétro actuellement équipé, ou null. */
+function shopEquippedKitId(array $user, array $ownedIds): ?string
+{
+    $jerseyId = (string) ($user['kit_jersey'] ?? '');
+    $jersey = kitJersey($jerseyId);
+    if (!$jersey) {
+        return null;
+    }
+    $shopId = kitJerseyShopItemId($jersey);
+    if ($shopId === null) {
+        return null;
+    }
+    if (!in_array($shopId, $ownedIds, true) && empty($user['_shop_preview_items'])) {
+        return null;
+    }
+
+    return $shopId;
 }
 
 /** Bandeau profil / dashboard / boutique — le fond cosmétique est sur le feutre de page. */

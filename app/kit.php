@@ -21,7 +21,10 @@ const KIT_DEFAULT_SHORTS = 'shorts_black';
 /**
  * Catalogue des maillots.
  *
- * @return array<string, array{id:string, pattern:string, c1:string, c2?:string, trim:bool, trimColor?:string}>
+ * @return array<string, array{
+ *   id:string, pattern:string, c1:string, c2?:string, trim:bool, trimColor?:string,
+ *   texture?:string, shop_item?:string
+ * }>
  */
 function kitJerseyCatalog(): array
 {
@@ -91,15 +94,99 @@ function kitJerseyCatalog(): array
         'rennes' => [
             'id' => 'rennes', 'pattern' => 'stripes', 'c1' => '#e2001a', 'c2' => '#1a1a1a', 'trim' => true,
         ],
+
+        // Rétro boutique — textures tissu aplaties (pas de logos / marques).
+        'france_98' => [
+            'id' => 'france_98', 'pattern' => 'texture', 'c1' => '#002395', 'trim' => true,
+            'trimColor' => '#f4f2ea',
+            'texture' => 'assets/img/kit/kit-france-98.jpg',
+            'shop_item' => 'kit_france_98',
+        ],
+        'france_06' => [
+            'id' => 'france_06', 'pattern' => 'texture', 'c1' => '#0A2F6B', 'trim' => true,
+            'trimColor' => '#E30613',
+            'texture' => 'assets/img/kit/kit-france-06.jpg',
+            'shop_item' => 'kit_france_06',
+        ],
+        'barca_09' => [
+            'id' => 'barca_09', 'pattern' => 'texture', 'c1' => '#A50044', 'c2' => '#004D98', 'trim' => true,
+            'trimColor' => '#F7B500',
+            'texture' => 'assets/img/kit/kit-barca-09.jpg',
+            'shop_item' => 'kit_barca_09',
+        ],
+        'ol_07' => [
+            'id' => 'ol_07', 'pattern' => 'texture', 'c1' => '#f4f2ea', 'trim' => true,
+            'trimColor' => '#C8102E',
+            'texture' => 'assets/img/kit/kit-ol-07.jpg',
+            'shop_item' => 'kit_ol_07',
+        ],
+        'italy_06' => [
+            'id' => 'italy_06', 'pattern' => 'texture', 'c1' => '#f4f2ea', 'trim' => true,
+            'trimColor' => '#0055A4',
+            'texture' => 'assets/img/kit/kit-italy-06.jpg',
+            'shop_item' => 'kit_italy_06',
+        ],
+        'brazil_02' => [
+            'id' => 'brazil_02', 'pattern' => 'texture', 'c1' => '#FDD116', 'trim' => true,
+            'trimColor' => '#009C3B',
+            'texture' => 'assets/img/kit/kit-brazil-02.jpg',
+            'shop_item' => 'kit_brazil_02',
+        ],
     ];
 
     return $catalog;
+}
+
+/** URL publique de la texture maillot, ou null. */
+function kitJerseyTextureUrl(array $jersey): ?string
+{
+    $rel = (string) ($jersey['texture'] ?? '');
+    if ($rel === '') {
+        return null;
+    }
+    $abs = dirname(__DIR__) . '/public/' . $rel;
+    if (!is_file($abs)) {
+        return null;
+    }
+
+    return assetUrl($rel);
+}
+
+/** Id boutique lié à un maillot verrouillé, ou null si gratuit. */
+function kitJerseyShopItemId(array $jersey): ?string
+{
+    $id = (string) ($jersey['shop_item'] ?? '');
+
+    return $id !== '' ? $id : null;
+}
+
+function kitJerseyRequiresUnlock(array $jersey): bool
+{
+    return kitJerseyShopItemId($jersey) !== null;
+}
+
+/**
+ * @param list<string> $ownedCosmeticIds
+ */
+function kitUserOwnsJersey(array $jersey, array $ownedCosmeticIds): bool
+{
+    $shopId = kitJerseyShopItemId($jersey);
+    if ($shopId === null) {
+        return true;
+    }
+
+    return in_array($shopId, $ownedCosmeticIds, true);
 }
 
 /** Valeur SVG (fill=) à appliquer au maillot. */
 function kitJerseyFill(array $jersey): string
 {
     switch ($jersey['pattern']) {
+        case 'texture':
+            if (kitJerseyTextureUrl($jersey) !== null) {
+                return 'url(#kitTex_' . $jersey['id'] . ')';
+            }
+            return $jersey['c1'];
         case 'stripes':
             return 'url(#kitStripes_' . $jersey['id'] . ')';
         case 'split_h':
@@ -116,6 +203,10 @@ function kitJerseyFill(array $jersey): string
  */
 function kitJerseyChip(array $jersey): string
 {
+    $tex = kitJerseyTextureUrl($jersey);
+    if ($tex !== null) {
+        return "center / cover no-repeat url('" . $tex . "')";
+    }
     $c1 = $jersey['c1'];
     $c2 = $jersey['c2'] ?? $c1;
     switch ($jersey['pattern']) {
@@ -287,11 +378,24 @@ function ensureKitSchema(PDO $pdo): void
     $addUserCol($pdo, 'kit_prop', 'kit_prop VARCHAR(32) NULL DEFAULT NULL AFTER kit_shorts');
 }
 
-function userKitJersey(array $user): ?string
+function userKitJersey(array $user, ?array $ownedCosmeticIds = null): ?string
 {
     $id = (string) ($user['kit_jersey'] ?? '');
+    $jersey = kitJersey($id);
+    if (!$jersey) {
+        return null;
+    }
+    if ($ownedCosmeticIds !== null && !kitUserOwnsJersey($jersey, $ownedCosmeticIds)) {
+        foreach (($user['_shop_preview_items'] ?? []) as $it) {
+            if (($it['type'] ?? '') === 'kit' && (string) ($it['kit_jersey'] ?? '') === $id) {
+                return $id;
+            }
+        }
 
-    return kitJersey($id) ? $id : null;
+        return null;
+    }
+
+    return $id;
 }
 
 /** Toujours un id de short catalogue. */
@@ -311,13 +415,21 @@ function userKitProp(array $user): ?string
 function saveUserKit(PDO $pdo, int $userId, ?string $jerseyId, ?string $shortsId, ?string $propId): void
 {
     ensureKitSchema($pdo);
+    ensureShopSchema($pdo);
 
     $jerseyId = ($jerseyId !== null && $jerseyId !== '') ? $jerseyId : null;
     $shortsId = resolveKitShortsId($shortsId);
     $propId = ($propId !== null && $propId !== '') ? $propId : null;
 
-    if ($jerseyId !== null && !kitJersey($jerseyId)) {
-        throw new InvalidArgumentException(t('kit.err.unknown'));
+    if ($jerseyId !== null) {
+        $jersey = kitJersey($jerseyId);
+        if (!$jersey) {
+            throw new InvalidArgumentException(t('kit.err.unknown'));
+        }
+        $owned = shopOwnedIds($pdo, $userId);
+        if (!kitUserOwnsJersey($jersey, $owned)) {
+            throw new InvalidArgumentException(t('kit.err.locked'));
+        }
     }
     if (!kitShorts($shortsId)) {
         throw new InvalidArgumentException(t('kit.err.unknown'));
@@ -347,7 +459,16 @@ function renderKitDollSvg(?string $jerseyId, ?string $shortsId, ?string $avatarU
     <svg viewBox="0 0 180 280" class="kit-doll" role="img" aria-label="<?= e(t('kit.doll_alt')) ?>">
         <defs>
             <?php foreach (kitJerseyCatalog() as $j): ?>
-                <?php if ($j['pattern'] === 'stripes'): ?>
+                <?php if ($j['pattern'] === 'texture'):
+                    $texUrl = kitJerseyTextureUrl($j);
+                    if ($texUrl === null) {
+                        continue;
+                    }
+                    ?>
+            <pattern id="kitTex_<?= e($j['id']) ?>" patternUnits="userSpaceOnUse" x="30" y="64" width="120" height="100">
+                <image href="<?= e($texUrl) ?>" xlink:href="<?= e($texUrl) ?>" x="30" y="64" width="120" height="100" preserveAspectRatio="xMidYMid slice"></image>
+            </pattern>
+                <?php elseif ($j['pattern'] === 'stripes'): ?>
             <pattern id="kitStripes_<?= e($j['id']) ?>" width="12" height="24" patternUnits="userSpaceOnUse">
                 <rect width="12" height="24" fill="<?= e($j['c1']) ?>"></rect>
                 <rect width="6" height="24" fill="<?= e($j['c2']) ?>"></rect>
@@ -481,7 +602,13 @@ function renderKitDollSvg(?string $jerseyId, ?string $shortsId, ?string $avatarU
 
 function renderKitDollCard(array $user, bool $isSelf): void
 {
-    $jerseyId = userKitJersey($user);
+    $owned = null;
+    try {
+        $owned = shopOwnedIds(getPDO(), (int) ($user['id'] ?? 0));
+    } catch (Throwable $e) {
+        $owned = [];
+    }
+    $jerseyId = userKitJersey($user, $owned);
     $shortsId = userKitShorts($user);
     $propId = userKitProp($user);
     ?>
@@ -503,9 +630,12 @@ function renderKitDollCard(array $user, bool $isSelf): void
 
 function renderKitButtonAndDialog(array $user): void
 {
-    $jerseyId = userKitJersey($user);
+    $pdo = getPDO();
+    $owned = shopOwnedIds($pdo, (int) ($user['id'] ?? 0));
+    $jerseyId = userKitJersey($user, $owned);
     $shortsId = userKitShorts($user);
     $propId = userKitProp($user);
+    $shopUrl = url('account/shop.php?tab=kit');
     ?>
     <button type="button" class="btn btn-ghost btn-sm" id="kitOpenBtn" aria-haspopup="dialog" aria-controls="kitDialog">
         <i class="fa-solid fa-shirt" aria-hidden="true"></i> <?= e(t('kit.open_btn')) ?>
@@ -533,16 +663,26 @@ function renderKitButtonAndDialog(array $user): void
                                 <span class="kit-swatch-chip" style="background: <?= e(KIT_PLAIN_JERSEY_FILL) ?>;"></span>
                                 <span class="sr-only"><?= e(t('kit.item.none_jersey')) ?></span>
                             </button>
-                            <?php foreach (kitJerseyCatalog() as $j): ?>
-                            <button type="button" class="kit-swatch<?= $jerseyId === $j['id'] ? ' is-active' : '' ?>"
+                            <?php foreach (kitJerseyCatalog() as $j):
+                                $locked = !kitUserOwnsJersey($j, $owned);
+                                $title = kitItemName($j['id']) . ($locked ? ' — ' . t('kit.locked_hint') : '');
+                                ?>
+                            <button type="button" class="kit-swatch<?= $jerseyId === $j['id'] ? ' is-active' : '' ?><?= $locked ? ' is-locked' : '' ?>"
                                     data-kit-id="<?= e($j['id']) ?>" data-kit-fill="<?= e(kitJerseyFill($j)) ?>" data-kit-trim="1"
                                     data-kit-trim-color="<?= e(kitJerseyTrimColor($j)) ?>"
-                                    aria-pressed="<?= $jerseyId === $j['id'] ? 'true' : 'false' ?>" title="<?= e(kitItemName($j['id'])) ?>">
+                                    <?php if ($locked): ?>data-kit-locked="1" data-kit-shop="<?= e($shopUrl) ?>"<?php endif; ?>
+                                    aria-pressed="<?= $jerseyId === $j['id'] ? 'true' : 'false' ?>" title="<?= e($title) ?>">
                                 <span class="kit-swatch-chip" style="background: <?= e(kitJerseyChip($j)) ?>;"></span>
-                                <span class="sr-only"><?= e(kitItemName($j['id'])) ?></span>
+                                <?php if ($locked): ?>
+                                <span class="kit-swatch-lock" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
+                                <?php endif; ?>
+                                <span class="sr-only"><?= e($title) ?></span>
                             </button>
                             <?php endforeach; ?>
                         </div>
+                        <p class="kit-retro-hint"><?= e(t('kit.retro_hint')) ?>
+                            <a href="<?= e($shopUrl) ?>"><?= e(t('kit.retro_shop')) ?></a>
+                        </p>
                     </div>
 
                     <div class="kit-picker-group">
@@ -583,7 +723,8 @@ function renderKitButtonAndDialog(array $user): void
             <p class="kit-save-note" id="kitSaveNote" role="status" aria-live="polite"
                data-msg-saving="<?= e(t('kit.saving')) ?>"
                data-msg-saved="<?= e(t('kit.saved')) ?>"
-               data-msg-error="<?= e(t('kit.err.generic')) ?>"></p>
+               data-msg-error="<?= e(t('kit.err.generic')) ?>"
+               data-msg-locked="<?= e(t('kit.err.locked')) ?>"></p>
         </div>
     </div>
     <?php

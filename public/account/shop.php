@@ -6,7 +6,7 @@ $pdo = getPDO();
 $user = currentUser($pdo);
 $userId = (int) $user['id'];
 
-$shopTabs = ['all', 'bg', 'name', 'owned'];
+$shopTabs = ['all', 'bg', 'name', 'kit', 'owned'];
 $shopTabRedirect = static function () use ($shopTabs): string {
     $tab = (string) ($_POST['tab'] ?? $_GET['tab'] ?? 'all');
     if (!in_array($tab, $shopTabs, true)) {
@@ -49,6 +49,7 @@ $balance = shopBalance($user);
 $ownedIds = shopOwnedIds($pdo, $userId);
 $equippedBg = shopEquippedBg($user);
 $equippedName = shopEquippedName($user);
+$equippedKit = shopEquippedKitId($user, $ownedIds);
 $activeSeason = getActiveSeason($pdo);
 $seasonPoints = $activeSeason ? getUserGeneralSeasonPoints($pdo, $userId, (int) $activeSeason['id']) : 0;
 $seasonLabel = $activeSeason ? seasonCountdownLabel($activeSeason) : '';
@@ -61,7 +62,7 @@ $items = array_values(array_filter(
     shopCatalogVisible($userId),
     static fn (array $it): bool => $it['id'] !== SHOP_BG_DEFAULT && $it['id'] !== SHOP_NAME_DEFAULT
 ));
-if ($filter === 'bg' || $filter === 'name') {
+if ($filter === 'bg' || $filter === 'name' || $filter === 'kit') {
     $items = array_values(array_filter($items, static fn (array $it): bool => $it['type'] === $filter));
 } elseif ($filter === 'owned') {
     $items = array_values(array_filter(
@@ -73,8 +74,10 @@ if ($filter === 'bg' || $filter === 'name') {
 
 $bgItem = shopItem($equippedBg) ?? shopItem(SHOP_BG_DEFAULT);
 $nameItem = shopItem($equippedName) ?? shopItem(SHOP_NAME_DEFAULT);
+$kitItem = $equippedKit ? shopItem($equippedKit) : null;
 $canUnequipBg = $equippedBg !== SHOP_BG_DEFAULT;
 $canUnequipName = $equippedName !== SHOP_NAME_DEFAULT;
+$canUnequipKit = $kitItem !== null;
 
 $previewPseudo = userDisplayName($user);
 ?>
@@ -159,6 +162,28 @@ $previewPseudo = userDisplayName($user);
                     <span class="shop-look-classic"><?= e(t('shop.classic')) ?></span>
                 <?php endif; ?>
             </article>
+            <article class="shop-look-slot">
+                <span class="shop-look-k"><?= e(t('shop.look_kit')) ?></span>
+                <div class="shop-look-preview shop-look-preview--kit" aria-hidden="true">
+                    <?php if ($kitItem && ($kitImg = shopItemImageUrl($kitItem))): ?>
+                        <img src="<?= e($kitImg) ?>" alt="" class="shop-look-kit-tex">
+                    <?php else: ?>
+                        <span class="shop-look-kit-plain" style="background: <?= e(KIT_PLAIN_JERSEY_FILL) ?>;"></span>
+                    <?php endif; ?>
+                </div>
+                <strong class="shop-look-v"><?= e($kitItem ? shopItemName($kitItem) : t('shop.classic_kit')) ?></strong>
+                <?php if ($canUnequipKit): ?>
+                    <form method="post" class="shop-look-form">
+                        <?= csrfField() ?>
+                        <input type="hidden" name="action" value="unequip">
+                        <input type="hidden" name="slot" value="kit">
+                        <input type="hidden" name="tab" value="<?= e($filter) ?>">
+                        <button type="submit" class="btn btn-ghost btn-sm shop-look-unequip"><?= e(t('shop.unequip')) ?></button>
+                    </form>
+                <?php else: ?>
+                    <span class="shop-look-classic"><?= e(t('shop.classic_kit')) ?></span>
+                <?php endif; ?>
+            </article>
         </div>
     </section>
 
@@ -166,6 +191,7 @@ $previewPseudo = userDisplayName($user);
         <a class="shop-tab<?= $filter === 'all' ? ' is-active' : '' ?>" href="<?= e(url('account/shop.php')) ?>"><?= e(t('shop.tab_all')) ?></a>
         <a class="shop-tab<?= $filter === 'bg' ? ' is-active' : '' ?>" href="<?= e(url('account/shop.php?tab=bg')) ?>"><?= e(t('shop.tab_bg')) ?></a>
         <a class="shop-tab<?= $filter === 'name' ? ' is-active' : '' ?>" href="<?= e(url('account/shop.php?tab=name')) ?>"><?= e(t('shop.tab_name')) ?></a>
+        <a class="shop-tab<?= $filter === 'kit' ? ' is-active' : '' ?>" href="<?= e(url('account/shop.php?tab=kit')) ?>"><?= e(t('shop.tab_kit')) ?></a>
         <a class="shop-tab<?= $filter === 'owned' ? ' is-active' : '' ?>" href="<?= e(url('account/shop.php?tab=owned')) ?>"><?= e(t('shop.tab_owned')) ?></a>
     </nav>
 
@@ -177,13 +203,14 @@ $previewPseudo = userDisplayName($user);
         <?php foreach ($items as $item):
             $owned = shopUserOwns($item, $ownedIds, $userId);
             $equipped = ($item['type'] === 'bg' && $item['id'] === $equippedBg)
-                || ($item['type'] === 'name' && $item['id'] === $equippedName);
+                || ($item['type'] === 'name' && $item['id'] === $equippedName)
+                || ($item['type'] === 'kit' && $equippedKit !== null && $item['id'] === $equippedKit);
             $imgUrl = shopItemImageUrl($item);
             $canBuy = !$owned && $balance >= (int) $item['price'];
             ?>
         <article class="shop-card shop-card--<?= e($item['rarity']) ?><?= $equipped ? ' is-equipped' : '' ?><?= $owned ? ' is-owned' : '' ?>">
-            <a class="shop-card-preview<?php if ($item['type'] === 'bg'): ?> <?= e(profileBgClass($item['id'])) ?><?php endif; ?>" href="<?= e(shopProfilePreviewUrl($userId, $item)) ?>" title="<?= e(t('shop.preview_title', ['name' => shopItemName($item)])) ?>">
-                <?php if ($item['type'] === 'bg' && $imgUrl): ?>
+            <a class="shop-card-preview<?php if ($item['type'] === 'bg'): ?> <?= e(profileBgClass($item['id'])) ?><?php endif; ?><?php if ($item['type'] === 'kit'): ?> shop-card-preview--kit<?php endif; ?>" href="<?= e(shopProfilePreviewUrl($userId, $item)) ?>" title="<?= e(t('shop.preview_title', ['name' => shopItemName($item)])) ?>">
+                <?php if (($item['type'] === 'bg' || $item['type'] === 'kit') && $imgUrl): ?>
                     <img src="<?= e($imgUrl) ?>" alt="" class="shop-card-photo">
                 <?php endif; ?>
                 <?php if ($item['type'] === 'name'): ?>

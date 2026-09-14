@@ -129,6 +129,16 @@
         jerseyGroup.addEventListener('click', function (e) {
             var btn = e.target.closest ? e.target.closest('.kit-swatch') : null;
             if (!btn) return;
+            if (btn.getAttribute('data-kit-locked') === '1') {
+                if (saveNote) {
+                    saveNote.textContent = saveNote.getAttribute('data-msg-locked') || '';
+                }
+                var shop = btn.getAttribute('data-kit-shop');
+                if (shop) {
+                    window.location.href = shop;
+                }
+                return;
+            }
             state.jersey = btn.getAttribute('data-kit-id') || '';
             setActive(jerseyGroup, btn);
             applyJerseyFill(btn);
