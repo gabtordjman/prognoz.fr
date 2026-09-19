@@ -178,21 +178,19 @@ function kitUserOwnsJersey(array $jersey, array $ownedCosmeticIds): bool
     return in_array($shopId, $ownedCosmeticIds, true);
 }
 
-/** Valeur SVG (fill=) à appliquer au maillot. */
-function kitJerseyFill(array $jersey): string
+/** Valeur SVG (fill=) à appliquer au maillot. Textures = couleur de base (image clipée à part). */
+function kitJerseyFill(array $jersey, string $uid = ''): string
 {
+    $sfx = $uid !== '' ? ('_' . $uid) : '';
     switch ($jersey['pattern']) {
         case 'texture':
-            if (kitJerseyTextureUrl($jersey) !== null) {
-                return 'url(#kitTex_' . $jersey['id'] . ')';
-            }
             return $jersey['c1'];
         case 'stripes':
-            return 'url(#kitStripes_' . $jersey['id'] . ')';
+            return 'url(#kitStripes_' . $jersey['id'] . $sfx . ')';
         case 'split_h':
-            return 'url(#kitSplitH_' . $jersey['id'] . ')';
+            return 'url(#kitSplitH_' . $jersey['id'] . $sfx . ')';
         case 'split_v':
-            return 'url(#kitSplitV_' . $jersey['id'] . ')';
+            return 'url(#kitSplitV_' . $jersey['id'] . $sfx . ')';
         default:
             return $jersey['c1'];
     }
@@ -443,52 +441,58 @@ function saveUserKit(PDO $pdo, int $userId, ?string $jerseyId, ?string $shortsId
 }
 
 /**
- * Joueur SVG — silhouette plus humaine, maillot lisible (motif clipé au torse).
- * Remplit #kitTorsoGroup / #kitShortsGroup pour le JS.
+ * Joueur SVG — silhouette plus humaine.
+ * Maillots texture : <image> clipée sur le torse (patterns SVG image instables).
+ * $forEditor = true : IDs fixes pour le JS de la cabine ; sinon IDs uniques.
  */
-function renderKitDollSvg(?string $jerseyId, ?string $shortsId, ?string $avatarUrl = null, string $pseudo = '', ?string $propId = null): void
-{
+function renderKitDollSvg(
+    ?string $jerseyId,
+    ?string $shortsId,
+    ?string $avatarUrl = null,
+    string $pseudo = '',
+    ?string $propId = null,
+    bool $forEditor = false
+): void {
     $jersey = kitJersey($jerseyId);
     $shorts = kitShorts(resolveKitShortsId($shortsId));
-    $torsoFill = $jersey !== null ? kitJerseyFill($jersey) : KIT_PLAIN_JERSEY_FILL;
+    $uid = $forEditor ? '' : bin2hex(random_bytes(3));
+    $sfx = $uid !== '' ? ('_' . $uid) : '';
+    $torsoFill = $jersey !== null ? kitJerseyFill($jersey, $uid) : KIT_PLAIN_JERSEY_FILL;
     $shortsFill = $shorts['fill'] ?? kitShortsCatalog()[KIT_DEFAULT_SHORTS]['fill'];
     $collarVisible = $jersey !== null;
     $collarColor = $jersey !== null ? kitJerseyTrimColor($jersey) : '';
     $avatarSrc = avatarPublicUrl($avatarUrl);
-    $jerseyPath = 'M54 78
-        C46 82 40 92 42 104
-        L40 152 C40 160 46 166 54 166
-        L126 166 C134 166 140 160 140 152
-        L138 104 C140 92 134 82 126 78
-        C116 70 104 66 90 66
-        C76 66 64 70 54 78 Z';
+    $texUrl = ($jersey !== null && ($jersey['pattern'] ?? '') === 'texture')
+        ? kitJerseyTextureUrl($jersey)
+        : null;
+
+    $bodyPath = 'M54 78 C46 82 40 92 42 104 L40 152 C40 160 46 166 54 166'
+        . ' L126 166 C134 166 140 160 140 152 L138 104 C140 92 134 82 126 78'
+        . ' C116 70 104 66 90 66 C76 66 64 70 54 78 Z';
+    $sleeveL = 'M54 78 C44 86 36 100 34 116 C42 110 50 100 56 90 Z';
+    $sleeveR = 'M126 78 C136 86 144 100 146 116 C138 110 130 100 124 90 Z';
+    $clipId = 'kitJerseyClip' . $sfx;
+    $headClipId = 'kitHeadClip' . $sfx;
+    $skinId = 'kitSkinGrad' . $sfx;
+    $sockId = 'kitSockGrad' . $sfx;
     ?>
     <svg viewBox="0 0 180 280" class="kit-doll" role="img" aria-label="<?= e(t('kit.doll_alt')) ?>">
         <defs>
             <?php foreach (kitJerseyCatalog() as $j): ?>
-                <?php if ($j['pattern'] === 'texture'):
-                    $texUrl = kitJerseyTextureUrl($j);
-                    if ($texUrl === null) {
-                        continue;
-                    }
-                    ?>
-            <pattern id="kitTex_<?= e($j['id']) ?>" patternUnits="userSpaceOnUse" x="40" y="66" width="100" height="100">
-                <image href="<?= e($texUrl) ?>" xlink:href="<?= e($texUrl) ?>" x="40" y="66" width="100" height="100" preserveAspectRatio="xMidYMid slice"></image>
-            </pattern>
-                <?php elseif ($j['pattern'] === 'stripes'): ?>
-            <pattern id="kitStripes_<?= e($j['id']) ?>" width="14" height="28" patternUnits="userSpaceOnUse" patternTransform="translate(40,66)">
+                <?php if ($j['pattern'] === 'stripes'): ?>
+            <pattern id="kitStripes_<?= e($j['id'] . $sfx) ?>" width="14" height="28" patternUnits="userSpaceOnUse" patternTransform="translate(40,66)">
                 <rect width="14" height="28" fill="<?= e($j['c1']) ?>"></rect>
                 <rect width="7" height="28" fill="<?= e($j['c2']) ?>"></rect>
             </pattern>
                 <?php elseif ($j['pattern'] === 'split_h'): ?>
-            <linearGradient id="kitSplitH_<?= e($j['id']) ?>" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id="kitSplitH_<?= e($j['id'] . $sfx) ?>" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="<?= e($j['c1']) ?>"></stop>
                 <stop offset="48%" stop-color="<?= e($j['c1']) ?>"></stop>
                 <stop offset="48%" stop-color="<?= e($j['c2']) ?>"></stop>
                 <stop offset="100%" stop-color="<?= e($j['c2']) ?>"></stop>
             </linearGradient>
                 <?php elseif ($j['pattern'] === 'split_v'): ?>
-            <linearGradient id="kitSplitV_<?= e($j['id']) ?>" x1="0" y1="0" x2="1" y2="0">
+            <linearGradient id="kitSplitV_<?= e($j['id'] . $sfx) ?>" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stop-color="<?= e($j['c1']) ?>"></stop>
                 <stop offset="50%" stop-color="<?= e($j['c1']) ?>"></stop>
                 <stop offset="50%" stop-color="<?= e($j['c2']) ?>"></stop>
@@ -496,79 +500,79 @@ function renderKitDollSvg(?string $jerseyId, ?string $shortsId, ?string $avatarU
             </linearGradient>
                 <?php endif; ?>
             <?php endforeach; ?>
-            <linearGradient id="kitSkinGrad" x1="0" y1="0" x2="0.35" y2="1">
+            <linearGradient id="<?= e($skinId) ?>" x1="0" y1="0" x2="0.35" y2="1">
                 <stop offset="0%" stop-color="#e8c4a0"></stop>
                 <stop offset="45%" stop-color="#d0a882"></stop>
                 <stop offset="100%" stop-color="#b08968"></stop>
             </linearGradient>
-            <linearGradient id="kitSockGrad" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id="<?= e($sockId) ?>" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="#f7f1e6"></stop>
                 <stop offset="100%" stop-color="#d4ccbc"></stop>
             </linearGradient>
-            <clipPath id="kitJerseyClip">
-                <path d="<?= $jerseyPath ?>"></path>
+            <clipPath id="<?= e($clipId) ?>" clipPathUnits="userSpaceOnUse">
+                <path d="<?= $bodyPath ?>"></path>
+                <path d="<?= $sleeveL ?>"></path>
+                <path d="<?= $sleeveR ?>"></path>
             </clipPath>
-            <clipPath id="kitHeadClip">
+            <clipPath id="<?= e($headClipId) ?>">
                 <ellipse cx="90" cy="40" rx="24" ry="28"></ellipse>
             </clipPath>
         </defs>
 
         <ellipse class="kit-shadow" cx="90" cy="268" rx="46" ry="7"></ellipse>
 
-        <!-- Jambes -->
-        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M70 172 C68 196 66 218 64 236 L78 238 C80 218 82 196 84 172 Z"></path>
-        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M96 172 C98 196 100 218 102 236 L116 238 C114 218 112 196 110 172 Z"></path>
+        <path class="kit-skin" fill="url(#<?= e($skinId) ?>)" d="M70 172 C68 196 66 218 64 236 L78 238 C80 218 82 196 84 172 Z"></path>
+        <path class="kit-skin" fill="url(#<?= e($skinId) ?>)" d="M96 172 C98 196 100 218 102 236 L116 238 C114 218 112 196 110 172 Z"></path>
 
-        <path class="kit-sock" fill="url(#kitSockGrad)" d="M64 226 h16 v20 h-17 z"></path>
-        <path class="kit-sock" fill="url(#kitSockGrad)" d="M100 226 h16 v20 h-15 z"></path>
+        <path class="kit-sock" fill="url(#<?= e($sockId) ?>)" d="M64 226 h16 v20 h-17 z"></path>
+        <path class="kit-sock" fill="url(#<?= e($sockId) ?>)" d="M100 226 h16 v20 h-15 z"></path>
 
         <path class="kit-boot" d="M58 244 q3 -7 13 -7 h13 q9 0 13 9 v5 h-41 z"></path>
         <path class="kit-boot" d="M96 244 q3 -7 13 -7 h13 q9 0 13 9 v5 h-41 z"></path>
         <path class="kit-boot-sole" d="M56 255 h40 v4 q0 3 -3 3 h-34 q-3 0 -3 -3 z"></path>
         <path class="kit-boot-sole" d="M94 255 h40 v4 q0 3 -3 3 h-34 q-3 0 -3 -3 z"></path>
 
-        <!-- Short -->
-        <g id="kitShortsGroup" style="fill: <?= e($shortsFill) ?>;">
-            <path d="M60 154
-                C56 154 54 158 54 163
-                L52 192 C52 198 56 202 62 202
-                L78 202 L84 180 L90 180 L96 202 L118 202
-                C124 202 128 198 128 192
-                L126 163 C126 158 124 154 120 154
-                Z"></path>
+        <g data-kit-role="shorts"<?= $forEditor ? ' id="kitShortsGroup"' : '' ?> style="fill: <?= e($shortsFill) ?>;">
+            <path d="M60 154 C56 154 54 158 54 163 L52 192 C52 198 56 202 62 202 L78 202 L84 180 L90 180 L96 202 L118 202 C124 202 128 198 128 192 L126 163 C126 158 124 154 120 154 Z"></path>
         </g>
         <path class="kit-shorts-shade" d="M84 156 v26 L90 180 L96 156 Z"></path>
 
-        <!-- Bras (sous le maillot) -->
-        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M48 86 C36 104 28 128 28 152 C28 158 33 162 39 160 C48 132 52 108 58 92 Z"></path>
-        <ellipse class="kit-skin" fill="url(#kitSkinGrad)" cx="34" cy="162" rx="9" ry="7"></ellipse>
-        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M132 86 C144 104 152 128 152 152 C152 158 147 162 141 160 C132 132 128 108 122 92 Z"></path>
-        <ellipse class="kit-skin" fill="url(#kitSkinGrad)" cx="146" cy="162" rx="9" ry="7"></ellipse>
+        <path class="kit-skin" fill="url(#<?= e($skinId) ?>)" d="M48 86 C36 104 28 128 28 152 C28 158 33 162 39 160 C48 132 52 108 58 92 Z"></path>
+        <ellipse class="kit-skin" fill="url(#<?= e($skinId) ?>)" cx="34" cy="162" rx="9" ry="7"></ellipse>
+        <path class="kit-skin" fill="url(#<?= e($skinId) ?>)" d="M132 86 C144 104 152 128 152 152 C152 158 147 162 141 160 C132 132 128 108 122 92 Z"></path>
+        <ellipse class="kit-skin" fill="url(#<?= e($skinId) ?>)" cx="146" cy="162" rx="9" ry="7"></ellipse>
 
-        <!-- Maillot : torse + manches (même fill pour le JS) -->
-        <g id="kitTorsoGroup" style="fill: <?= e($torsoFill) ?>;">
-            <path d="<?= $jerseyPath ?>"></path>
-            <path d="M54 78 C44 86 36 100 34 116 C42 110 50 100 56 90 Z"></path>
-            <path d="M126 78 C136 86 144 100 146 116 C138 110 130 100 124 90 Z"></path>
+        <g data-kit-role="torso"<?= $forEditor ? ' id="kitTorsoGroup"' : '' ?> style="fill: <?= e($torsoFill) ?>;">
+            <path d="<?= $bodyPath ?>"></path>
+            <path d="<?= $sleeveL ?>"></path>
+            <path d="<?= $sleeveR ?>"></path>
         </g>
-        <g clip-path="url(#kitJerseyClip)" pointer-events="none">
+
+        <g clip-path="url(#<?= e($clipId) ?>)">
+            <image data-kit-role="tex"<?= $forEditor ? ' id="kitJerseyTexImg"' : '' ?>
+                   class="kit-jersey-tex"
+                   href="<?= $texUrl !== null ? e($texUrl) : '' ?>"
+                   xlink:href="<?= $texUrl !== null ? e($texUrl) : '' ?>"
+                   x="38" y="64" width="104" height="108"
+                   preserveAspectRatio="xMidYMid slice"
+                   style="<?= $texUrl !== null ? '' : 'display: none;' ?>"></image>
+        </g>
+
+        <g pointer-events="none" clip-path="url(#<?= e($clipId) ?>)">
             <path class="kit-jersey-shade" d="M90 68 L90 166 L126 166 C132 166 136 160 136 154 L134 104 C132 84 116 70 90 68 Z"></path>
             <path class="kit-jersey-fold" d="M72 92 C78 110 80 130 78 150" fill="none"></path>
             <path class="kit-jersey-fold" d="M108 92 C102 110 100 130 102 150" fill="none"></path>
         </g>
 
-        <!-- Cou -->
-        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M81 56 C81 50 85 46 90 46 C95 46 99 50 99 56 L97 70 L83 70 Z"></path>
+        <path class="kit-skin" fill="url(#<?= e($skinId) ?>)" d="M81 56 C81 50 85 46 90 46 C95 46 99 50 99 56 L97 70 L83 70 Z"></path>
 
-        <!-- Col -->
-        <path id="kitCollarShape" class="kit-collar-shape"
+        <path data-kit-role="collar"<?= $forEditor ? ' id="kitCollarShape"' : '' ?> class="kit-collar-shape"
               style="<?= $collarVisible ? 'fill: ' . e($collarColor) . ';' : 'display: none;' ?>"
               d="M80 70 L90 86 L100 70 L96 68 L90 80 L84 68 Z"></path>
 
-        <!-- Tête -->
         <?php if ($avatarSrc !== null): ?>
         <image href="<?= e($avatarSrc) ?>" xlink:href="<?= e($avatarSrc) ?>" x="66" y="12" width="48" height="56"
-               preserveAspectRatio="xMidYMid slice" clip-path="url(#kitHeadClip)"></image>
+               preserveAspectRatio="xMidYMid slice" clip-path="url(#<?= e($headClipId) ?>)"></image>
         <ellipse cx="90" cy="40" rx="24" ry="28" fill="none" class="kit-head-ring"></ellipse>
         <?php else: ?>
         <ellipse cx="90" cy="40" rx="24" ry="28" style="fill: <?= e(userAvatarColor($pseudo)) ?>;"></ellipse>
@@ -576,7 +580,7 @@ function renderKitDollSvg(?string $jerseyId, ?string $shortsId, ?string $avatarU
         <ellipse cx="90" cy="40" rx="24" ry="28" fill="none" class="kit-head-ring"></ellipse>
         <?php endif; ?>
 
-        <g id="kitPropStage">
+        <g data-kit-role="props"<?= $forEditor ? ' id="kitPropStage"' : '' ?>>
             <?php foreach (kitPropCatalog() as $p): ?>
             <g class="kit-prop-look" data-kit-prop-id="<?= e($p['id']) ?>"
                transform="<?= e(kitPropTransform($p['id'])) ?>"
@@ -588,6 +592,7 @@ function renderKitDollSvg(?string $jerseyId, ?string $shortsId, ?string $avatarU
     </svg>
     <?php
 }
+
 
 function renderKitDollCard(array $user, bool $isSelf): void
 {
@@ -639,7 +644,7 @@ function renderKitButtonAndDialog(array $user): void
 
             <div class="kit-body">
                 <div class="kit-stage">
-                    <?php renderKitDollSvg($jerseyId, $shortsId, $user['avatar_url'] ?? null, (string) ($user['pseudo'] ?? ''), $propId); ?>
+                    <?php renderKitDollSvg($jerseyId, $shortsId, $user['avatar_url'] ?? null, (string) ($user['pseudo'] ?? ''), $propId, true); ?>
                 </div>
 
                 <div class="kit-picker">
@@ -647,7 +652,7 @@ function renderKitButtonAndDialog(array $user): void
                         <h3 class="kit-picker-title"><?= e(t('kit.section_jersey')) ?></h3>
                         <div class="kit-swatches" id="kitJerseySwatches" role="group" aria-label="<?= e(t('kit.section_jersey')) ?>">
                             <button type="button" class="kit-swatch kit-swatch-none<?= $jerseyId === null ? ' is-active' : '' ?>"
-                                    data-kit-id="" data-kit-fill="<?= e(KIT_PLAIN_JERSEY_FILL) ?>" data-kit-trim="0"
+                                    data-kit-id="" data-kit-fill="<?= e(KIT_PLAIN_JERSEY_FILL) ?>" data-kit-trim="0" data-kit-texture=""
                                     aria-pressed="<?= $jerseyId === null ? 'true' : 'false' ?>" title="<?= e(t('kit.item.none_jersey')) ?>">
                                 <span class="kit-swatch-chip" style="background: <?= e(KIT_PLAIN_JERSEY_FILL) ?>;"></span>
                                 <span class="sr-only"><?= e(t('kit.item.none_jersey')) ?></span>
@@ -659,6 +664,7 @@ function renderKitButtonAndDialog(array $user): void
                             <button type="button" class="kit-swatch<?= $jerseyId === $j['id'] ? ' is-active' : '' ?><?= $locked ? ' is-locked' : '' ?>"
                                     data-kit-id="<?= e($j['id']) ?>" data-kit-fill="<?= e(kitJerseyFill($j)) ?>" data-kit-trim="1"
                                     data-kit-trim-color="<?= e(kitJerseyTrimColor($j)) ?>"
+                                    data-kit-texture="<?= e(kitJerseyTextureUrl($j) ?? '') ?>"
                                     <?php if ($locked): ?>data-kit-locked="1" data-kit-shop="<?= e($shopUrl) ?>"<?php endif; ?>
                                     aria-pressed="<?= $jerseyId === $j['id'] ? 'true' : 'false' ?>" title="<?= e($title) ?>">
                                 <span class="kit-swatch-chip" style="background: <?= e(kitJerseyChip($j)) ?>;"></span>

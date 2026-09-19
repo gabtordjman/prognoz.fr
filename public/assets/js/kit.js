@@ -12,6 +12,7 @@
     var closeBtn = document.getElementById('kitDialogClose');
     var backdrop = document.getElementById('kitDialogBackdrop');
     var torso = document.getElementById('kitTorsoGroup');
+    var jerseyTex = document.getElementById('kitJerseyTexImg');
     var shortsShape = document.getElementById('kitShortsGroup');
     var collar = document.getElementById('kitCollarShape');
     var jerseyGroup = document.getElementById('kitJerseySwatches');
@@ -67,10 +68,25 @@
         btn.setAttribute('aria-pressed', 'true');
     }
 
+    function setJerseyTexture(url) {
+        if (!jerseyTex) return;
+        if (url) {
+            jerseyTex.setAttribute('href', url);
+            jerseyTex.setAttributeNS('http://www.w3.org/1999/xlink', 'href', url);
+            jerseyTex.style.display = '';
+        } else {
+            jerseyTex.removeAttribute('href');
+            jerseyTex.removeAttributeNS('http://www.w3.org/1999/xlink', 'href');
+            jerseyTex.style.display = 'none';
+        }
+    }
+
     function applyJerseyFill(btn) {
         var fill = btn.getAttribute('data-kit-fill');
+        var tex = btn.getAttribute('data-kit-texture') || '';
         var hasTrim = btn.getAttribute('data-kit-trim') === '1';
         if (torso) torso.style.fill = fill;
+        setJerseyTexture(tex);
         if (collar) {
             collar.style.display = hasTrim ? '' : 'none';
             if (hasTrim) {
