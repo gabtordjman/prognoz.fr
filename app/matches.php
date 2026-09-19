@@ -2884,19 +2884,27 @@ function maintainMatchLifecycle(PDO $pdo, bool $webRequest = false): array
     $cache = false;
     $scores = false;
     $pruned = null;
+    $liveFootball = false;
 
     if ($webRequest) {
         maybeScorePendingFinishedMatches($pdo);
         $closed = closeExpiredMatches($pdo);
     } else {
         $scores = maybeSyncMatchScores($pdo);
+        $liveFootball = maybeSyncLiveFootballScores($pdo, false);
         $cache = maybeRefreshMatchesFromCache($pdo);
         $closed = closeExpiredMatches($pdo);
         scorePendingFinishedMatches($pdo);
         $pruned = maybePruneStaleMatchData($pdo);
     }
 
-    return ['scores' => $scores, 'cache' => $cache, 'closed' => $closed, 'pruned' => $pruned];
+    return [
+        'scores'        => $scores,
+        'live_football' => $liveFootball,
+        'cache'         => $cache,
+        'closed'        => $closed,
+        'pruned'        => $pruned,
+    ];
 }
 
 function pruneLastRunPath(): string

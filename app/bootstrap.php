@@ -49,6 +49,7 @@ require __DIR__ . '/shop.php';
 require __DIR__ . '/kit.php';
 require __DIR__ . '/layout.php';
 require __DIR__ . '/matches.php';
+require __DIR__ . '/live_football.php';
 require __DIR__ . '/events.php';
 require __DIR__ . '/site_theme.php';
 require __DIR__ . '/favorite_team.php';

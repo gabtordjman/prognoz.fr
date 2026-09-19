@@ -15,7 +15,6 @@ releaseSession();
 $pdo = getPDO();
 $force = !empty($_GET['sync']) || !empty($_POST['sync']);
 
-// Sync API réservée au cron / clé : le navigateur lit seulement le cache.
 if ($force) {
     $cronKey = (string) ($_GET['key'] ?? $_POST['key'] ?? '');
     $authorized = CRON_SECRET !== '' && hash_equals(CRON_SECRET, $cronKey);

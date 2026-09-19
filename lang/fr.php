@@ -347,6 +347,8 @@ return [
     'home.no_matches' => 'Aucun match pour l\'instant.',
     'home.no_matches_sport' => 'Aucun match {sport} pour l\'instant.',
     'home.picks_closed' => 'Pronostics fermés',
+    'home.live' => 'Live',
+    'home.live_score' => 'Score en direct',
     'home.scorer' => 'Buteur',
     'home.title' => 'Matchs',
     'home.winner' => 'Vainqueur',

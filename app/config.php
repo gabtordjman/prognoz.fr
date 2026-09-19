@@ -101,6 +101,17 @@ define('ODDS_API_KEY', env('ODDS_API_KEY', ''));
 define('ODDS_API_BASE', 'https://api.the-odds-api.com');
 define('ODDS_SPORT_GROUPS', ['Tennis', 'Basketball', 'Soccer']);
 
+/** API-Football (api-sports) — scores live foot uniquement (affichage, pas de scoring points). */
+define('API_FOOTBALL_KEY', trim((string) env('API_FOOTBALL_KEY', '')));
+define('API_FOOTBALL_BASE', rtrim((string) env('API_FOOTBALL_BASE', 'https://v3.football.api-sports.io'), '/'));
+define('API_FOOTBALL_TIMEOUT', max(3, (int) env('API_FOOTBALL_TIMEOUT', '6')));
+/** Intervalle mini entre deux appels live=all. Free tier ≈ 100 req/j. */
+define('LIVE_FOOTBALL_SYNC_INTERVAL_SECONDS', max(30, (int) env('LIVE_FOOTBALL_SYNC_INTERVAL', '60')));
+/** Fenêtre après coup d’envoi pour afficher / sync le live (minutes). */
+define('LIVE_FOOTBALL_WINDOW_MINUTES', max(60, (int) env('LIVE_FOOTBALL_WINDOW_MINUTES', '150')));
+/** Lab : fixtures depuis var/cache/live_football_mock.json (0 appel API). */
+define('LIVE_FOOTBALL_MOCK', (int) env('LIVE_FOOTBALL_MOCK', '0') === 1);
+
 /** Ligues prioritaires par groupe — ordre d'affichage (sync inclut tout le catalogue API actif). */
 define('ODDS_SPORT_PRIORITY', [
     'Tennis' => [
@@ -283,7 +294,7 @@ date_default_timezone_set(APP_TIMEZONE);
  */
 define('SESSION_LIFETIME', max(300, (int) env('SESSION_LIFETIME', (string) (7 * 86400))));
 
-if (session_status() === PHP_SESSION_NONE) {
+if (PHP_SAPI !== 'cli' && session_status() === PHP_SESSION_NONE) {
     $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
         || ((int) ($_SERVER['SERVER_PORT'] ?? 0) === 443)
         || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');

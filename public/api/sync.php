@@ -44,11 +44,29 @@ if ($cronLight) {
         'mode'            => 'cron',
         'cache_refreshed' => $lifecycle['cache'],
         'scores_synced'   => $lifecycle['scores'],
+        'live_football'   => $lifecycle['live_football'],
         'closed'          => $lifecycle['closed'],
         'reminders'       => $reminders,
         'fav_team'        => $favNotifs,
         'quota_remaining' => oddsQuotaRemaining(),
     ]);
+    exit;
+}
+
+/** Sync scores live foot (API-Football) — indépendant du quota Odds. */
+$liveMode = (($_GET['mode'] ?? '') === 'live_football');
+if ($liveMode) {
+    if (!$authorizedByCron && !$authorizedByAdmin) {
+        syncForbiddenResponse('admin');
+    }
+    @set_time_limit(30);
+    $live = syncLiveFootballScores($pdo, !empty($_GET['force']));
+    echo json_encode([
+        'ok'            => true,
+        'mode'          => 'live_football',
+        'live_football' => $live,
+        'payload'       => liveFootballPublicPayload($pdo),
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 

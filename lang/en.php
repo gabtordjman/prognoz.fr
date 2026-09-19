@@ -347,6 +347,8 @@ return [
     'home.no_matches' => 'No matches right now.',
     'home.no_matches_sport' => 'No {sport} matches right now.',
     'home.picks_closed' => 'Picks closed',
+    'home.live' => 'Live',
+    'home.live_score' => 'Live score',
     'home.scorer' => 'Scorer',
     'home.title' => 'Matches',
     'home.winner' => 'Winner',
