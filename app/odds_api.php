@@ -401,29 +401,32 @@ function oddsApiRequest(string $path, array $query = []): ?array
 }
 
 /**
- * Sports actuellement en saison.
- * GET /v4/sports — ne consomme PAS de quota.
+ * Catalogue sports (actifs + hors saison).
+ * GET /v4/sports?all=true — ne consomme PAS de quota.
  */
 function oddsFetchSportsList(bool $forceRefresh = false): array
 {
     if (!$forceRefresh) {
-        $cached = oddsCacheGet('sports_list', ODDS_CACHE_TTL_SPORTS);
+        $cached = oddsCacheGet('sports_list_all', ODDS_CACHE_TTL_SPORTS);
         if ($cached !== null) {
             return $cached;
         }
     }
 
-    $data = oddsApiRequest('/v4/sports');
+    $data = oddsApiRequest('/v4/sports', ['all' => 'true']);
     if (!is_array($data)) {
-        if (!$forceRefresh) {
-            return [];
+        $stale = oddsCacheGet('sports_list_all', ODDS_CACHE_TTL_SPORTS * 100);
+        if (is_array($stale)) {
+            return $stale;
         }
-        $stale = oddsCacheGet('sports_list', ODDS_CACHE_TTL_SPORTS * 100);
+        // Migration : ancien cache sans all=true
+        $legacy = oddsCacheGet('sports_list', ODDS_CACHE_TTL_SPORTS * 100);
 
-        return is_array($stale) ? $stale : [];
+        return is_array($legacy) ? $legacy : [];
     }
 
-    oddsCacheSet('sports_list', $data);
+    oddsCacheSet('sports_list_all', $data);
+
     return $data;
 }
 
@@ -555,6 +558,15 @@ function oddsSportsForSync(bool $forceRefresh = false, bool $allowProbe = true):
 
     $selected = [];
     $probes   = ['Tennis' => 0, 'Basketball' => 0, 'Soccer' => 0];
+    $activeTennis = 0;
+    foreach ($byKey as $meta) {
+        if (($meta['group'] ?? '') === 'Tennis' && !empty($meta['active']) && oddsSportIsBettable($meta)) {
+            $activeTennis++;
+        }
+    }
+    $tennisProbeCap = $activeTennis < (int) SYNC_TENNIS_PROBE_WHEN_ACTIVE_BELOW
+        ? max((int) SYNC_PROBE_MAX_PER_GROUP, count($byKey))
+        : (int) SYNC_PROBE_MAX_PER_GROUP;
 
     foreach ($byKey as $key => $meta) {
         $group = $meta['group'] ?? '';
@@ -572,7 +584,8 @@ function oddsSportsForSync(bool $forceRefresh = false, bool $allowProbe = true):
             continue;
         }
 
-        if ($probes[$group] >= SYNC_PROBE_MAX_PER_GROUP) {
+        $probeCap = ($group === 'Tennis') ? $tennisProbeCap : (int) SYNC_PROBE_MAX_PER_GROUP;
+        if ($probes[$group] >= $probeCap) {
             continue;
         }
         $probes[$group]++;
@@ -646,8 +659,9 @@ function oddsLimitSportsBalanced(array $sports, int $max): array
     }
 
     // Soft caps : laisser de la place au foot (beaucoup de ligues) + basket.
+    // Tennis : plus large — beaucoup de clés, peu d’actives à un instant T.
     $soft = [
-        'Tennis'     => 12,
+        'Tennis'     => 20,
         'Basketball' => 12,
         'Soccer'     => 20,
     ];

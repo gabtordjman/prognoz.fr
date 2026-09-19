@@ -104,12 +104,19 @@ define('ODDS_SPORT_GROUPS', ['Tennis', 'Basketball', 'Soccer']);
 /** Ligues prioritaires par groupe — ordre d'affichage (sync inclut tout le catalogue API actif). */
 define('ODDS_SPORT_PRIORITY', [
     'Tennis' => [
+        // Tournois d’automne / en cours (souvent seuls actifs hors GS)
+        'tennis_wta_guadalajara_open',
+        'tennis_wta_monterrey_open',
+        'tennis_atp_china_open', 'tennis_wta_china_open',
+        'tennis_atp_shanghai_masters', 'tennis_wta_wuhan_open',
+        'tennis_atp_paris_masters',
+        'tennis_atp_washington_open', 'tennis_wta_washington_open',
         // Grands Chelems
+        'tennis_atp_us_open', 'tennis_wta_us_open',
         'tennis_atp_french_open', 'tennis_wta_french_open',
         'tennis_atp_wimbledon', 'tennis_wta_wimbledon',
-        'tennis_atp_us_open', 'tennis_wta_us_open',
         'tennis_atp_aus_open_singles', 'tennis_wta_aus_open_singles',
-        // Masters 1000 / 500 / ATP 250 & WTA (catalogue The Odds API)
+        // Masters 1000 / 500 / ATP–WTA (catalogue The Odds API)
         'tennis_atp_indian_wells', 'tennis_wta_indian_wells',
         'tennis_atp_miami_open', 'tennis_wta_miami_open',
         'tennis_atp_monte_carlo_masters', 'tennis_wta_charleston_open',
@@ -120,13 +127,10 @@ define('ODDS_SPORT_PRIORITY', [
         'tennis_atp_queens_club_champ', 'tennis_wta_queens_club_champ',
         'tennis_atp_canadian_open', 'tennis_wta_canadian_open',
         'tennis_atp_cincinnati_open', 'tennis_wta_cincinnati_open',
-        'tennis_atp_shanghai_masters', 'tennis_wta_wuhan_open',
-        'tennis_atp_paris_masters', 'tennis_wta_china_open',
         'tennis_atp_dubai', 'tennis_wta_dubai',
         'tennis_atp_qatar_open', 'tennis_wta_qatar_open',
         'tennis_atp_barcelona_open', 'tennis_wta_stuttgart_open',
         'tennis_atp_munich', 'tennis_wta_strasbourg',
-        'tennis_atp_china_open',
     ],
     'Basketball' => [
         // Hommes d’abord (saison / volume Odds API)
@@ -257,8 +261,10 @@ define('SYNC_LOCK_MAX_AGE', 600); // verrou considéré périmé après 10 min
 define('SYNC_MAX_SPORTS_PER_GROUP', 8); // tennis / basket : pas de plafond effectif (voir oddsSportsForSync)
 define('SYNC_MAX_SOCCER_SPORTS', 40); // foot : inclure toutes les ligues actives API (été = 30+ compétitions)
 define('SYNC_FORCE_MAX_SECONDS', 90); // budget temps sync forcée (réponse HTTP / CLI)
-define('SYNC_PROBE_MAX_PER_GROUP', 40); // sonde /events max par catégorie (gratuit, cache 4h)
-define('SYNC_FORCE_MAX_SPORTS', 40); // import forcé : mix tennis/basket/foot (/events = 0 crédit)
+define('SYNC_PROBE_MAX_PER_GROUP', 50); // sonde /events max par catégorie (gratuit, cache 4h)
+define('SYNC_FORCE_MAX_SPORTS', 48); // import forcé : mix tennis/basket/foot (/events = 0 crédit)
+/** Si peu de tournois tennis « active », sonder tout le catalogue tennis (/events gratuit). */
+define('SYNC_TENNIS_PROBE_WHEN_ACTIVE_BELOW', 3);
 
 /** Web Push (VAPID) — générer : php tools/generate_vapid.php */
 define('VAPID_PUBLIC_KEY', env('VAPID_PUBLIC_KEY', ''));

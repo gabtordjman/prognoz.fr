@@ -278,10 +278,10 @@ function kitPropCatalog(): array
 function kitPropTransform(string $propId): string
 {
     if ($propId === 'prop_ball') {
-        return 'translate(118, 238) scale(1.55)';
+        return 'translate(118, 246) scale(1.5)';
     }
 
-    return 'translate(128, 148) scale(1.45)';
+    return 'translate(130, 152) scale(1.4)';
 }
 
 function kitPropEmoji(string $propId): string
@@ -443,8 +443,8 @@ function saveUserKit(PDO $pdo, int $userId, ?string $jerseyId, ?string $shortsId
 }
 
 /**
- * Joueur SVG — proportions plus réalistes (silhouette footballeur),
- * scène felt côté CSS. Remplit #kitTorsoGroup / #kitShortsGroup pour le JS.
+ * Joueur SVG — silhouette plus humaine, maillot lisible (motif clipé au torse).
+ * Remplit #kitTorsoGroup / #kitShortsGroup pour le JS.
  */
 function renderKitDollSvg(?string $jerseyId, ?string $shortsId, ?string $avatarUrl = null, string $pseudo = '', ?string $propId = null): void
 {
@@ -455,6 +455,13 @@ function renderKitDollSvg(?string $jerseyId, ?string $shortsId, ?string $avatarU
     $collarVisible = $jersey !== null;
     $collarColor = $jersey !== null ? kitJerseyTrimColor($jersey) : '';
     $avatarSrc = avatarPublicUrl($avatarUrl);
+    $jerseyPath = 'M54 78
+        C46 82 40 92 42 104
+        L40 152 C40 160 46 166 54 166
+        L126 166 C134 166 140 160 140 152
+        L138 104 C140 92 134 82 126 78
+        C116 70 104 66 90 66
+        C76 66 64 70 54 78 Z';
     ?>
     <svg viewBox="0 0 180 280" class="kit-doll" role="img" aria-label="<?= e(t('kit.doll_alt')) ?>">
         <defs>
@@ -465,19 +472,19 @@ function renderKitDollSvg(?string $jerseyId, ?string $shortsId, ?string $avatarU
                         continue;
                     }
                     ?>
-            <pattern id="kitTex_<?= e($j['id']) ?>" patternUnits="userSpaceOnUse" x="30" y="64" width="120" height="100">
-                <image href="<?= e($texUrl) ?>" xlink:href="<?= e($texUrl) ?>" x="30" y="64" width="120" height="100" preserveAspectRatio="xMidYMid slice"></image>
+            <pattern id="kitTex_<?= e($j['id']) ?>" patternUnits="userSpaceOnUse" x="40" y="66" width="100" height="100">
+                <image href="<?= e($texUrl) ?>" xlink:href="<?= e($texUrl) ?>" x="40" y="66" width="100" height="100" preserveAspectRatio="xMidYMid slice"></image>
             </pattern>
                 <?php elseif ($j['pattern'] === 'stripes'): ?>
-            <pattern id="kitStripes_<?= e($j['id']) ?>" width="12" height="24" patternUnits="userSpaceOnUse">
-                <rect width="12" height="24" fill="<?= e($j['c1']) ?>"></rect>
-                <rect width="6" height="24" fill="<?= e($j['c2']) ?>"></rect>
+            <pattern id="kitStripes_<?= e($j['id']) ?>" width="14" height="28" patternUnits="userSpaceOnUse" patternTransform="translate(40,66)">
+                <rect width="14" height="28" fill="<?= e($j['c1']) ?>"></rect>
+                <rect width="7" height="28" fill="<?= e($j['c2']) ?>"></rect>
             </pattern>
                 <?php elseif ($j['pattern'] === 'split_h'): ?>
             <linearGradient id="kitSplitH_<?= e($j['id']) ?>" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="<?= e($j['c1']) ?>"></stop>
-                <stop offset="50%" stop-color="<?= e($j['c1']) ?>"></stop>
-                <stop offset="50%" stop-color="<?= e($j['c2']) ?>"></stop>
+                <stop offset="48%" stop-color="<?= e($j['c1']) ?>"></stop>
+                <stop offset="48%" stop-color="<?= e($j['c2']) ?>"></stop>
                 <stop offset="100%" stop-color="<?= e($j['c2']) ?>"></stop>
             </linearGradient>
                 <?php elseif ($j['pattern'] === 'split_v'): ?>
@@ -489,104 +496,86 @@ function renderKitDollSvg(?string $jerseyId, ?string $shortsId, ?string $avatarU
             </linearGradient>
                 <?php endif; ?>
             <?php endforeach; ?>
-            <linearGradient id="kitSkinGrad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#e0b892"></stop>
-                <stop offset="55%" stop-color="#c4a07a"></stop>
-                <stop offset="100%" stop-color="#a88460"></stop>
+            <linearGradient id="kitSkinGrad" x1="0" y1="0" x2="0.35" y2="1">
+                <stop offset="0%" stop-color="#e8c4a0"></stop>
+                <stop offset="45%" stop-color="#d0a882"></stop>
+                <stop offset="100%" stop-color="#b08968"></stop>
             </linearGradient>
             <linearGradient id="kitSockGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#f4ede0"></stop>
-                <stop offset="100%" stop-color="#d8d0c0"></stop>
+                <stop offset="0%" stop-color="#f7f1e6"></stop>
+                <stop offset="100%" stop-color="#d4ccbc"></stop>
             </linearGradient>
+            <clipPath id="kitJerseyClip">
+                <path d="<?= $jerseyPath ?>"></path>
+            </clipPath>
             <clipPath id="kitHeadClip">
-                <ellipse cx="90" cy="42" rx="26" ry="30"></ellipse>
+                <ellipse cx="90" cy="40" rx="24" ry="28"></ellipse>
             </clipPath>
         </defs>
 
-        <!-- Ombre -->
-        <ellipse class="kit-shadow" cx="90" cy="266" rx="48" ry="7"></ellipse>
+        <ellipse class="kit-shadow" cx="90" cy="268" rx="46" ry="7"></ellipse>
 
-        <!-- Jambe G -->
-        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M68 168
-            C66 190 64 210 62 228
-            L76 230 C78 210 80 190 82 168 Z"></path>
-        <!-- Jambe D -->
-        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M98 168
-            C100 190 102 210 104 228
-            L118 230 C116 210 114 190 112 168 Z"></path>
+        <!-- Jambes -->
+        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M70 172 C68 196 66 218 64 236 L78 238 C80 218 82 196 84 172 Z"></path>
+        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M96 172 C98 196 100 218 102 236 L116 238 C114 218 112 196 110 172 Z"></path>
 
-        <!-- Chaussettes -->
-        <path class="kit-sock" fill="url(#kitSockGrad)" d="M62 218 h16 v18 h-17 z"></path>
-        <path class="kit-sock" fill="url(#kitSockGrad)" d="M102 218 h16 v18 h-15 z"></path>
+        <path class="kit-sock" fill="url(#kitSockGrad)" d="M64 226 h16 v20 h-17 z"></path>
+        <path class="kit-sock" fill="url(#kitSockGrad)" d="M100 226 h16 v20 h-15 z"></path>
 
-        <!-- Chaussures -->
-        <path class="kit-boot" d="M56 234 q2 -6 12 -6 h14 q8 0 12 8 v6 h-40 z"></path>
-        <path class="kit-boot" d="M98 234 q2 -6 12 -6 h14 q8 0 12 8 v6 h-40 z"></path>
-        <path class="kit-boot-sole" d="M54 246 h42 v4 q0 3 -3 3 h-36 q-3 0 -3 -3 z"></path>
-        <path class="kit-boot-sole" d="M96 246 h42 v4 q0 3 -3 3 h-36 q-3 0 -3 -3 z"></path>
+        <path class="kit-boot" d="M58 244 q3 -7 13 -7 h13 q9 0 13 9 v5 h-41 z"></path>
+        <path class="kit-boot" d="M96 244 q3 -7 13 -7 h13 q9 0 13 9 v5 h-41 z"></path>
+        <path class="kit-boot-sole" d="M56 255 h40 v4 q0 3 -3 3 h-34 q-3 0 -3 -3 z"></path>
+        <path class="kit-boot-sole" d="M94 255 h40 v4 q0 3 -3 3 h-34 q-3 0 -3 -3 z"></path>
 
-        <!-- Short (toujours) -->
+        <!-- Short -->
         <g id="kitShortsGroup" style="fill: <?= e($shortsFill) ?>;">
-            <path d="M62 148
-                C58 148 56 152 56 158
-                L54 188 C54 194 58 198 64 198
-                L78 198 L84 178 L90 178 L96 198 L116 198
-                C122 198 126 194 126 188
-                L124 158 C124 152 122 148 118 148
+            <path d="M60 154
+                C56 154 54 158 54 163
+                L52 192 C52 198 56 202 62 202
+                L78 202 L84 180 L90 180 L96 202 L118 202
+                C124 202 128 198 128 192
+                L126 163 C126 158 124 154 120 154
                 Z"></path>
         </g>
-        <path class="kit-shorts-shade" d="M84 150 v28 L90 178 L96 150 Z"></path>
+        <path class="kit-shorts-shade" d="M84 156 v26 L90 180 L96 156 Z"></path>
 
-        <!-- Bras G (légèrement écarté) -->
-        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M52 78
-            C40 95 32 120 30 148
-            C30 154 34 158 40 156
-            C48 130 52 105 58 88 Z"></path>
-        <ellipse class="kit-skin" fill="url(#kitSkinGrad)" cx="36" cy="158" rx="9" ry="7"></ellipse>
+        <!-- Bras (sous le maillot) -->
+        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M48 86 C36 104 28 128 28 152 C28 158 33 162 39 160 C48 132 52 108 58 92 Z"></path>
+        <ellipse class="kit-skin" fill="url(#kitSkinGrad)" cx="34" cy="162" rx="9" ry="7"></ellipse>
+        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M132 86 C144 104 152 128 152 152 C152 158 147 162 141 160 C132 132 128 108 122 92 Z"></path>
+        <ellipse class="kit-skin" fill="url(#kitSkinGrad)" cx="146" cy="162" rx="9" ry="7"></ellipse>
 
-        <!-- Bras D -->
-        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M128 78
-            C140 95 148 120 150 148
-            C150 154 146 158 140 156
-            C132 130 128 105 122 88 Z"></path>
-        <ellipse class="kit-skin" fill="url(#kitSkinGrad)" cx="144" cy="158" rx="9" ry="7"></ellipse>
-
-        <!-- Maillot : torse + manches -->
+        <!-- Maillot : torse + manches (même fill pour le JS) -->
         <g id="kitTorsoGroup" style="fill: <?= e($torsoFill) ?>;">
-            <path d="M58 72
-                C52 76 48 86 50 98
-                L48 146 C48 154 54 160 62 160
-                L118 160 C126 160 132 154 132 146
-                L130 98 C132 86 128 76 122 72
-                C112 66 100 64 90 64
-                C80 64 68 66 58 72 Z"></path>
-            <!-- Manche G -->
-            <path d="M58 72 C48 78 40 92 38 108 C44 104 52 96 58 88 Z"></path>
-            <!-- Manche D -->
-            <path d="M122 72 C132 78 140 92 142 108 C136 104 128 96 122 88 Z"></path>
+            <path d="<?= $jerseyPath ?>"></path>
+            <path d="M54 78 C44 86 36 100 34 116 C42 110 50 100 56 90 Z"></path>
+            <path d="M126 78 C136 86 144 100 146 116 C138 110 130 100 124 90 Z"></path>
         </g>
-        <path class="kit-jersey-shade" d="M90 68 L90 158 L118 158 C124 158 128 152 128 146 L126 100 C124 82 112 70 90 68 Z"></path>
+        <g clip-path="url(#kitJerseyClip)" pointer-events="none">
+            <path class="kit-jersey-shade" d="M90 68 L90 166 L126 166 C132 166 136 160 136 154 L134 104 C132 84 116 70 90 68 Z"></path>
+            <path class="kit-jersey-fold" d="M72 92 C78 110 80 130 78 150" fill="none"></path>
+            <path class="kit-jersey-fold" d="M108 92 C102 110 100 130 102 150" fill="none"></path>
+        </g>
 
         <!-- Cou -->
-        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M80 58 C80 52 84 48 90 48 C96 48 100 52 100 58 L98 68 L82 68 Z"></path>
+        <path class="kit-skin" fill="url(#kitSkinGrad)" d="M81 56 C81 50 85 46 90 46 C95 46 99 50 99 56 L97 70 L83 70 Z"></path>
 
-        <!-- Col V -->
+        <!-- Col -->
         <path id="kitCollarShape" class="kit-collar-shape"
               style="<?= $collarVisible ? 'fill: ' . e($collarColor) . ';' : 'display: none;' ?>"
-              d="M78 68 L90 82 L102 68 L98 66 L90 76 L82 66 Z"></path>
+              d="M80 70 L90 86 L100 70 L96 68 L90 80 L84 68 Z"></path>
 
         <!-- Tête -->
         <?php if ($avatarSrc !== null): ?>
-        <image href="<?= e($avatarSrc) ?>" xlink:href="<?= e($avatarSrc) ?>" x="64" y="12" width="52" height="60"
+        <image href="<?= e($avatarSrc) ?>" xlink:href="<?= e($avatarSrc) ?>" x="66" y="12" width="48" height="56"
                preserveAspectRatio="xMidYMid slice" clip-path="url(#kitHeadClip)"></image>
-        <ellipse cx="90" cy="42" rx="26" ry="30" fill="none" class="kit-head-ring"></ellipse>
+        <ellipse cx="90" cy="40" rx="24" ry="28" fill="none" class="kit-head-ring"></ellipse>
         <?php else: ?>
-        <ellipse cx="90" cy="42" rx="26" ry="30" style="fill: <?= e(userAvatarColor($pseudo)) ?>;"></ellipse>
-        <text x="90" y="48" text-anchor="middle" class="kit-head-initials"><?= e(userInitials($pseudo)) ?></text>
-        <ellipse cx="90" cy="42" rx="26" ry="30" fill="none" class="kit-head-ring"></ellipse>
+        <ellipse cx="90" cy="40" rx="24" ry="28" style="fill: <?= e(userAvatarColor($pseudo)) ?>;"></ellipse>
+        <text x="90" y="46" text-anchor="middle" class="kit-head-initials"><?= e(userInitials($pseudo)) ?></text>
+        <ellipse cx="90" cy="40" rx="24" ry="28" fill="none" class="kit-head-ring"></ellipse>
         <?php endif; ?>
 
-        <!-- Prop -->
         <g id="kitPropStage">
             <?php foreach (kitPropCatalog() as $p): ?>
             <g class="kit-prop-look" data-kit-prop-id="<?= e($p['id']) ?>"

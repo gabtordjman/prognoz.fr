@@ -3147,9 +3147,9 @@ button.pill-points-btn:active {
 
 .kit-stage {
     flex: 0 0 auto;
-    width: 176px;
+    width: 188px;
     margin: 0 auto;
-    padding: 0.75rem 0.45rem 0.4rem;
+    padding: 0.85rem 0.5rem 0.45rem;
     background:
         radial-gradient(ellipse at 50% 82%, rgba(0, 0, 0, 0.22), transparent 58%),
         linear-gradient(180deg, #2f5240 0%, #1a3226 52%, #12241c 100%);
@@ -3195,7 +3195,15 @@ button.pill-points-btn:active {
 
 .kit-jersey-shade,
 .kit-shorts-shade {
-    fill: rgba(0, 0, 0, 0.12);
+    fill: rgba(0, 0, 0, 0.14);
+    pointer-events: none;
+}
+
+.kit-jersey-fold {
+    stroke: rgba(0, 0, 0, 0.12);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    fill: none;
     pointer-events: none;
 }
 
