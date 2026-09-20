@@ -206,6 +206,7 @@ adminLayoutStart('Joueurs', 'users');
                         <td class="ops-mono"><?= (int) $u['points_totaux'] ?></td>
                         <td>
                             <div class="ops-actions">
+                                <a class="ops-btn ops-btn-ghost ops-btn-sm" href="<?= e(url('admin/player.php?id=' . (int) $u['id'])) ?>">Dossier</a>
                                 <form method="post">
                                     <?= csrfField() ?>
                                     <input type="hidden" name="action" value="set_mail_opt_out">

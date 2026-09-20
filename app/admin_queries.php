@@ -506,3 +506,175 @@ function adminTruncate(string $s, int $len): string
 
     return mb_substr($s, 0, max(0, $len - 1)) . '…';
 }
+
+/**
+ * Stats globales + classement réussite + pronos ouverts récents.
+ *
+ * @return array{
+ *   overview:array<string,int|float>,
+ *   leaders:list<array<string,mixed>>,
+ *   pending_recent:list<array<string,mixed>>,
+ *   by_market:list<array<string,mixed>>
+ * }
+ */
+function adminQueryPredictionsOverview(PDO $pdo, int $leaderMin = 5, int $leaderLimit = 40): array
+{
+    ensurePredictionHistorySchema($pdo);
+    $leaderMin = max(1, min(50, $leaderMin));
+    $leaderLimit = max(5, min(100, $leaderLimit));
+
+    $overview = [
+        'pending'   => 0,
+        'correct'   => 0,
+        'incorrect' => 0,
+        'voided'    => 0,
+        'resolved'  => 0,
+        'rate'      => 0.0,
+        'points'    => 0,
+        'players'   => 0,
+    ];
+    try {
+        $row = $pdo->query(
+            "SELECT
+                SUM(CASE WHEN statut = 'en_attente' THEN 1 ELSE 0 END) AS pending,
+                SUM(CASE WHEN statut = 'correct' THEN 1 ELSE 0 END) AS correct,
+                SUM(CASE WHEN statut = 'incorrect' THEN 1 ELSE 0 END) AS incorrect,
+                SUM(CASE WHEN statut = 'annule' THEN 1 ELSE 0 END) AS voided,
+                COALESCE(SUM(CASE WHEN statut IN ('correct','incorrect') THEN points_gagnes ELSE 0 END), 0) AS points,
+                COUNT(DISTINCT user_id) AS players
+             FROM predictions"
+        )->fetch() ?: [];
+        $overview['pending'] = (int) ($row['pending'] ?? 0);
+        $overview['correct'] = (int) ($row['correct'] ?? 0);
+        $overview['incorrect'] = (int) ($row['incorrect'] ?? 0);
+        $overview['voided'] = (int) ($row['voided'] ?? 0);
+        $overview['points'] = (int) ($row['points'] ?? 0);
+        $overview['players'] = (int) ($row['players'] ?? 0);
+        $overview['resolved'] = $overview['correct'] + $overview['incorrect'];
+        $overview['rate'] = $overview['resolved'] > 0
+            ? round(100 * $overview['correct'] / $overview['resolved'], 1)
+            : 0.0;
+    } catch (Throwable $e) {
+        // table manquante
+    }
+
+    $leaders = [];
+    try {
+        $stmt = $pdo->query(
+            "SELECT u.id, u.pseudo, u.points_totaux, u.actif,
+                    COUNT(*) AS total,
+                    SUM(CASE WHEN p.statut = 'correct' THEN 1 ELSE 0 END) AS wins,
+                    SUM(CASE WHEN p.statut = 'incorrect' THEN 1 ELSE 0 END) AS losses,
+                    COALESCE(SUM(p.points_gagnes), 0) AS pred_points
+             FROM predictions p
+             INNER JOIN users u ON u.id = p.user_id
+             WHERE p.statut IN ('correct', 'incorrect')
+             GROUP BY u.id, u.pseudo, u.points_totaux, u.actif
+             HAVING total >= {$leaderMin}
+             ORDER BY (wins / total) DESC, wins DESC, pred_points DESC
+             LIMIT {$leaderLimit}"
+        );
+        foreach ($stmt->fetchAll() ?: [] as $row) {
+            $total = (int) $row['total'];
+            $wins = (int) $row['wins'];
+            $leaders[] = [
+                'id'            => (int) $row['id'],
+                'pseudo'        => (string) $row['pseudo'],
+                'actif'         => !empty($row['actif']),
+                'points_totaux' => (int) $row['points_totaux'],
+                'total'         => $total,
+                'wins'          => $wins,
+                'losses'        => (int) $row['losses'],
+                'pred_points'   => (int) $row['pred_points'],
+                'rate'          => $total > 0 ? round(100 * $wins / $total, 1) : 0.0,
+            ];
+        }
+    } catch (Throwable $e) {
+        $leaders = [];
+    }
+
+    $pendingRecent = [];
+    try {
+        $stmt = $pdo->query(
+            "SELECT p.id, p.reponse, p.created_at, u.id AS user_id, u.pseudo,
+                    pm.type AS market_type, pm.points_si_correct,
+                    m.id AS match_id, m.equipe_home, m.equipe_away, m.competition,
+                    m.sport, m.date_match, m.statut AS match_statut
+             FROM predictions p
+             INNER JOIN users u ON u.id = p.user_id
+             INNER JOIN prediction_markets pm ON pm.id = p.market_id
+             INNER JOIN matches m ON m.id = pm.match_id
+             WHERE p.statut = 'en_attente'
+             ORDER BY p.created_at DESC
+             LIMIT 40"
+        );
+        $pendingRecent = $stmt->fetchAll() ?: [];
+    } catch (Throwable $e) {
+        $pendingRecent = [];
+    }
+
+    $byMarket = [];
+    try {
+        $stmt = $pdo->query(
+            "SELECT pm.type AS market_type,
+                    COUNT(*) AS total,
+                    SUM(CASE WHEN p.statut = 'correct' THEN 1 ELSE 0 END) AS wins,
+                    SUM(CASE WHEN p.statut = 'incorrect' THEN 1 ELSE 0 END) AS losses
+             FROM predictions p
+             INNER JOIN prediction_markets pm ON pm.id = p.market_id
+             WHERE p.statut IN ('correct', 'incorrect')
+             GROUP BY pm.type
+             ORDER BY total DESC"
+        );
+        foreach ($stmt->fetchAll() ?: [] as $row) {
+            $total = (int) $row['total'];
+            $wins = (int) $row['wins'];
+            $byMarket[] = [
+                'type'   => (string) $row['market_type'],
+                'total'  => $total,
+                'wins'   => $wins,
+                'losses' => (int) $row['losses'],
+                'rate'   => $total > 0 ? round(100 * $wins / $total, 1) : 0.0,
+            ];
+        }
+    } catch (Throwable $e) {
+        $byMarket = [];
+    }
+
+    return [
+        'overview'       => $overview,
+        'leaders'        => $leaders,
+        'pending_recent' => $pendingRecent,
+        'by_market'      => $byMarket,
+    ];
+}
+
+/**
+ * Pronos ouverts d’un joueur.
+ *
+ * @return list<array<string,mixed>>
+ */
+function adminQueryUserPendingPredictions(PDO $pdo, int $userId, int $limit = 50): array
+{
+    if ($userId < 1) {
+        return [];
+    }
+    ensurePredictionHistorySchema($pdo);
+    $limit = max(1, min(100, $limit));
+    $stmt = $pdo->prepare(
+        "SELECT p.id, p.reponse, p.statut, p.created_at,
+                pm.type AS market_type, pm.points_si_correct,
+                m.id AS match_id, m.equipe_home, m.equipe_away, m.competition,
+                m.sport, m.date_match, m.statut AS match_statut,
+                m.score_home, m.score_away, m.resultat_1x2
+         FROM predictions p
+         INNER JOIN prediction_markets pm ON pm.id = p.market_id
+         INNER JOIN matches m ON m.id = pm.match_id
+         WHERE p.user_id = ? AND p.statut = 'en_attente'
+         ORDER BY m.date_match ASC, p.id ASC
+         LIMIT {$limit}"
+    );
+    $stmt->execute([$userId]);
+
+    return $stmt->fetchAll() ?: [];
+}

@@ -5,7 +5,7 @@ if (!defined('APP_BOOT')) {
 }
 
 /**
- * @param 'dashboard'|'scores'|'users'|'ops'|'seasons'|'messages'|'reports'|'events'|'announcements'|'retention' $active
+ * @param 'dashboard'|'scores'|'users'|'ops'|'seasons'|'messages'|'reports'|'events'|'announcements'|'retention'|'predictions' $active
  */
 function adminLayoutStart(string $title, string $active = 'dashboard'): void
 {
@@ -34,6 +34,7 @@ function adminLayoutStart(string $title, string $active = 'dashboard'): void
             'items' => [
                 ['id' => 'messages', 'label' => 'Modération chat', 'href' => url('admin/messages.php')],
                 ['id' => 'users', 'label' => 'Joueurs & points', 'href' => url('admin/users.php')],
+                ['id' => 'predictions', 'label' => 'Pronostics & réussite', 'href' => url('admin/predictions.php')],
             ],
         ],
         [
