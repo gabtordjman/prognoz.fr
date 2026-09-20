@@ -8,7 +8,7 @@ if (!defined('APP_BOOT')) {
 }
 
 define('APP_NAME', 'Prognoz');
-define('APP_VERSION', '1.4.0');
+define('APP_VERSION', '1.4.1');
 define('APP_BETA', envBool('APP_BETA', false));
 define('APP_MAINTENANCE', envBool('APP_MAINTENANCE', false));
 define('APP_CONTACT_EMAIL', env('APP_CONTACT_EMAIL', 'contact@example.com'));
@@ -105,8 +105,10 @@ define('ODDS_SPORT_GROUPS', ['Tennis', 'Basketball', 'Soccer']);
 define('API_FOOTBALL_KEY', trim((string) env('API_FOOTBALL_KEY', '')));
 define('API_FOOTBALL_BASE', rtrim((string) env('API_FOOTBALL_BASE', 'https://v3.football.api-sports.io'), '/'));
 define('API_FOOTBALL_TIMEOUT', max(3, (int) env('API_FOOTBALL_TIMEOUT', '6')));
-/** Intervalle mini entre deux appels live=all. Free tier ≈ 100 req/j. */
-define('LIVE_FOOTBALL_SYNC_INTERVAL_SECONDS', max(30, (int) env('LIVE_FOOTBALL_SYNC_INTERVAL', '60')));
+/** Intervalle mini entre deux appels live=all. Free tier ≈ 100 req/j → défaut 5 min. */
+define('LIVE_FOOTBALL_SYNC_INTERVAL_SECONDS', max(120, (int) env('LIVE_FOOTBALL_SYNC_INTERVAL', '300')));
+/** Plafond d’appels API live / jour UTC (garde-fou free tier). */
+define('LIVE_FOOTBALL_DAILY_BUDGET', max(10, (int) env('LIVE_FOOTBALL_DAILY_BUDGET', '80')));
 /** Fenêtre après coup d’envoi pour afficher / sync le live (minutes). */
 define('LIVE_FOOTBALL_WINDOW_MINUTES', max(60, (int) env('LIVE_FOOTBALL_WINDOW_MINUTES', '150')));
 /** Lab : fixtures depuis var/cache/live_football_mock.json (0 appel API). */

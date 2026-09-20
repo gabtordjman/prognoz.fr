@@ -34,6 +34,116 @@ function liveFootballLastSyncPath(): string
     return APP_CACHE_DIR . '/last_live_football_sync.txt';
 }
 
+function liveFootballQuotaPath(): string
+{
+    return APP_CACHE_DIR . '/live_football_quota.json';
+}
+
+function liveFootballLockPath(): string
+{
+    return APP_CACHE_DIR . '/live_football_sync.lock';
+}
+
+/** @return array{date:string,used:int,budget:int,remaining:int} */
+function liveFootballQuotaState(): array
+{
+    $budget = (int) LIVE_FOOTBALL_DAILY_BUDGET;
+    $today = gmdate('Y-m-d');
+    $used = 0;
+    $path = liveFootballQuotaPath();
+    if (is_file($path)) {
+        $raw = @file_get_contents($path);
+        $data = is_string($raw) ? json_decode($raw, true) : null;
+        if (is_array($data) && ($data['date'] ?? '') === $today) {
+            $used = max(0, (int) ($data['used'] ?? 0));
+        }
+    }
+
+    return [
+        'date'      => $today,
+        'used'      => $used,
+        'budget'    => $budget,
+        'remaining' => max(0, $budget - $used),
+    ];
+}
+
+function liveFootballQuotaAllow(): bool
+{
+    if (LIVE_FOOTBALL_MOCK) {
+        return true;
+    }
+    $state = liveFootballQuotaState();
+
+    return $state['remaining'] > 0;
+}
+
+function liveFootballQuotaConsume(int $n = 1): void
+{
+    if (LIVE_FOOTBALL_MOCK || $n < 1) {
+        return;
+    }
+    if (!ensureAppCacheDir()) {
+        return;
+    }
+    $path = liveFootballQuotaPath();
+    $today = gmdate('Y-m-d');
+    $fp = @fopen($path, 'c+');
+    if ($fp === false) {
+        return;
+    }
+    try {
+        if (!flock($fp, LOCK_EX)) {
+            return;
+        }
+        $raw = stream_get_contents($fp);
+        $data = is_string($raw) && $raw !== '' ? json_decode($raw, true) : null;
+        $used = 0;
+        if (is_array($data) && ($data['date'] ?? '') === $today) {
+            $used = max(0, (int) ($data['used'] ?? 0));
+        }
+        $used += $n;
+        $payload = json_encode(['date' => $today, 'used' => $used], JSON_UNESCAPED_UNICODE);
+        ftruncate($fp, 0);
+        rewind($fp);
+        fwrite($fp, (string) $payload);
+        fflush($fp);
+        flock($fp, LOCK_UN);
+    } finally {
+        fclose($fp);
+    }
+}
+
+/**
+ * Verrou court anti double-appel (plusieurs onglets / workers FPM).
+ * @return resource|false
+ */
+function liveFootballAcquireLock()
+{
+    if (!ensureAppCacheDir()) {
+        return false;
+    }
+    $fp = @fopen(liveFootballLockPath(), 'c+');
+    if ($fp === false) {
+        return false;
+    }
+    if (!flock($fp, LOCK_EX | LOCK_NB)) {
+        fclose($fp);
+
+        return false;
+    }
+
+    return $fp;
+}
+
+function liveFootballReleaseLock($fp): void
+{
+    if ($fp === false || $fp === null) {
+        return;
+    }
+    flock($fp, LOCK_UN);
+    fclose($fp);
+}
+
 /**
  * Normalise un nom d’équipe pour appariement Odds ↔ API-Football.
  * Réutilise normalizeTeamName puis retire les suffixes club courants.
@@ -270,6 +380,98 @@ function getSoccerMatchesTrackedForLive(PDO $pdo): array
 }
 
 /**
+ * Matchs en direct pour UN joueur (ses pronos en_attente uniquement).
+ *
+ * @return list<array<string,mixed>>
+ */
+function getSoccerMatchesLiveForUser(PDO $pdo, int $userId): array
+{
+    if ($userId < 1) {
+        return [];
+    }
+    $window = (int) LIVE_FOOTBALL_WINDOW_MINUTES;
+    $now = matchSqlNow();
+
+    $stmt = $pdo->prepare(
+        "SELECT DISTINCT m.*
+         FROM matches m
+         INNER JOIN prediction_markets pm ON pm.match_id = m.id
+         INNER JOIN predictions p ON p.market_id = pm.id
+         WHERE p.user_id = ?
+           AND p.statut = 'en_attente'
+           AND m.sport LIKE 'soccer_%'
+           AND m.resultat_1x2 IS NULL
+           AND m.statut NOT IN ('annule')
+           AND m.date_match <= {$now}
+           AND m.date_match > DATE_SUB({$now}, INTERVAL {$window} MINUTE)
+         ORDER BY m.date_match ASC"
+    );
+    $stmt->execute([$userId]);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    return is_array($rows) ? $rows : [];
+}
+
+/**
+ * Empreinte légère des scores (détecter un but côté front sans recharger la page).
+ *
+ * @param array<string,array<string,mixed>> $matches
+ */
+function liveFootballScoreFingerprint(array $matches): string
+{
+    if ($matches === []) {
+        return 'empty';
+    }
+    ksort($matches);
+    $parts = [];
+    foreach ($matches as $id => $snap) {
+        if (!is_array($snap)) {
+            continue;
+        }
+        $parts[] = $id . ':' . ($snap['home'] ?? 'x') . '-' . ($snap['away'] ?? 'x')
+            . ':' . ($snap['status'] ?? '') . ':' . ($snap['clock'] ?? '');
+    }
+
+    return substr(hash('sha256', implode('|', $parts)), 0, 16);
+}
+
+/**
+ * Intervalle de poll front recommandé (lecture cache — ne brûle pas l’API).
+ *
+ * @param array<string,array<string,mixed>> $matches
+ */
+function liveFootballSuggestedPollMs(array $matches): int
+{
+    if ($matches === []) {
+        return 45000;
+    }
+    $hasLivePlay = false;
+    $onlyBreak = true;
+    foreach ($matches as $snap) {
+        if (!is_array($snap) || !empty($snap['pending'])) {
+            continue;
+        }
+        $st = strtoupper((string) ($snap['status'] ?? ''));
+        if (in_array($st, ['1H', '2H', 'ET', 'P', 'LIVE'], true)) {
+            $hasLivePlay = true;
+            $onlyBreak = false;
+            break;
+        }
+        if (!in_array($st, ['HT', 'BT'], true) && empty($snap['finished'])) {
+            $onlyBreak = false;
+        }
+    }
+    if ($hasLivePlay) {
+        return 12000;
+    }
+    if ($onlyBreak) {
+        return 28000;
+    }
+
+    return 20000;
+}
+
+/**
  * Fusionne les matchs live suivis dans la liste soccer affichée (sans doublon).
  *
  * @param list<array<string,mixed>> $upcoming
@@ -480,9 +682,10 @@ function liveFootballMockFixtures(): array
 }
 
 /**
- * Sync live — 0 appel si aucun match suivi, sinon 1× /fixtures?live=all (throttle).
+ * Sync live — 0 appel si aucun match suivi, sinon 1× /fixtures?live=all
+ * (throttle intervalle + budget journalier + verrou anti-doublon).
  *
- * @return array{ran:bool,tracked:int,matched:int,throttled:bool,skipped:string|null}
+ * @return array{ran:bool,tracked:int,matched:int,throttled:bool,skipped:string|null,quota:?array}
  */
 function syncLiveFootballScores(PDO $pdo, bool $force = false): array
 {
@@ -492,6 +695,7 @@ function syncLiveFootballScores(PDO $pdo, bool $force = false): array
         'matched'   => 0,
         'throttled' => false,
         'skipped'   => null,
+        'quota'     => liveFootballQuotaState(),
     ];
 
     if (!liveFootballConfigured()) {
@@ -510,8 +714,15 @@ function syncLiveFootballScores(PDO $pdo, bool $force = false): array
         return $empty;
     }
 
-    if (!$force && !ensureAppCacheDir()) {
+    if (!ensureAppCacheDir()) {
         $empty['skipped'] = 'cache_dir';
+
+        return $empty;
+    }
+
+    if (!$force && !liveFootballQuotaAllow()) {
+        $empty['skipped'] = 'daily_budget';
+        $empty['quota'] = liveFootballQuotaState();
 
         return $empty;
     }
@@ -528,24 +739,57 @@ function syncLiveFootballScores(PDO $pdo, bool $force = false): array
         }
     }
 
-    $fixtures = liveFootballFetchLiveFixtures();
-    if ($fixtures === null) {
-        $empty['skipped'] = 'api_error';
+    // Force admin : respect quand même le budget (sauf mock).
+    if ($force && !liveFootballQuotaAllow()) {
+        $empty['skipped'] = 'daily_budget';
+        $empty['quota'] = liveFootballQuotaState();
 
         return $empty;
     }
 
-    $snapshots = liveFootballBuildSnapshots($fixtures, $tracked);
-    liveFootballWriteCache($snapshots);
-    @file_put_contents($stampFile, (string) time());
+    $lock = liveFootballAcquireLock();
+    if ($lock === false) {
+        $empty['throttled'] = true;
+        $empty['skipped'] = 'locked';
 
-    return [
-        'ran'       => true,
-        'tracked'   => count($tracked),
-        'matched'   => count($snapshots),
-        'throttled' => false,
-        'skipped'   => null,
-    ];
+        return $empty;
+    }
+
+    try {
+        // Re-check throttle after lock (autre worker vient de sync).
+        if (!$force && is_file($stampFile)) {
+            $last = (int) @file_get_contents($stampFile);
+            if ($last > 0 && (time() - $last) < $interval) {
+                $empty['throttled'] = true;
+                $empty['skipped'] = 'throttled';
+
+                return $empty;
+            }
+        }
+
+        $fixtures = liveFootballFetchLiveFixtures();
+        if ($fixtures === null) {
+            $empty['skipped'] = 'api_error';
+
+            return $empty;
+        }
+
+        liveFootballQuotaConsume(1);
+        $snapshots = liveFootballBuildSnapshots($fixtures, $tracked);
+        liveFootballWriteCache($snapshots);
+        @file_put_contents($stampFile, (string) time());
+
+        return [
+            'ran'       => true,
+            'tracked'   => count($tracked),
+            'matched'   => count($snapshots),
+            'throttled' => false,
+            'skipped'   => null,
+            'quota'     => liveFootballQuotaState(),
+        ];
+    } finally {
+        liveFootballReleaseLock($lock);
+    }
 }
 
 /**
@@ -611,9 +855,13 @@ function liveFootballPublicPayload(PDO $pdo): array
     }
 
     return [
-        'ok'         => true,
-        'enabled'    => $enabled,
-        'fetched_at' => (int) ($cache['fetched_at'] ?? 0),
-        'matches'    => $matches,
+        'ok'           => true,
+        'enabled'      => $enabled,
+        'fetched_at'   => (int) ($cache['fetched_at'] ?? 0),
+        'fingerprint'  => liveFootballScoreFingerprint($matches),
+        'poll_ms'      => liveFootballSuggestedPollMs($matches),
+        'api_interval' => (int) LIVE_FOOTBALL_SYNC_INTERVAL_SECONDS,
+        'quota'        => liveFootballQuotaState(),
+        'matches'      => $matches,
     ];
 }

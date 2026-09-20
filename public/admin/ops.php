@@ -150,6 +150,7 @@ $liveConfigured = function_exists('liveFootballConfigured') && liveFootballConfi
 $liveTracked = $liveConfigured ? count(getSoccerMatchesTrackedForLive($pdo)) : 0;
 $liveCache = $liveConfigured ? liveFootballReadCache() : ['fetched_at' => 0, 'matches' => []];
 $liveMatched = is_array($liveCache['matches'] ?? null) ? count($liveCache['matches']) : 0;
+$liveQuota = $liveConfigured ? liveFootballQuotaState() : ['used' => 0, 'budget' => 0, 'remaining' => 0];
 
 adminLayoutStart('Sync API & crédits', 'ops');
 ?>
@@ -193,9 +194,16 @@ adminLayoutStart('Sync API & crédits', 'ops');
             </span>
             · matchs suivis : <span class="ops-mono"><?= (int) $liveTracked ?></span>
             · scores en cache : <span class="ops-mono"><?= (int) $liveMatched ?></span>
+            · budget jour : <span class="ops-mono"><?= (int) $liveQuota['used'] ?>/<?= (int) $liveQuota['budget'] ?></span>
+            (reste <?= (int) $liveQuota['remaining'] ?>)
+            · sync max 1× / <?= (int) (LIVE_FOOTBALL_SYNC_INTERVAL_SECONDS / 60) ?> min
             <?php if (!empty($liveCache['fetched_at'])): ?>
                 · maj <?= e(date('H:i:s', (int) $liveCache['fetched_at'])) ?>
             <?php endif; ?>
+        </p>
+        <p class="ops-muted">
+            Free tier ≈ 100 req/j : le front lit le cache souvent ; l’API est plafonnée
+            (intervalle + budget). Forcer compte dans le budget.
         </p>
         <form method="post">
             <?= csrfField() ?>

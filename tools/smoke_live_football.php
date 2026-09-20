@@ -63,6 +63,9 @@ echo 'clé .env         : ' . ($keyInEnv !== '' ? 'oui (' . strlen($keyInEnv) . 
 echo 'API_FOOTBALL_KEY : ' . (API_FOOTBALL_KEY !== '' ? 'oui (' . strlen(API_FOOTBALL_KEY) . ' car.)' : 'NON') . "\n";
 echo 'MOCK             : ' . (LIVE_FOOTBALL_MOCK ? 'oui' : 'non') . "\n";
 echo 'configured       : ' . (liveFootballConfigured() ? 'oui' : 'non') . "\n";
+$q = liveFootballQuotaState();
+echo 'budget jour      : ' . $q['used'] . '/' . $q['budget'] . ' (reste ' . $q['remaining'] . ")\n";
+echo 'intervalle sync  : ' . LIVE_FOOTBALL_SYNC_INTERVAL_SECONDS . " s\n";
 
 if (!liveFootballConfigured()) {
     echo "Abandon : mets API_FOOTBALL_KEY=... dans le .env serveur.\n";

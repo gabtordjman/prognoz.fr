@@ -1434,6 +1434,68 @@ button.pill-points-btn:active {
     box-shadow: var(--shadow-card), inset 0 0 0 1px rgba(47, 115, 76, 0.14);
 }
 
+.match-live-picks {
+    list-style: none;
+    margin: 0.55rem 0 0;
+    padding: 0.45rem 0 0;
+    border-top: 1px dashed rgba(90, 75, 55, 0.28);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.match-live-picks li {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+}
+
+.sport-cat-btn--live {
+    color: var(--green-dark);
+}
+
+.sport-cat-live-dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--green-light);
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 0.15rem;
+    box-shadow: 0 0 0 0 rgba(78, 160, 110, 0.5);
+    animation: match-live-pulse 1.6s ease-out infinite;
+}
+
+.sport-section-title--live {
+    color: var(--green-dark);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.sport-section--live {
+    margin-bottom: 1.35rem;
+}
+
+.match-card--live .match-live-score {
+    font-size: 1.25rem;
+}
+
+.match-card.match-slip.is-live-goal {
+    box-shadow: var(--shadow-card), inset 0 0 0 2px rgba(160, 120, 34, 0.55);
+}
+
+.match-card.match-slip.is-live-goal .match-live-score {
+    color: var(--brass);
+    animation: match-live-score-flash 0.65s ease;
+}
+
+.match-card.match-slip.is-live-goal .match-live-clock {
+    color: var(--brass);
+}
+
 .market-block {
     margin-top: 0.65rem;
     padding-top: 0.65rem;
@@ -8585,6 +8647,7 @@ html.site-theme-derby.event-theme-fest body::after {
     }
 
     .match-live-dot,
+    .sport-cat-live-dot,
     .match-card.match-slip.is-live-pulse .match-live-score {
         animation: none;
     }
@@ -8629,4 +8692,13 @@ html.theme-match-night .match-live-badge {
     border-color: rgba(100, 180, 130, 0.32);
 }
 html.theme-match-night .match-live-score { color: #d8f0de; }
+
+html.site-theme-floodlight .sport-cat-btn--live,
+html.site-theme-floodlight .sport-section-title--live { color: #d8f0c8; }
+html.site-theme-pressbox .sport-cat-btn--live,
+html.site-theme-pressbox .sport-section-title--live { color: #f0e2c0; }
+html.site-theme-derby .sport-cat-btn--live,
+html.site-theme-derby .sport-section-title--live { color: #f2e8d8; }
+html.site-theme-chalk .sport-cat-btn--live,
+html.site-theme-chalk .sport-section-title--live { color: #2a4a38; }
 

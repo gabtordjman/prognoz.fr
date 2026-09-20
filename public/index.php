@@ -7,27 +7,22 @@ ensureMatchProbColumns($pdo);
 maintainMatchLifecycle($pdo, true);
 
 $matchsByCategory = getUpcomingMatchesByCategory($pdo);
-$liveSoccerTracked = liveFootballConfigured() ? getSoccerMatchesTrackedForLive($pdo) : [];
-$liveSoccerIds = [];
-foreach ($liveSoccerTracked as $lm) {
-    $liveSoccerIds[(int) $lm['id']] = true;
-}
-if ($liveSoccerTracked !== []) {
-    $matchsByCategory['soccer'] = mergeLiveSoccerMatchesForDisplay(
-        $matchsByCategory['soccer'] ?? [],
-        $liveSoccerTracked
-    );
-}
-$matchsRaw = [];
-foreach (sportCategories() as $cat) {
-    foreach ($matchsByCategory[$cat] ?? [] as $m) {
-        $matchsRaw[] = $m;
+$matchsRaw = getUpcomingMatches($pdo);
+$matchIds = array_column($matchsRaw, 'id');
+
+// Matchs en direct = uniquement ceux où CE joueur a un prono ouvert.
+$liveForUser = [];
+$liveFootballEnabled = liveFootballConfigured();
+if ($user && $liveFootballEnabled) {
+    $liveForUser = getSoccerMatchesLiveForUser($pdo, (int) $user['id']);
+    foreach ($liveForUser as $lm) {
+        $lid = (int) $lm['id'];
+        if (!in_array($lid, $matchIds, true)) {
+            $matchIds[] = $lid;
+        }
     }
 }
-usort($matchsRaw, static function ($a, $b) {
-    return strcmp((string) ($a['date_match'] ?? ''), (string) ($b['date_match'] ?? ''));
-});
-$matchIds = array_column($matchsRaw, 'id');
+
 $marketsByMatch = getMarketsForMatches($pdo, $matchIds);
 
 $allMarketIds = [];
@@ -39,15 +34,18 @@ foreach ($matchsRaw as $m) {
     }
     $matchs[] = $m;
 }
+foreach ($liveForUser as $lm) {
+    foreach ($marketsByMatch[(int) $lm['id']] ?? [] as $mk) {
+        $allMarketIds[] = (int) $mk['id'];
+    }
+}
+$allMarketIds = array_values(array_unique($allMarketIds));
 
 $matchsByCategoryDisplay = [];
 foreach (sportCategories() as $cat) {
     $matchsByCategoryDisplay[$cat] = [];
     foreach ($matchsByCategory[$cat] ?? [] as $m) {
         $m['markets'] = $marketsByMatch[(int) $m['id']] ?? [];
-        if ($cat === 'soccer' && isset($liveSoccerIds[(int) $m['id']])) {
-            $m['live_track'] = true;
-        }
         $matchsByCategoryDisplay[$cat][] = $m;
     }
 }
@@ -56,7 +54,14 @@ $liveFootballCache = liveFootballReadCache();
 $liveFootballSnaps = is_array($liveFootballCache['matches'] ?? null)
     ? $liveFootballCache['matches']
     : [];
-$liveFootballEnabled = liveFootballConfigured();
+
+$liveMatchesDisplay = [];
+foreach ($liveForUser as $m) {
+    $m['markets'] = $marketsByMatch[(int) $m['id']] ?? [];
+    $m['live_track'] = true;
+    $liveMatchesDisplay[] = $m;
+}
+$liveCount = count($liveMatchesDisplay);
 
 $predictions = getUserPredictions($pdo, $user ? (int) $user['id'] : null, $allMarketIds);
 $flashes = getFlashes();
@@ -78,6 +83,7 @@ $totalAffichés = 0;
 foreach ($matchsByCategoryDisplay as $catMatchs) {
     $totalAffichés += count($catMatchs);
 }
+$hasHomeContent = $totalAffichés > 0 || $liveCount > 0;
 
 $marketsMeta = [];
 foreach ($matchs as $m) {
@@ -167,20 +173,34 @@ releaseSession();
     <?php if ($user): ?>
         <header class="page-head">
             <h1 class="page-title"><?= e(t('home.matches_today')) ?></h1>
-            <?php if ($totalAffichés > 0): ?>
-            <p class="page-sub"><?= e($totalAffichés > 1 ? t('home.meetings_other', ['n' => $totalAffichés]) : t('home.meetings_one', ['n' => $totalAffichés])) ?></p>
+            <?php if ($hasHomeContent): ?>
+            <p class="page-sub"><?php
+                if ($liveCount > 0 && $totalAffichés > 0) {
+                    echo e(t('home.live_and_upcoming', ['live' => $liveCount, 'n' => $totalAffichés]));
+                } elseif ($liveCount > 0) {
+                    echo e(t('home.live_only', ['n' => $liveCount]));
+                } else {
+                    echo e($totalAffichés > 1 ? t('home.meetings_other', ['n' => $totalAffichés]) : t('home.meetings_one', ['n' => $totalAffichés]));
+                }
+            ?></p>
             <?php endif; ?>
         </header>
     <?php endif; ?>
-    <?php if ($totalAffichés > 0): ?>
+    <?php if ($hasHomeContent): ?>
         <div class="sport-cat-sticky-sentinel" id="sportCatSentinel" aria-hidden="true"></div>
         <div class="sport-cat-panel" id="sportCatPanel">
                     <div class="sport-cat-panel-head"><?= e(t('home.choose_cat')) ?></div>
                     <nav class="sport-cat-nav" id="sportCatNav" aria-label="<?= e(t('home.cat_aria')) ?>">
                     <button type="button" class="sport-cat-btn is-active" data-cat="all">
                         <i class="fa-solid fa-layer-group" aria-hidden="true"></i> <?= e(t('home.all')) ?>
-                        <span class="sport-cat-count"><?= $totalAffichés ?></span>
+                        <span class="sport-cat-count"><?= $totalAffichés + $liveCount ?></span>
                     </button>
+                    <?php if ($liveCount > 0): ?>
+                    <button type="button" class="sport-cat-btn sport-cat-btn--live" data-cat="live">
+                        <span class="sport-cat-live-dot" aria-hidden="true"></span> <?= e(t('home.live_now')) ?>
+                        <span class="sport-cat-count"><?= $liveCount ?></span>
+                    </button>
+                    <?php endif; ?>
                     <?php foreach (sportCategories() as $cat):
                         $ui = sportCategoryUi($cat);
                         $count = count($matchsByCategoryDisplay[$cat]);
@@ -195,9 +215,85 @@ releaseSession();
     <?php endif; ?>
 
         <div class="pronos-matches">
-            <?php if ($totalAffichés === 0): ?>
+            <?php if (!$hasHomeContent): ?>
                 <div class="panel"><div class="panel-body empty-msg"><?= e(t('home.no_matches')) ?></div></div>
             <?php else: ?>
+
+                <?php if ($liveCount > 0): ?>
+                <section class="sport-section sport-section--live" data-cat-section="live" id="liveMatchesSection">
+                    <header class="sport-section-head">
+                        <h2 class="sport-section-title sport-section-title--live">
+                            <span class="sport-cat-live-dot" aria-hidden="true"></span>
+                            <?= e(t('home.live_section')) ?>
+                        </h2>
+                        <span class="sport-section-meta"><?= e(t('home.live_section_hint')) ?></span>
+                    </header>
+                    <?php foreach ($liveMatchesDisplay as $m):
+                        $mid = (int) $m['id'];
+                        $liveSnap = $liveFootballSnaps[(string) $mid] ?? null;
+                        $liveHasScore = is_array($liveSnap)
+                            && isset($liveSnap['home'], $liveSnap['away'])
+                            && $liveSnap['home'] !== null
+                            && $liveSnap['away'] !== null;
+                        $liveClock = is_array($liveSnap) ? trim((string) ($liveSnap['clock'] ?? '')) : '';
+                        $liveStatus = is_array($liveSnap) ? strtoupper(trim((string) ($liveSnap['status'] ?? ''))) : '';
+                        $liveFetchedAt = (int) ($liveFootballCache['fetched_at'] ?? 0);
+                        $pickLines = [];
+                        foreach ($m['markets'] as $mk) {
+                            $mkId = (int) ($mk['id'] ?? 0);
+                            if ($mkId < 1 || empty($predictions[$mkId])) {
+                                continue;
+                            }
+                            $pred = $predictions[$mkId];
+                            if (($pred['statut'] ?? '') !== 'en_attente') {
+                                continue;
+                            }
+                            $row = array_merge($mk, $m, ['reponse' => $pred['reponse'], 'market_type' => $mk['type']]);
+                            $pickLines[] = marketTypeLabel((string) $mk['type']) . ' · ' . formatPredictionPick($row);
+                        }
+                    ?>
+                    <article class="match-card match-slip match-card--live is-live-track<?= $liveHasScore ? ' is-live' : '' ?>"
+                             data-match-cat="live"
+                             data-match-id="<?= $mid ?>"
+                             data-live-track="1"
+                             data-live-status="<?= e($liveStatus) ?>"
+                             data-live-fetched-at="<?= $liveFetchedAt > 0 ? $liveFetchedAt : '' ?>"
+                             data-live-clock-raw="<?= e($liveClock) ?>">
+                        <div class="match-slip-edge match-slip-edge-top" aria-hidden="true"></div>
+                        <div class="match-card-body">
+                            <div class="match-meta">
+                                <span class="match-comp match-cat-soccer"><?= e((string) $m['competition']) ?></span>
+                                <span class="match-live-badge<?= $liveHasScore ? '' : ' is-waiting' ?>" data-live-badge <?= $liveClock === '' && !$liveHasScore ? 'hidden' : '' ?>>
+                                    <span class="match-live-dot" aria-hidden="true"></span>
+                                    <span class="match-live-clock" data-live-clock><?= $liveClock !== '' ? e($liveClock) : e(t('home.live')) ?></span>
+                                </span>
+                                <time><?= e(formatMatchWhen($m['date_match'])) ?></time>
+                            </div>
+                            <div class="match-teams">
+                                <span class="team home"><?= e($m['equipe_home']) ?></span>
+                                <span class="match-scoreboard" data-live-scoreboard>
+                                    <span class="match-live-score" data-live-score <?= $liveHasScore ? '' : 'hidden' ?>><?php
+                                        if ($liveHasScore) {
+                                            echo e((int) $liveSnap['home'] . '–' . (int) $liveSnap['away']);
+                                        }
+                                    ?></span>
+                                    <span class="vs" data-live-vs <?= $liveHasScore ? 'hidden' : '' ?>>–</span>
+                                </span>
+                                <span class="team away"><?= e($m['equipe_away']) ?></span>
+                            </div>
+                            <?php if ($pickLines !== []): ?>
+                            <ul class="match-live-picks">
+                                <?php foreach ($pickLines as $line): ?>
+                                <li><?= e($line) ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                            <?php endif; ?>
+                        </div>
+                        <div class="match-slip-edge match-slip-edge-bottom" aria-hidden="true"></div>
+                    </article>
+                    <?php endforeach; ?>
+                </section>
+                <?php endif; ?>
 
                 <?php foreach (sportCategories() as $cat):
                     $ui = sportCategoryUi($cat);
@@ -277,44 +373,21 @@ releaseSession();
                                 }
                             }
                         }
-                        $liveTrack = $isSoccer && !empty($m['live_track']) && $liveFootballEnabled;
-                        $liveSnap = $liveTrack
-                            ? ($liveFootballSnaps[(string) (int) $m['id']] ?? null)
-                            : null;
-                        $liveHasScore = is_array($liveSnap)
-                            && isset($liveSnap['home'], $liveSnap['away'])
-                            && $liveSnap['home'] !== null
-                            && $liveSnap['away'] !== null;
-                        $liveClock = is_array($liveSnap) ? trim((string) ($liveSnap['clock'] ?? '')) : '';
                     ?>
-                    <article class="match-card match-slip<?= $extraOpen ? ' is-markets-open' : '' ?><?= $ferme ? ' is-picks-closed' : '' ?><?= $liveTrack ? ' is-live-track' : '' ?><?= $liveHasScore ? ' is-live' : '' ?>"
+                    <article class="match-card match-slip<?= $extraOpen ? ' is-markets-open' : '' ?><?= $ferme ? ' is-picks-closed' : '' ?>"
                              data-match-cat="<?= e($cat) ?>"
-                             data-match-id="<?= (int) $m['id'] ?>"
-                             <?= $liveTrack ? 'data-live-track="1"' : '' ?>>
+                             data-match-id="<?= (int) $m['id'] ?>">
                         <div class="match-slip-edge match-slip-edge-top" aria-hidden="true"></div>
                         <div class="match-card-body">
                         <div class="match-meta">
                             <span class="match-comp match-cat-<?= e(sportCategory($m['sport'])) ?>">
                                 <?= e($m['competition']) ?>
                             </span>
-                            <?php if ($liveTrack): ?>
-                            <span class="match-live-badge<?= $liveHasScore ? '' : ' is-waiting' ?>" data-live-badge <?= $liveClock === '' && !$liveHasScore ? 'hidden' : '' ?>>
-                                <span class="match-live-dot" aria-hidden="true"></span>
-                                <span class="match-live-clock" data-live-clock><?= $liveClock !== '' ? e($liveClock) : e(t('home.live')) ?></span>
-                            </span>
-                            <?php endif; ?>
                             <time><?= e(formatMatchWhen($m['date_match'])) ?></time>
                         </div>
                         <div class="match-teams">
                             <span class="team home"><?= e($m['equipe_home']) ?></span>
-                            <span class="match-scoreboard" data-live-scoreboard>
-                                <span class="match-live-score" data-live-score <?= $liveHasScore ? '' : 'hidden' ?>><?php
-                                    if ($liveHasScore) {
-                                        echo e((int) $liveSnap['home'] . '–' . (int) $liveSnap['away']);
-                                    }
-                                ?></span>
-                                <span class="vs" data-live-vs <?= $liveHasScore ? 'hidden' : '' ?>>–</span>
-                            </span>
+                            <span class="vs">–</span>
                             <span class="team away"><?= e($m['equipe_away']) ?></span>
                         </div>
 
@@ -554,6 +627,9 @@ releaseSession();
     window.PRONO_API = <?= json_encode(url('api/')) ?>;
     window.PRONO_MARKETS = <?= json_encode($marketsMeta, JSON_UNESCAPED_UNICODE) ?>;
     window.PRONO_VALIDATED = <?= json_encode($validatedPicksJs, JSON_UNESCAPED_UNICODE) ?>;
+    window.PRONO_I18N = Object.assign({}, window.PRONO_I18N || {}, {
+        live_goal: <?= json_encode(t('home.live_goal'), JSON_UNESCAPED_UNICODE) ?>
+    });
 </script>
 <script src="<?= e(assetUrl('assets/js/predictions.js')) ?>"></script>
 <script src="<?= e(assetUrl('assets/js/match-effects.js')) ?>"></script>

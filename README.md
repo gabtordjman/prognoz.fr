@@ -6,7 +6,7 @@ Gratuit, sans argent réel : on joue pour les points et le classement.
 |         |                                      |
 | ------- | ------------------------------------ |
 | Site    | [prognoz.fr](https://www.prognoz.fr) |
-| Version | **1.4.0**                            |
+| Version | **1.4.1**                            |
 
 Le serveur web ne doit servir que le dossier **`public/`**. Le reste (`app/`, `.env`, etc.) reste hors web.
 
@@ -64,7 +64,8 @@ curl -s "https://www.prognoz.fr/api/sync?cron=1&key=VOTRE_CRON_SECRET"
 ```
 
 Sans cron, une sync légère tourne quand même côté site (throttlée).  
-Live foot : rafraîchi aussi quand un joueur ouvre la home (`/api/live_scores`, 1 req API max / minute si matchs suivis).
+Live foot : rafraîchi via cache navigateur ; appels API-Football plafonnés
+(`LIVE_FOOTBALL_SYNC_INTERVAL` défaut 300 s, `LIVE_FOOTBALL_DAILY_BUDGET` défaut 80).
 
 Smoke live (serveur) :
 

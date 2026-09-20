@@ -142,5 +142,19 @@ assert_eq(true, !empty($merged[0]['live_track']), 'flag live_track');
 $ids = array_map(static fn ($m) => (int) $m['id'], $merged);
 assert_eq([9, 2, 1], $ids, 'ordre merge attendu');
 
+$fp1 = liveFootballScoreFingerprint([
+    '1' => ['home' => 0, 'away' => 0, 'status' => '1H', 'clock' => "10'"],
+]);
+$fp2 = liveFootballScoreFingerprint([
+    '1' => ['home' => 1, 'away' => 0, 'status' => '1H', 'clock' => "11'"],
+]);
+assert_true($fp1 !== $fp2, 'fingerprint change après but');
+assert_eq(12000, liveFootballSuggestedPollMs([
+    '1' => ['home' => 0, 'away' => 0, 'status' => '2H', 'clock' => "70'", 'in_play' => true],
+]), 'poll rapide en jeu');
+assert_eq(28000, liveFootballSuggestedPollMs([
+    '1' => ['home' => 0, 'away' => 0, 'status' => 'HT', 'clock' => 'MT'],
+]), 'poll plus lent à la mi-temps');
+
 echo "\n{$passed} passed, {$failed} failed\n";
 exit($failed > 0 ? 1 : 0);

@@ -751,13 +751,25 @@ function adminActionSyncLiveFootball(PDO $pdo): array
         return adminActionResult(false, 'API_FOOTBALL_KEY manquante dans le .env.');
     }
     $sync = syncLiveFootballScores($pdo, true);
+    $quota = is_array($sync['quota'] ?? null) ? $sync['quota'] : liveFootballQuotaState();
+    $budgetLabel = (int) ($quota['used'] ?? 0) . '/' . (int) ($quota['budget'] ?? 0);
+
+    if (!empty($sync['ran'])) {
+        return adminActionResult(
+            true,
+            'Live foot OK · suivis=' . (int) ($sync['tracked'] ?? 0)
+            . ' · matchés=' . (int) ($sync['matched'] ?? 0)
+            . ' · budget ' . $budgetLabel,
+            $sync
+        );
+    }
+
+    $skip = (string) ($sync['skipped'] ?? 'unknown');
+    $ok = !in_array($skip, ['daily_budget', 'api_error', 'not_configured'], true);
 
     return adminActionResult(
-        true,
-        'Live foot : ran=' . (!empty($sync['ran']) ? 'oui' : 'non')
-        . ' · suivis=' . (int) ($sync['tracked'] ?? 0)
-        . ' · matchés=' . (int) ($sync['matched'] ?? 0)
-        . ' · skip=' . ($sync['skipped'] ?? '-'),
+        $ok,
+        'Live foot non sync (' . $skip . ') · budget ' . $budgetLabel,
         $sync
     );
 }
