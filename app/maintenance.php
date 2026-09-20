@@ -7,7 +7,32 @@ if (!defined('APP_BOOT')) {
 /** Mode maintenance actif (.env APP_MAINTENANCE=1). */
 function appInMaintenanceMode(): bool
 {
-    return defined('APP_MAINTENANCE') && APP_MAINTENANCE;
+    // Relecture .env (toggle admin sans redémarrer PHP-FPM).
+    return envBool('APP_MAINTENANCE', defined('APP_MAINTENANCE') && APP_MAINTENANCE);
+}
+
+/**
+ * Active / coupe APP_MAINTENANCE dans le .env.
+ * @return array{ok:bool,enabled:bool,message:string}
+ */
+function setAppMaintenanceMode(bool $enabled): array
+{
+    $value = $enabled ? '1' : '0';
+    if (!writeEnvValue('APP_MAINTENANCE', $value)) {
+        return [
+            'ok'      => false,
+            'enabled' => appInMaintenanceMode(),
+            'message' => 'Impossible d’écrire le .env (droits fichier ?).',
+        ];
+    }
+
+    return [
+        'ok'      => true,
+        'enabled' => $enabled,
+        'message' => $enabled
+            ? 'Maintenance activée (visiteurs → page maintenance ; IPs allowlist OK).'
+            : 'Maintenance désactivée — site ouvert.',
+    ];
 }
 
 /** @return list<string> */

@@ -12,8 +12,14 @@
 | Matchs & résultats | Sync API & crédits | Import matchs, cron, sonde quota |
 | Communauté | Modération chat | Masquer / restaurer / effacer |
 | Communauté | Joueurs & points | Points, désactiver, reset MDP, photos |
+| Communauté | Pronostics & réussite | Stats, classement, dossier joueur |
 | Compétition | Saisons | Clôturer / planifier |
 | Compétition | Événements | ×points, thèmes, push |
+
+### Sync API
+
+- **Maintenance** : bouton dans Ops qui écrit `APP_MAINTENANCE=0|1` dans le `.env`
+- **Live football** : sync forcée API-Football (affichage score/minute)
 
 ### Résultats & scores — 4 cas
 

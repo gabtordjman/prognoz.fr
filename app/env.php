@@ -33,12 +33,9 @@ function loadEnvFile(string $path): void
         if ($key === '') {
             continue;
         }
-        if (!array_key_exists($key, $_ENV)) {
-            $_ENV[$key] = $value;
-        }
-        if (getenv($key) === false) {
-            putenv($key . '=' . $value);
-        }
+        // Le fichier .env fait foi à chaque requête (toggle admin / FPM worker).
+        $_ENV[$key] = $value;
+        putenv($key . '=' . $value);
     }
 }
 
@@ -55,4 +52,67 @@ function envBool(string $key, bool $default = false): bool
 {
     $v = strtolower(env($key, $default ? '1' : '0'));
     return in_array($v, ['1', 'true', 'yes', 'on'], true);
+}
+
+/**
+ * Met à jour une clé dans le fichier .env (et $_ENV / putenv pour le process courant).
+ * Réservé à des clés allowlistées côté appelant.
+ */
+function writeEnvValue(string $key, string $value, ?string $envPath = null): bool
+{
+    $key = trim($key);
+    if ($key === '' || !preg_match('/^[A-Z][A-Z0-9_]*$/', $key)) {
+        return false;
+    }
+
+    $path = $envPath ?? (dirname(__DIR__) . '/.env');
+    if (!is_file($path) || !is_writable($path)) {
+        return false;
+    }
+
+    $raw = file_get_contents($path);
+    if ($raw === false) {
+        return false;
+    }
+
+    // Escape si espaces / caractères spéciaux.
+    $needsQuotes = (bool) preg_match('/[\s#\'"\\\\]/', $value);
+    $encoded = $needsQuotes
+        ? '"' . str_replace(['\\', '"'], ['\\\\', '\\"'], $value) . '"'
+        : $value;
+
+    $line = $key . '=' . $encoded;
+    $pattern = '/^' . preg_quote($key, '/') . '\s*=.*$/m';
+    if (preg_match($pattern, $raw)) {
+        $next = preg_replace($pattern, $line, $raw, 1);
+    } else {
+        $next = rtrim($raw) . "\n" . $line . "\n";
+    }
+    if (!is_string($next)) {
+        return false;
+    }
+
+    $fp = fopen($path, 'c+');
+    if ($fp === false) {
+        return false;
+    }
+    try {
+        if (!flock($fp, LOCK_EX)) {
+            return false;
+        }
+        ftruncate($fp, 0);
+        rewind($fp);
+        if (fwrite($fp, $next) === false) {
+            return false;
+        }
+        fflush($fp);
+        flock($fp, LOCK_UN);
+    } finally {
+        fclose($fp);
+    }
+
+    $_ENV[$key] = $value;
+    putenv($key . '=' . $value);
+
+    return true;
 }

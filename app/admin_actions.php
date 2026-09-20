@@ -65,6 +65,8 @@ function adminRunAction(PDO $pdo, string $action, array $p = []): array
             'ann_delete' => adminActionAnnDelete($pdo, $p),
             'report_unavailable' => adminActionReportUnavailable($pdo),
             'report_month' => adminActionReportMonth($pdo),
+            'toggle_maintenance' => adminActionToggleMaintenance($p),
+            'sync_live_football' => adminActionSyncLiveFootball($pdo),
             default => adminActionResult(false, 'Action inconnue.'),
         };
     } catch (InvalidArgumentException $e) {
@@ -726,4 +728,36 @@ function adminActionReportMonth(PDO $pdo): array
     }
 
     return adminActionResult(true, 'Rapport du mois envoyé à ' . adminNotifyEmail() . '.');
+}
+
+/** @param array<string,mixed> $p */
+function adminActionToggleMaintenance(array $p): array
+{
+    $enabled = !empty($p['enabled']);
+    $r = setAppMaintenanceMode($enabled);
+    if (empty($r['ok'])) {
+        return adminActionResult(false, (string) ($r['message'] ?? 'Échec écriture .env'));
+    }
+
+    return adminActionResult(true, (string) $r['message'], ['enabled' => !empty($r['enabled'])]);
+}
+
+function adminActionSyncLiveFootball(PDO $pdo): array
+{
+    if (!function_exists('syncLiveFootballScores')) {
+        return adminActionResult(false, 'Module live football absent.');
+    }
+    if (!liveFootballConfigured()) {
+        return adminActionResult(false, 'API_FOOTBALL_KEY manquante dans le .env.');
+    }
+    $sync = syncLiveFootballScores($pdo, true);
+
+    return adminActionResult(
+        true,
+        'Live foot : ran=' . (!empty($sync['ran']) ? 'oui' : 'non')
+        . ' · suivis=' . (int) ($sync['tracked'] ?? 0)
+        . ' · matchés=' . (int) ($sync['matched'] ?? 0)
+        . ' · skip=' . ($sync['skipped'] ?? '-'),
+        $sync
+    );
 }

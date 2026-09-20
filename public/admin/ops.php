@@ -66,6 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'success',
                 'Cron scores (local) : scores_run='
                 . (!empty($lifecycle['scores']) ? 'oui' : 'non/throttle')
+                . ' · live_foot=' . (is_array($lifecycle['live_football'] ?? null) && !empty($lifecycle['live_football']['ran']) ? 'oui' : 'non')
                 . ' · cache=' . (!empty($lifecycle['cache']) ? 'oui' : 'non')
                 . ' · fermés=' . (int) ($lifecycle['closed'] ?? 0)
                 . ' · rappels_push=' . (int) ($reminders['sent_push'] ?? 0)
@@ -75,6 +76,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 . ', trop vieux=' . (int) $summary['too_old'] . ')'
                 . ' · quota=' . (oddsQuotaRemaining() ?? '?')
             );
+        } elseif ($action === 'toggle_maintenance') {
+            $r = adminRunAction($pdo, 'toggle_maintenance', [
+                'enabled' => !empty($_POST['enabled']),
+            ]);
+            adminFlash((string) ($r['type'] ?? 'error'), (string) ($r['message'] ?? ''));
+        } elseif ($action === 'sync_live_football') {
+            $r = adminRunAction($pdo, 'sync_live_football', []);
+            adminFlash((string) ($r['type'] ?? 'error'), (string) ($r['message'] ?? ''));
         } elseif ($action === 'catchup_scores') {
             @set_time_limit(240);
             $rec = catchUpMissingScoresFromApi($pdo);
@@ -136,9 +145,68 @@ $purgeTotal = (int) $pruneStats['score_options']
     + (int) $pruneStats['empty_markets']
     + (int) $pruneStats['old_matches']
     + (int) ($pruneStats['junk_finished'] ?? 0);
+$maintenanceOn = appInMaintenanceMode();
+$liveConfigured = function_exists('liveFootballConfigured') && liveFootballConfigured();
+$liveTracked = $liveConfigured ? count(getSoccerMatchesTrackedForLive($pdo)) : 0;
+$liveCache = $liveConfigured ? liveFootballReadCache() : ['fetched_at' => 0, 'matches' => []];
+$liveMatched = is_array($liveCache['matches'] ?? null) ? count($liveCache['matches']) : 0;
 
 adminLayoutStart('Sync API & crédits', 'ops');
 ?>
+<div class="ops-panel">
+    <div class="ops-panel-head">Maintenance site</div>
+    <div class="ops-panel-body">
+        <p class="ops-muted">
+            État : <span class="ops-badge <?= $maintenanceOn ? 'ops-badge--warn' : 'ops-badge--ok' ?>">
+                <?= $maintenanceOn ? 'MAINTENANCE ON' : 'site ouvert' ?>
+            </span>
+            · écrit <span class="ops-mono">APP_MAINTENANCE</span> dans le .env
+            (IPs allowlist / bypass key inchangés).
+        </p>
+        <div class="ops-actions">
+            <?php if ($maintenanceOn): ?>
+            <form method="post" onsubmit="return confirm('Rouvrir le site au public ?');">
+                <?= csrfField() ?>
+                <input type="hidden" name="action" value="toggle_maintenance">
+                <input type="hidden" name="enabled" value="0">
+                <button class="ops-btn ops-btn-primary" type="submit">Désactiver la maintenance</button>
+            </form>
+            <?php else: ?>
+            <form method="post" onsubmit="return confirm('Activer la page maintenance pour tous les visiteurs (sauf IPs allowlist) ?');">
+                <?= csrfField() ?>
+                <input type="hidden" name="action" value="toggle_maintenance">
+                <input type="hidden" name="enabled" value="1">
+                <button class="ops-btn ops-btn-ghost ops-btn-danger" type="submit">Activer la maintenance</button>
+            </form>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<div class="ops-panel">
+    <div class="ops-panel-head">Scores live football</div>
+    <div class="ops-panel-body">
+        <p class="ops-muted">
+            API-Football :
+            <span class="ops-badge <?= $liveConfigured ? 'ops-badge--ok' : 'ops-badge--off' ?>">
+                <?= $liveConfigured ? 'configuré' : 'clé absente' ?>
+            </span>
+            · matchs suivis : <span class="ops-mono"><?= (int) $liveTracked ?></span>
+            · scores en cache : <span class="ops-mono"><?= (int) $liveMatched ?></span>
+            <?php if (!empty($liveCache['fetched_at'])): ?>
+                · maj <?= e(date('H:i:s', (int) $liveCache['fetched_at'])) ?>
+            <?php endif; ?>
+        </p>
+        <form method="post">
+            <?= csrfField() ?>
+            <input type="hidden" name="action" value="sync_live_football">
+            <button class="ops-btn ops-btn-ghost" type="submit" <?= $liveConfigured ? '' : 'disabled' ?>>
+                Forcer sync live (1 req)
+            </button>
+        </form>
+    </div>
+</div>
+
 <div class="ops-panel">
     <div class="ops-panel-head">Crédits The Odds API</div>
     <div class="ops-panel-body">
