@@ -6,7 +6,7 @@ Gratuit, sans argent réel : on joue pour les points et le classement.
 |         |                                      |
 | ------- | ------------------------------------ |
 | Site    | [prognoz.fr](https://www.prognoz.fr) |
-| Version | **1.3.1**                            |
+| Version | **1.4.0**                            |
 
 Le serveur web ne doit servir que le dossier **`public/`**. Le reste (`app/`, `.env`, etc.) reste hors web.
 
@@ -16,6 +16,7 @@ Le serveur web ne doit servir que le dossier **`public/`**. Le reste (`app/`, `.
 
 **Cœur**
 - Matchs (The Odds API) : 1/N/2, score exact, buteur, équipe préférée
+- Scores live football (API-Football) : minute + score sur les matchs déjà pronostiqués
 - Ticket de pronos + points / séries / saisons (marchés durs = bonus, sans pénalité)
 - Communautés, amis, chat chiffré
 - Classements saison
@@ -23,10 +24,11 @@ Le serveur web ne doit servir que le dossier **`public/`**. Le reste (`app/`, `.
 **Autour (Mon espace)**
 - Compte, photo, bio, sport favori
 - Boutique + tenue de joueur (cosmétiques)
+- Thèmes d’apparence (Bulletin, Pitch, Vestiaire, Cabine, Clásico)
 
 **Ops**
 - Événements site, annonces admin, notifications push
-- Admin web (scores, sync, événements…)
+- Admin web : scores, sync, pronos joueurs, maintenance `.env`
 
 ---
 
@@ -46,7 +48,7 @@ Générer la clé de chiffrement :
 php -r "echo base64_encode(random_bytes(32)) . PHP_EOL;"
 ```
 
-Variables : voir [`.env.example`](.env.example).  
+Variables : voir [`.env.example`](.env.example) (`ODDS_API_KEY`, `API_FOOTBALL_KEY`, `APP_MAINTENANCE`, etc.).  
 Pas à pas lab : [`docs/lab-setup.md`](docs/lab-setup.md) ou le wiki **Installation**.
 
 ---
@@ -61,7 +63,15 @@ curl -s "https://www.prognoz.fr/api/sync?cron=1&key=VOTRE_CRON_SECRET"
 */15 * * * * cd /var/www/prognoz && php tools/resolve_results.php >> var/log/resolve.log 2>&1
 ```
 
-Sans cron, une sync légère tourne quand même côté site (throttlée).
+Sans cron, une sync légère tourne quand même côté site (throttlée).  
+Live foot : rafraîchi aussi quand un joueur ouvre la home (`/api/live_scores`, 1 req API max / minute si matchs suivis).
+
+Smoke live (serveur) :
+
+```bash
+php tools/test_live_football.php
+php tools/smoke_live_football.php --sync
+```
 
 Détail des modes : wiki **Exploitation**.
 
