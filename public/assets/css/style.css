@@ -8653,14 +8653,28 @@ html.site-theme-derby.event-theme-fest body::after {
     }
 }
 
-/* --- Live football scoreboard : thèmes perso (boutique / settings) --- */
-html.site-theme-floodlight .match-live-badge {
-    color: #d8f0c8;
-    background: rgba(120, 180, 90, 0.18);
-    border-color: rgba(160, 210, 110, 0.35);
+/* --- Live football : contrastes sur cartes papier (thèmes boutique) ---
+   Les slips restent --paper : jamais de jaune/crème clair sur fond clair. */
+html.site-theme-floodlight .match-live-badge,
+html.site-theme-pressbox .match-live-badge,
+html.site-theme-derby .match-live-badge,
+html.theme-match-night .match-live-badge {
+    color: var(--green-dark);
+    background: rgba(47, 115, 76, 0.12);
+    border-color: rgba(47, 115, 76, 0.28);
 }
-html.site-theme-floodlight .match-live-score { color: #e8f7d8; }
-html.site-theme-floodlight .match-live-dot { background: #9fd86a; }
+html.site-theme-floodlight .match-live-score,
+html.site-theme-pressbox .match-live-score,
+html.site-theme-derby .match-live-score,
+html.theme-match-night .match-live-score {
+    color: var(--ink);
+}
+html.site-theme-floodlight .match-live-dot,
+html.site-theme-pressbox .match-live-dot,
+html.site-theme-derby .match-live-dot,
+html.theme-match-night .match-live-dot {
+    background: var(--green-light);
+}
 
 html.site-theme-chalk .match-live-badge {
     color: #2a4a38;
@@ -8670,35 +8684,16 @@ html.site-theme-chalk .match-live-badge {
 }
 html.site-theme-chalk .match-live-score { color: #1e3a2a; }
 
-html.site-theme-pressbox .match-live-badge {
-    color: #f0e2c0;
-    background: rgba(200, 160, 60, 0.16);
-    border-color: rgba(220, 180, 80, 0.35);
-}
-html.site-theme-pressbox .match-live-score { color: #f5e6b8; }
-html.site-theme-pressbox .match-live-dot { background: #e0b84a; }
-
-html.site-theme-derby .match-live-badge {
-    color: #f2e8d8;
-    background: rgba(180, 40, 40, 0.18);
-    border-color: rgba(220, 80, 80, 0.35);
-}
-html.site-theme-derby .match-live-score { color: #fff4e8; }
-html.site-theme-derby .match-live-dot { background: #e06060; }
-
-html.theme-match-night .match-live-badge {
-    color: #c8e8d0;
-    background: rgba(80, 160, 110, 0.16);
-    border-color: rgba(100, 180, 130, 0.32);
-}
-html.theme-match-night .match-live-score { color: #d8f0de; }
-
 html.site-theme-floodlight .sport-cat-btn--live,
-html.site-theme-floodlight .sport-section-title--live { color: #d8f0c8; }
+html.site-theme-floodlight .sport-section-title--live,
 html.site-theme-pressbox .sport-cat-btn--live,
-html.site-theme-pressbox .sport-section-title--live { color: #f0e2c0; }
+html.site-theme-pressbox .sport-section-title--live,
 html.site-theme-derby .sport-cat-btn--live,
-html.site-theme-derby .sport-section-title--live { color: #f2e8d8; }
+html.site-theme-derby .sport-section-title--live,
+html.theme-match-night .sport-cat-btn--live,
+html.theme-match-night .sport-section-title--live {
+    color: var(--green-dark);
+}
 html.site-theme-chalk .sport-cat-btn--live,
 html.site-theme-chalk .sport-section-title--live { color: #2a4a38; }
 

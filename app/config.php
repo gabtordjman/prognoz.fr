@@ -8,7 +8,7 @@ if (!defined('APP_BOOT')) {
 }
 
 define('APP_NAME', 'Prognoz');
-define('APP_VERSION', '1.4.1');
+define('APP_VERSION', '1.4.2');
 define('APP_BETA', envBool('APP_BETA', false));
 define('APP_MAINTENANCE', envBool('APP_MAINTENANCE', false));
 define('APP_CONTACT_EMAIL', env('APP_CONTACT_EMAIL', 'contact@example.com'));
@@ -107,6 +107,8 @@ define('API_FOOTBALL_BASE', rtrim((string) env('API_FOOTBALL_BASE', 'https://v3.
 define('API_FOOTBALL_TIMEOUT', max(3, (int) env('API_FOOTBALL_TIMEOUT', '6')));
 /** Intervalle mini entre deux appels live=all. Free tier ≈ 100 req/j → défaut 5 min. */
 define('LIVE_FOOTBALL_SYNC_INTERVAL_SECONDS', max(120, (int) env('LIVE_FOOTBALL_SYNC_INTERVAL', '300')));
+/** Pendant mi-temps uniquement : prochain appel API après N secondes (défaut 10 min). */
+define('LIVE_FOOTBALL_HT_SYNC_SECONDS', max(300, (int) env('LIVE_FOOTBALL_HT_SYNC_SECONDS', '600')));
 /** Plafond d’appels API live / jour UTC (garde-fou free tier). */
 define('LIVE_FOOTBALL_DAILY_BUDGET', max(10, (int) env('LIVE_FOOTBALL_DAILY_BUDGET', '80')));
 /** Fenêtre après coup d’envoi pour afficher / sync le live (minutes). */

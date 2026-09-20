@@ -443,32 +443,75 @@ function liveFootballScoreFingerprint(array $matches): string
 function liveFootballSuggestedPollMs(array $matches): int
 {
     if ($matches === []) {
-        return 45000;
+        return 60000;
     }
-    $hasLivePlay = false;
-    $onlyBreak = true;
-    foreach ($matches as $snap) {
+    $phase = liveFootballCachePhase($matches);
+    return match ($phase) {
+        'playing', 'mixed' => 15000,
+        'break' => 45000,
+        'finished' => 60000,
+        default => 30000,
+    };
+}
+
+/**
+ * Phase du cache live : playing | break | finished | mixed | empty.
+ *
+ * @param array<string,array<string,mixed>> $cachedMatches
+ */
+function liveFootballCachePhase(array $cachedMatches): string
+{
+    if ($cachedMatches === []) {
+        return 'empty';
+    }
+    $playing = 0;
+    $break = 0;
+    $finished = 0;
+    foreach ($cachedMatches as $snap) {
         if (!is_array($snap) || !empty($snap['pending'])) {
             continue;
         }
         $st = strtoupper((string) ($snap['status'] ?? ''));
         if (in_array($st, ['1H', '2H', 'ET', 'P', 'LIVE'], true)) {
-            $hasLivePlay = true;
-            $onlyBreak = false;
-            break;
-        }
-        if (!in_array($st, ['HT', 'BT'], true) && empty($snap['finished'])) {
-            $onlyBreak = false;
+            $playing++;
+        } elseif (in_array($st, ['HT', 'BT'], true)) {
+            $break++;
+        } elseif (in_array($st, ['FT', 'AET', 'PEN'], true) || !empty($snap['finished'])) {
+            $finished++;
         }
     }
-    if ($hasLivePlay) {
-        return 12000;
+    if ($playing > 0 && $break > 0) {
+        return 'mixed';
     }
-    if ($onlyBreak) {
-        return 28000;
+    if ($playing > 0) {
+        return 'playing';
+    }
+    if ($break > 0) {
+        return 'break';
+    }
+    if ($finished > 0) {
+        return 'finished';
     }
 
-    return 20000;
+    return 'empty';
+}
+
+/**
+ * Intervalle API effectif : 5 min en jeu, 10 min si uniquement mi-temps.
+ *
+ * @param array<string,array<string,mixed>> $cachedMatches
+ */
+function liveFootballEffectiveSyncIntervalSeconds(array $cachedMatches): int
+{
+    $normal = (int) LIVE_FOOTBALL_SYNC_INTERVAL_SECONDS;
+    $ht = (int) LIVE_FOOTBALL_HT_SYNC_SECONDS;
+    $phase = liveFootballCachePhase($cachedMatches);
+
+    return match ($phase) {
+        'break' => max($normal, $ht),
+        'finished' => max($normal, $ht),
+        default => $normal,
+    };
 }
 
 /**
@@ -727,7 +770,11 @@ function syncLiveFootballScores(PDO $pdo, bool $force = false): array
         return $empty;
     }
 
-    $interval = (int) LIVE_FOOTBALL_SYNC_INTERVAL_SECONDS;
+    $interval = liveFootballEffectiveSyncIntervalSeconds(
+        is_array(($cachePeek = liveFootballReadCache())['matches'] ?? null)
+            ? $cachePeek['matches']
+            : []
+    );
     $stampFile = liveFootballLastSyncPath();
     if (!$force && is_file($stampFile)) {
         $last = (int) @file_get_contents($stampFile);
@@ -785,6 +832,8 @@ function syncLiveFootballScores(PDO $pdo, bool $force = false): array
             'matched'   => count($snapshots),
             'throttled' => false,
             'skipped'   => null,
+            'interval'  => $interval,
+            'phase'     => liveFootballCachePhase($snapshots),
             'quota'     => liveFootballQuotaState(),
         ];
     } finally {

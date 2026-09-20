@@ -149,12 +149,36 @@ $fp2 = liveFootballScoreFingerprint([
     '1' => ['home' => 1, 'away' => 0, 'status' => '1H', 'clock' => "11'"],
 ]);
 assert_true($fp1 !== $fp2, 'fingerprint change après but');
-assert_eq(12000, liveFootballSuggestedPollMs([
+assert_eq(15000, liveFootballSuggestedPollMs([
     '1' => ['home' => 0, 'away' => 0, 'status' => '2H', 'clock' => "70'", 'in_play' => true],
-]), 'poll rapide en jeu');
-assert_eq(28000, liveFootballSuggestedPollMs([
+]), 'poll cache en jeu');
+assert_eq(45000, liveFootballSuggestedPollMs([
     '1' => ['home' => 0, 'away' => 0, 'status' => 'HT', 'clock' => 'MT'],
-]), 'poll plus lent à la mi-temps');
+]), 'poll cache plus lent à la mi-temps');
+assert_eq(60000, liveFootballSuggestedPollMs([]), 'poll vide sans match');
+
+assert_eq('break', liveFootballCachePhase([
+    '1' => ['home' => 0, 'away' => 0, 'status' => 'HT', 'clock' => 'MT'],
+]), 'phase mi-temps');
+assert_eq('playing', liveFootballCachePhase([
+    '1' => ['home' => 1, 'away' => 0, 'status' => '1H', 'clock' => "20'"],
+]), 'phase en jeu');
+assert_eq('mixed', liveFootballCachePhase([
+    '1' => ['home' => 1, 'away' => 0, 'status' => '1H', 'clock' => "20'"],
+    '2' => ['home' => 0, 'away' => 0, 'status' => 'HT', 'clock' => 'MT'],
+]), 'phase mixte');
+
+assert_eq(LIVE_FOOTBALL_SYNC_INTERVAL_SECONDS, liveFootballEffectiveSyncIntervalSeconds([
+    '1' => ['home' => 1, 'away' => 0, 'status' => '2H', 'clock' => "55'"],
+]), 'API 5 min en jeu');
+assert_eq(LIVE_FOOTBALL_HT_SYNC_SECONDS, liveFootballEffectiveSyncIntervalSeconds([
+    '1' => ['home' => 0, 'away' => 0, 'status' => 'HT', 'clock' => 'MT'],
+]), 'API 10 min à la mi-temps');
+assert_eq(LIVE_FOOTBALL_SYNC_INTERVAL_SECONDS, liveFootballEffectiveSyncIntervalSeconds([
+    '1' => ['home' => 1, 'away' => 0, 'status' => '1H', 'clock' => "20'"],
+    '2' => ['home' => 0, 'away' => 0, 'status' => 'HT', 'clock' => 'MT'],
+]), 'API 5 min si au moins un match en jeu');
+assert_true(LIVE_FOOTBALL_HT_SYNC_SECONDS >= 600, 'HT sync >= 10 min');
 
 echo "\n{$passed} passed, {$failed} failed\n";
 exit($failed > 0 ? 1 : 0);
